@@ -21,6 +21,17 @@ cur.execute(
 
 cur.execute(
     """
+    CREATE TABLE IF NOT EXISTS cities (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
+        country_id INTEGER,
+        UNIQUE(name, country_id)
+    )
+    """
+)
+
+cur.execute(
+    """
     CREATE TABLE IF NOT EXISTS currencies (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT UNIQUE,
@@ -168,7 +179,7 @@ cur.execute(
         gics_industry_id INTEGER,
         website TEXT,
         country_id INTEGER,
-        city TEXT,
+        city_id INTEGER,
         address1 TEXT,
         address2 TEXT,
         zip TEXT,

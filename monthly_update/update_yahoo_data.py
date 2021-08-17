@@ -94,15 +94,21 @@ for index, ticker in enumerate(tickers):
             data["country"] = "The Bahamas"
         
         if data["country"] != "Netherlands Antilles":
-            country_id = cur.execute("SELECT name FROM countries WHERE name = ?", (data["country"], )).fetchone()[0]
+            country_id = cur.execute("SELECT id FROM countries WHERE name = ?", (data["country"], )).fetchone()[0]
+        else:
+            country_id = None
+
+        if cur.execute("SELECT id FROM cities WHERE name = ? AND country_id = ?", (data["city"], country_id)).fetchone() is None:
+            cur.execute("INSERT INTO cities (name, country_id) VALUES (?, ?)", (data["city"], country_id))
+        city_id = cur.execute("SELECT id FROM cities WHERE name = ? AND country_id = ?", (data["city"], country_id)).fetchone()[0]
 
         cur.execute(
             """
-            UPDATE companies SET gics_industry_id = ?, website = ?, country_id = ?, city = ?,
+            UPDATE companies SET gics_industry_id = ?, website = ?, country_id = ?, city_id = ?,
             address1 = ?, address2 = ?, zip = ?, employees = ?
             WHERE security_id = ?
             """,
-            (industry_id, data["website"], country_id, data["city"], data["address1"], data["address2"], data["zip"], data["fullTimeEmployees"], security_id)
+            (industry_id, data["website"], country_id, city_id, data["address1"], data["address2"], data["zip"], data["fullTimeEmployees"], security_id)
         )
 
         # executives
@@ -221,6 +227,8 @@ for index, ticker in enumerate(tickers):
                 name = dct["firm"]
                 old = dct["old"]
                 new = dct["new"]
+                if old == "":
+                    old = new
                 change = dct["change"]
                 
                 if  cur.execute("SELECT id FROM analysts WHERE name = ?", (name, )).fetchone() is None:
@@ -237,7 +245,7 @@ for index, ticker in enumerate(tickers):
 
                 if cur.execute("SELECT id FROM ratings WHERE name = ?", (change, )).fetchone() is None:
                     cur.execute("INSERT INTO ratings (name) VALUES (?)", (change, ))
-                change_id = cur.execute("SELECT id FROM ratings WHERE name = ?", (new, )).fetchone()[0]
+                change_id = cur.execute("SELECT id FROM ratings WHERE name = ?", (change, )).fetchone()[0]
 
                 cur.execute(
                     "INSERT OR IGNORE INTO analyst_recommendations VALUES (?, ?, ?, ?, ?, ?)",
@@ -279,7 +287,8 @@ for index, ticker in enumerate(tickers):
                     trend[calendar]["strong_sell"])
                 )
     
-    cur.execute("UPDATE securities SET profile_updated = ?", (ts_today,))
+    cur.execute("UPDATE securities SET profile_updated = ? WHERE id = ?", (ts_today, security_id))
+    cur.execute("UPDATE securities SET yahoo_fundamentals_updated = ? WHERE security-id = ?", (ts_today, security_id))
 
 con.commit()
 con.close()

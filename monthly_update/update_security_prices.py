@@ -46,7 +46,7 @@ for index, (security_id, ticker) in enumerate(securities[11130:11600]):
         "REPLACE INTO security_prices VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (data)
     )
-    cur.execute("UPDATE securities SET prices_updated = ?, currency_id = ? WHERE id = ?", (ts_today, security_id, currency_id))
+    cur.execute("UPDATE securities SET prices_updated = ?, currency_id = ? WHERE id = ?", (ts_today, currency_id, security_id))
     if index % 100 == 0:
         con.commit()
 
