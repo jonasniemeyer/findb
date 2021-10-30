@@ -29,12 +29,18 @@ form_ids = cur.execute(
 ).fetchall()
 form_ids = tuple([item[0] for item in form_ids])
 
-tickers = cur.execute("SELECT ticker FROM securities WHERE discontinued IS NULL").fetchall()
+tickers = cur.execute(
+    """
+    SELECT ticker FROM securities 
+    WHERE 
+    discontinued IS NULL
+    ORDER BY ticker
+    """
+).fetchall()
 tickers = [item[0] for item in tickers]
 
-types = []
 length = len(tickers)
-for index, ticker in enumerate(tickers):
+for index, ticker in enumerate(tickers[2000:]):
     if index % 100 == 0:
         con.commit()
     print(ticker, index, "of", length)
@@ -58,7 +64,8 @@ for index, ticker in enumerate(tickers):
 
     cur.execute("UPDATE securities SET yahoo_name = ?, type_id = ?, description = ? WHERE ticker = ?", (security_name, type_id, description, ticker))
 
-    if security_type == "EQUITY" and cur.execute(f"SELECT * FROM sec_filings WHERE cik = ? AND form_type_id IN {form_ids}", (cik, )).fetchone() is None:
+    # check if company and insert company data
+    if security_type == "EQUITY" and cur.execute(f"SELECT * FROM sec_filings WHERE cik = ? AND form_type_id IN {form_ids}", (cik,)).fetchone() is not None:
         
         cur.execute("INSERT OR IGNORE INTO companies (security_id) VALUES (?)", (security_id,))
         
@@ -97,10 +104,16 @@ for index, ticker in enumerate(tickers):
             country_id = cur.execute("SELECT id FROM countries WHERE name = ?", (data["country"], )).fetchone()[0]
         else:
             country_id = None
+            print(ticker, "failed", "country Netherlands Antilles")
+            continue
 
         if cur.execute("SELECT id FROM cities WHERE name = ? AND country_id = ?", (data["city"], country_id)).fetchone() is None:
             cur.execute("INSERT INTO cities (name, country_id) VALUES (?, ?)", (data["city"], country_id))
-        city_id = cur.execute("SELECT id FROM cities WHERE name = ? AND country_id = ?", (data["city"], country_id)).fetchone()[0]
+        if data["city"] is None:
+            city_id = cur.execute("SELECT id FROM cities WHERE name IS NULL AND country_id = ?", (country_id,)).fetchone()[0]
+        else:
+            city_id = cur.execute("SELECT id FROM cities WHERE name = ? AND country_id = ?", (data["city"], country_id)).fetchone()[0]
+        
 
         cur.execute(
             """
@@ -288,7 +301,7 @@ for index, ticker in enumerate(tickers):
                 )
     
     cur.execute("UPDATE securities SET profile_updated = ? WHERE id = ?", (ts_today, security_id))
-    cur.execute("UPDATE securities SET yahoo_fundamentals_updated = ? WHERE security-id = ?", (ts_today, security_id))
+    cur.execute("UPDATE companies SET yahoo_fundamentals_updated = ? WHERE security_id = ?", (ts_today, security_id))
 
 con.commit()
 con.close()
