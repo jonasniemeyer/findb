@@ -1,5 +1,6 @@
 from pathlib import Path
 from finance_database import Database
+import sqlite3
 
 db = Database()
 con = db.connection
@@ -92,14 +93,17 @@ cur.execute(
     """
 )
 
-cur.executescript(
-    """
-    INSERT INTO financial_statement_types (name) VALUES ("income statement");
-    INSERT INTO financial_statement_types (name) VALUES ("balance sheet");
-    INSERT INTO financial_statement_types (name) VALUES ("cashflow statement");
-    INSERT INTO financial_statement_types (name) VALUES ("statement of changes in equity");
-    """
-)
+try:
+    cur.executescript(
+        """
+        INSERT INTO financial_statement_types (name) VALUES ("income statement");
+        INSERT INTO financial_statement_types (name) VALUES ("balance sheet");
+        INSERT INTO financial_statement_types (name) VALUES ("cashflow statement");
+        INSERT INTO financial_statement_types (name) VALUES ("statement of changes in equity");
+        """
+    )
+except sqlite3.IntegrityError:
+    pass
 
 cur.execute(
     """

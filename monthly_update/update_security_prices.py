@@ -14,10 +14,10 @@ securities = cur.execute(
     WHERE 
     discontinued IS NULL
     ORDER BY ticker
-    """,
+    """
 ).fetchall()
 
-for index, (security_id, ticker) in enumerate(securities[11130:11600]):
+for index, (security_id, ticker) in enumerate(securities):
     print(f"{ticker}, {index} of {len(securities)}")
     try:
         reader = YahooReader(ticker=ticker).historical_data(

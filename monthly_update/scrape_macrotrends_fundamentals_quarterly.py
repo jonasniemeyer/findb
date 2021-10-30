@@ -12,20 +12,20 @@ tickers = cur.execute("SELECT ticker FROM securities WHERE id IN (SELECT securit
 tickers = [item[0] for item in tickers]
 
 def scrape_data(ticker):
-    if f"{ticker}.json" in os.listdir("fundamentals/yearly"):
+    if f"{ticker}.json" in os.listdir("fundamentals/quarterly"):
         return
-    reader = MacrotrendsReader(ticker, frequency="Y")
+    reader = MacrotrendsReader(ticker, frequency="Q")
     try:
         reader.open_website()
         data = reader.parse()
     except:
         data = {}
-    with open(f"fundamentals/yearly/{ticker}.json", "w") as file:
+    with open(f"fundamentals/quarterly/{ticker}.json", "w") as file:
         json.dump(data, file, indent=4)
 
 if __name__ == "__main__":
     print(len(tickers))
     if not os.path.exists("fundamentals"):
-        os.mkdir("fundamentals/yearly")
+        os.mkdir("fundamentals/quarterly")
     with concurrent.futures.ProcessPoolExecutor(4) as p:
         p.map(scrape_data, tickers)
