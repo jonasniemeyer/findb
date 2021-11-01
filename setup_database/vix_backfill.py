@@ -17,8 +17,8 @@ tags = soup.find_all("a", {"class": "link"})
 
 urls = [base_url + tag.get("href") for tag in tags if "products/csv/VX" in tag.get("href")]
 
-items = []
 for url in urls:
+    items = []
     print(url)
     data = requests.get(url).text
     df = pd.read_csv(StringIO(data), index_col=0)
@@ -31,13 +31,14 @@ for url in urls:
         volume = df.loc[index, "Total Volume"]
         if isinstance(price, pd.Series):
             price = price.iloc[0]
+            volume = volume.iloc[0]
         items.append((maturity_ts, ts, price, volume))
-cur.executemany(
-    """
-    INSERT INTO vix_prices VALUES(?, ?, ?, ?)
-    """,
-    items
-)
+    cur.executemany(
+        """
+        INSERT OR IGNORE INTO vix_prices VALUES(?, ?, ?, ?)
+        """,
+        items
+    )
 con.commit()
 con.close()
 
