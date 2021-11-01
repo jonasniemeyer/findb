@@ -13,7 +13,7 @@ cur = db.cursor
 cur.execute(
     """
     CREATE TABLE IF NOT EXISTS countries (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY,
         name TEXT UNIQUE,
         flag BLOB
     )
@@ -23,7 +23,7 @@ cur.execute(
 cur.execute(
     """
     CREATE TABLE IF NOT EXISTS cities (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY,
         name TEXT,
         country_id INTEGER,
         UNIQUE(name, country_id)
@@ -34,7 +34,7 @@ cur.execute(
 cur.execute(
     """
     CREATE TABLE IF NOT EXISTS currencies (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY,
         name TEXT UNIQUE,
         abbr TEXT UNIQUE
     )
@@ -54,7 +54,7 @@ cur.execute(
 cur.execute(
     """
     CREATE TABLE IF NOT EXISTS exchanges (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY,
         name TEXT,
         yahoo_suffix TEXT,
         country_id TEXT,
@@ -66,7 +66,7 @@ cur.execute(
 cur.execute(
     """
     CREATE TABLE IF NOT EXISTS indices (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY,
         name TEXT UNIQUE,
         ticker TEXT,
         country_id INTEGER
@@ -87,7 +87,7 @@ cur.execute(
 cur.execute(
     """
     CREATE TABLE IF NOT EXISTS financial_statement_types (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY,
         name TEXT UNIQUE
     )
     """
@@ -108,7 +108,7 @@ except sqlite3.IntegrityError:
 cur.execute(
     """
     CREATE TABLE IF NOT EXISTS sec_daily_filings_lists (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY,
         ts INTEGER UNIQUE,
         url TEXT UNIQUE,
         parsed INTEGER
@@ -119,7 +119,7 @@ cur.execute(
 cur.execute(
     """
     CREATE TABLE IF NOT EXISTS form_types (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY,
         name TEXT UNIQUE
     )
     """
@@ -128,7 +128,7 @@ cur.execute(
 cur.execute(
     """
     CREATE TABLE IF NOT EXISTS sec_filings (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY,
         cik INTEGER,
         form_type_id INTEGER,
         ts_filed INTEGER,
@@ -146,7 +146,7 @@ cur.execute(
 cur.execute(
     """
     CREATE TABLE IF NOT EXISTS securities (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY,
         cik INTEGER,
         ticker TEXT,
         yahoo_name TEXT,
@@ -169,7 +169,7 @@ cur.execute(
 cur.execute(
     """
     CREATE TABLE IF NOT EXISTS security_types (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY,
         name TEXT UNIQUE
     )
     """
@@ -198,7 +198,7 @@ cur.execute(
 cur.execute(
     """
     CREATE TABLE IF NOT EXISTS executives (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY,
         name TEXT,
         age INTEGER,
         born INTEGER,
@@ -210,7 +210,7 @@ cur.execute(
 cur.execute(
     """
     CREATE TABLE IF NOT EXISTS executive_positions (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY,
         name TEXT UNIQUE
     )
     """
@@ -253,7 +253,7 @@ cur.execute(
 cur.execute(
     """
     CREATE TABLE IF NOT EXISTS analysts (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY,
         name TEXT UNIQUE
     )
     """
@@ -262,7 +262,7 @@ cur.execute(
 cur.execute(
     """
     CREATE TABLE IF NOT EXISTS ratings (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY,
         name TEXT UNIQUE
     )
     """
@@ -303,7 +303,7 @@ cur.execute(
 cur.execute(
     """
     CREATE TABLE IF NOT EXISTS fundamental_variables_sec (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY,
         name TEXT,
         statement_id INTEGER,
         UNIQUE(name, statement_id)
@@ -329,7 +329,7 @@ cur.execute(
 cur.execute(
     """
     CREATE TABLE IF NOT EXISTS fundamental_variables_macrotrends (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY,
         name TEXT,
         statement_id INTEGER,
         UNIQUE(name, statement_id)
@@ -354,7 +354,7 @@ cur.execute(
 cur.execute(
     """
     CREATE TABLE IF NOT EXISTS fundamental_variables_yahoo (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY,
         name TEXT,
         statement_id INTEGER,
         UNIQUE(name, statement_id)
@@ -383,7 +383,7 @@ cur.execute(
 cur.execute(
     """
     CREATE TABLE IF NOT EXISTS french_datasets (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY,
         name TEXT UNIQUE,
         updated INTEGER
     )
@@ -393,7 +393,7 @@ cur.execute(
 cur.execute(
     """
     CREATE TABLE IF NOT EXISTS french_categories (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY,
         name TEXT UNIQUE
     )
     """
@@ -402,7 +402,7 @@ cur.execute(
 cur.execute(
     """
     CREATE TABLE IF NOT EXISTS french_series (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY,
         dataset_id INTEGER,
         category_id INTEGER,
         name TEXT,
@@ -455,7 +455,7 @@ cur.execute(
 cur.execute(
     """
     CREATE TABLE IF NOT EXISTS options (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY,
         name TEXT UNIQUE
     )
     """
@@ -468,7 +468,7 @@ cur.execute(
 cur.execute(
     """
     CREATE TABLE IF NOT EXISTS cusips (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY,
         cusip TEXT
     )
     """
@@ -559,7 +559,7 @@ cur.execute(
 cur.execute(
     """
     CREATE TABLE IF NOT EXISTS commodities (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY,
         name TEXT UNIQUE,
         exchange_id INTEGER,
         sector_id INTEGER,
@@ -571,7 +571,7 @@ cur.execute(
 cur.execute(
     """
     CREATE TABLE IF NOT EXISTS commodity_sectors (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY,
         name TEXT UNIQUE
     )
     """
@@ -624,7 +624,7 @@ cur.execute(
 cur.execute(
     """
     CREATE TABLE IF NOT EXISTS fred_categories(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY,
         name TEXT,
         super_category_id INTEGER
     )
@@ -634,7 +634,7 @@ cur.execute(
 cur.execute(
     """
     CREATE TABLE IF NOT EXISTS fred_series (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY,
         abbr TEXT,
         name TEXT,
         description TEXT,
