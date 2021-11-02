@@ -290,7 +290,7 @@ cur.execute(
         ts INTEGER,
         month INTEGER,
         number INTEGER,
-        average INTEGER,
+        average REAL,
         strong_buy INTEGER,
         buy INTEGER,
         hold INTEGER,
@@ -430,7 +430,8 @@ cur.execute(
 cur.execute(
     """
     CREATE TABLE IF NOT EXISTS investment_managers (
-        cik INTEGER PRIMARY KEY,
+        id INTEGER PRIMARY KEY
+        cik INTEGER UNIQUE,
         name TEXT
     )
     """
@@ -444,6 +445,7 @@ cur.execute(
         year INTEGER,
         ts INTEGER,
         cusip_id INTEGER,
+        percentage REAL,
         no_shares INTEGER,
         market_value REAL,
         option_id INTEGER,
@@ -478,13 +480,14 @@ cur.execute(
 cur.execute(
     """
     CREATE TABLE IF NOT EXISTS acquisitions (
-        cik INTEGER,
+        cik_filer INTEGER,
+        cik_subject INTEGER,
         cusip_id INTEGER,
         ts INTEGER,
         shares INTEGER,
         percentage REAL,
         filing_id INTEGER,
-        PRIMARY KEY(cik, cusip_id, ts)
+        PRIMARY KEY(cik_filer, cik_subject, cusip_id, ts)
     )
     """
 )
