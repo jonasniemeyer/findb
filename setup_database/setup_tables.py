@@ -472,7 +472,7 @@ cur.execute(
     """
     CREATE TABLE IF NOT EXISTS cusips (
         id INTEGER PRIMARY KEY,
-        cusip TEXT
+        cusip TEXT UNIQUE
     )
     """
 )
