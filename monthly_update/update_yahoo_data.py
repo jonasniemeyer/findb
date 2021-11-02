@@ -40,7 +40,7 @@ tickers = cur.execute(
 tickers = [item[0] for item in tickers]
 
 length = len(tickers)
-for index, ticker in enumerate(tickers[2000:]):
+for index, ticker in enumerate(tickers):
     if index % 100 == 0:
         con.commit()
     print(ticker, index, "of", length)
@@ -50,14 +50,19 @@ for index, ticker in enumerate(tickers[2000:]):
     except:
         print("\t", ticker, "failed")
         continue
+    try:
+        logo = reader.logo()
+        if logo == b"\n":
+            raise KeyError
+    except KeyError:
+        logo = None
     
     security_id = cur.execute("SELECT id FROM securities WHERE ticker = ?", (ticker,)).fetchone()[0]
     cik = cur.execute("SELECT cik FROM securities WHERE ticker = ?", (ticker,)).fetchone()[0]
     
     security_name = reader.name
     security_type = reader.security_type
-    if cur.execute("SELECT id FROM security_types WHERE name = ?", (security_type,)).fetchone() is None:
-        cur.execute("INSERT INTO security_types (name) VALUES (?)", (security_type, ))
+    cur.execute("INSERT OR IGNORE INTO security_types (name) VALUES (?)", (security_type, ))
     type_id = cur.execute("SELECT id FROM security_types WHERE name = ?", (security_type,)).fetchone()[0]
 
     description = profile["description"]
@@ -88,11 +93,9 @@ for index, ticker in enumerate(tickers[2000:]):
 
         #industry
         if data["industry"] is not None:
-            if cur.execute("SELECT id FROM gics_sectors WHERE name = ?", (data["sector"],)).fetchone() is None:
-                cur.execute("INSERT INTO gics_sectors (name) VALUES (?)", (data["sector"],))
+            cur.execute("INSERT OR IGNORE INTO gics_sectors (name) VALUES (?)", (data["sector"],))
             sector_id = cur.execute("SELECT id FROM gics_sectors WHERE name = ?", (data["sector"],)).fetchone()[0]
-            if cur.execute("SELECT id FROM gics_industries WHERE name = ?", (data["industry"],)).fetchone() is None:
-                cur.execute("INSERT INTO gics_industries (name, sector_id) VALUES (?, ?)", (data["industry"], sector_id))
+            cur.execute("INSERT OR IGNORE INTO gics_industries (name, sector_id) VALUES (?, ?)", (data["industry"], sector_id))
             industry_id = cur.execute("SELECT id FROM gics_industries WHERE name = ?", (data["industry"],)).fetchone()[0]
         else:
             industry_id = None
@@ -101,14 +104,13 @@ for index, ticker in enumerate(tickers[2000:]):
             data["country"] = "The Bahamas"
         
         if data["country"] != "Netherlands Antilles":
-            country_id = cur.execute("SELECT id FROM countries WHERE name = ?", (data["country"], )).fetchone()[0]
+            country_id = cur.execute("SELECT id FROM countries WHERE name = ?", (data["country"],)).fetchone()[0]
         else:
             country_id = None
             print(ticker, "failed", "country Netherlands Antilles")
             continue
 
-        if cur.execute("SELECT id FROM cities WHERE name = ? AND country_id = ?", (data["city"], country_id)).fetchone() is None:
-            cur.execute("INSERT INTO cities (name, country_id) VALUES (?, ?)", (data["city"], country_id))
+        cur.execute("INSERT OR IGNORE INTO cities (name, country_id) VALUES (?, ?)", (data["city"], country_id))
         if data["city"] is None:
             city_id = cur.execute("SELECT id FROM cities WHERE name IS NULL AND country_id = ?", (country_id,)).fetchone()[0]
         else:
@@ -117,11 +119,11 @@ for index, ticker in enumerate(tickers[2000:]):
 
         cur.execute(
             """
-            UPDATE companies SET gics_industry_id = ?, website = ?, country_id = ?, city_id = ?,
+            UPDATE companies SET gics_industry_id = ?, website = ?, logo = ?, country_id = ?, city_id = ?,
             address1 = ?, address2 = ?, zip = ?, employees = ?
             WHERE security_id = ?
             """,
-            (industry_id, data["website"], country_id, city_id, data["address1"], data["address2"], data["zip"], data["fullTimeEmployees"], security_id)
+            (industry_id, data["website"], logo, country_id, city_id, data["address1"], data["address2"], data["zip"], data["fullTimeEmployees"], security_id)
         )
 
         # executives
@@ -134,12 +136,10 @@ for index, ticker in enumerate(tickers[2000:]):
             born = item["born"]
 
             cur.execute("UPDATE executives SET age = ? WHERE name = ? AND born = ?", (age, name, born))
-            if cur.execute("SELECT id FROM executives WHERE name = ?", (name,)).fetchone() is None:
-                cur.execute("INSERT INTO executives (name, age, born) VALUES (?, ?, ?)", (name, age, born))
+            cur.execute("INSERT OR IGNORE INTO executives (name, age, born) VALUES (?, ?, ?)", (name, age, born))
             executive_id = cur.execute("SELECT id FROM executives WHERE name = ?", (name,)).fetchone()[0]
 
-            if cur.execute("SELECT id FROM executive_positions WHERE name = ?", (position,)).fetchone() is None:
-                cur.execute("INSERT OR IGNORE INTO executive_positions (name) VALUES (?)", (position,))
+            cur.execute("INSERT OR IGNORE INTO executive_positions (name) VALUES (?)", (position,))
             position_id = cur.execute("SELECT id FROM executive_positions WHERE name = ?", (position,)).fetchone()[0]
 
             executives[(security_id, executive_id, position_id)] = salary
@@ -163,7 +163,7 @@ for index, ticker in enumerate(tickers[2000:]):
                         "UPDATE company_executive_match SET salary = ? WHERE security_id = ? AND executive_id = ? AND position_id = ?",
                         (executives[(security_id, executive_id, position_id)], security_id, executive_id, position_id)
                     )
-            
+        
         con.commit()
 
         entries = cur.execute("SELECT security_id, executive_id, position_id FROM company_executive_match").fetchall()
@@ -197,8 +197,7 @@ for index, ticker in enumerate(tickers[2000:]):
                     ts_statement = int((date - dt.date(1970, 1, 1)).total_seconds())
                     for variable in statements[statement][date_iso]:
                         statement_id = cur.execute("SELECT id FROM financial_statement_types WHERE name = ?", (statement_name, )).fetchone()[0]
-                        if cur.execute("SELECT id FROM fundamental_variables_yahoo WHERE name = ? AND statement_id = ?", (variable, statement_id)).fetchone() is None:
-                            cur.execute("INSERT INTO fundamental_variables_yahoo (name, statement_id) VALUES (?, ?)", (variable, statement_id))
+                        cur.execute("INSERT OR IGNORE INTO fundamental_variables_yahoo (name, statement_id) VALUES (?, ?)", (variable, statement_id))
                         variable_id = cur.execute("SELECT id FROM fundamental_variables_yahoo WHERE name = ? AND statement_id = ?", (variable, statement_id)).fetchone()[0]
                         cur.execute(
                             "INSERT OR IGNORE INTO fundamental_data_yahoo VALUES (?, ?, ?, ?, ?, ?)",
@@ -221,8 +220,7 @@ for index, ticker in enumerate(tickers[2000:]):
                         ts_statement = int((date - dt.date(1970, 1, 1)).total_seconds())
                         for variable in statements[statement][date_iso]:
                             statement_id = cur.execute("SELECT id FROM financial_statement_types WHERE name = ?", (statement_name, )).fetchone()[0]
-                            if cur.execute("SELECT id FROM fundamental_variables_yahoo WHERE name = ? AND statement_id = ?", (variable, statement_id)).fetchone() is None:
-                                cur.execute("INSERT INTO fundamental_variables_yahoo (name, statement_id) VALUES (?, ?)", (variable, statement_id))
+                            cur.execute("INSERT OR IGNORE INTO fundamental_variables_yahoo (name, statement_id) VALUES (?, ?)", (variable, statement_id))
                             variable_id = cur.execute("SELECT id FROM fundamental_variables_yahoo WHERE name = ? AND statement_id = ?", (variable, statement_id)).fetchone()[0]
                             cur.execute(
                                 "INSERT OR IGNORE INTO fundamental_data_yahoo VALUES (?, ?, ?, ?, ?, ?)",
@@ -244,20 +242,16 @@ for index, ticker in enumerate(tickers[2000:]):
                     old = new
                 change = dct["change"]
                 
-                if  cur.execute("SELECT id FROM analysts WHERE name = ?", (name, )).fetchone() is None:
-                    cur.execute("INSERT INTO analysts (name) VALUES (?)", (name, ))
+                cur.execute("INSERT OR IGNORE INTO analysts (name) VALUES (?)", (name, ))
                 analyst_id = cur.execute("SELECT id FROM analysts WHERE name = ?", (name, )).fetchone()[0]
 
-                if cur.execute("SELECT id FROM ratings WHERE name = ?", (old, )).fetchone() is None:
-                    cur.execute("INSERT INTO ratings (name) VALUES (?)", (old, ))
+                cur.execute("INSERT OR IGNORE INTO ratings (name) VALUES (?)", (old, ))
                 old_id = cur.execute("SELECT id FROM ratings WHERE name = ?", (old, )).fetchone()[0]
 
-                if cur.execute("SELECT id FROM ratings WHERE name = ?", (new, )).fetchone() is None:
-                    cur.execute("INSERT INTO ratings (name) VALUES (?)", (new, ))
+                cur.execute("INSERT OR IGNORE INTO ratings (name) VALUES (?)", (new, ))
                 new_id = cur.execute("SELECT id FROM ratings WHERE name = ?", (new, )).fetchone()[0]
 
-                if cur.execute("SELECT id FROM ratings WHERE name = ?", (change, )).fetchone() is None:
-                    cur.execute("INSERT INTO ratings (name) VALUES (?)", (change, ))
+                cur.execute("INSERT OR IGNORE INTO ratings (name) VALUES (?)", (change, ))
                 change_id = cur.execute("SELECT id FROM ratings WHERE name = ?", (change, )).fetchone()[0]
 
                 cur.execute(

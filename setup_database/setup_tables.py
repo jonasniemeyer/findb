@@ -182,6 +182,7 @@ cur.execute(
         sic_industry_id INTEGER,
         gics_industry_id INTEGER,
         website TEXT,
+        "logo"	BLOB,
         country_id INTEGER,
         city_id INTEGER,
         address1 TEXT,
