@@ -31,8 +31,8 @@ form_ids = tuple([item[0] for item in form_ids])
 
 tickers = cur.execute(
     """
-    SELECT ticker FROM securities 
-    WHERE 
+    SELECT ticker FROM securities
+    WHERE
     discontinued IS NULL
     ORDER BY ticker
     """
@@ -62,12 +62,13 @@ for index, ticker in enumerate(tickers):
     
     security_name = reader.name
     security_type = reader.security_type
-    cur.execute("INSERT OR IGNORE INTO security_types (name) VALUES (?)", (security_type, ))
+    isin = reader.isin
+    cur.execute("INSERT OR IGNORE INTO security_types (name) VALUES (?)", (security_type,))
     type_id = cur.execute("SELECT id FROM security_types WHERE name = ?", (security_type,)).fetchone()[0]
 
     description = profile["description"]
 
-    cur.execute("UPDATE securities SET yahoo_name = ?, type_id = ?, description = ? WHERE ticker = ?", (security_name, type_id, description, ticker))
+    cur.execute("UPDATE securities SET yahoo_name = ?, type_id = ?, description = ?, isin = ? WHERE ticker = ?", (security_name, type_id, description, isin, ticker))
 
     # check if company and insert company data
     if security_type == "EQUITY" and cur.execute(f"SELECT * FROM sec_filings WHERE cik = ? AND form_type_id IN {form_ids}", (cik,)).fetchone() is not None:
