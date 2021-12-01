@@ -487,7 +487,7 @@ cur.execute(
         shares INTEGER,
         percentage REAL,
         filing_id INTEGER,
-        PRIMARY KEY(cik_filer, cik_subject, cusip_id, ts)
+        PRIMARY KEY(filing_id)
     )
     """
 )
