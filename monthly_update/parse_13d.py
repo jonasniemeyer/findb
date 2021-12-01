@@ -22,6 +22,7 @@ form_ids = tuple([item[0] for item in form_ids])
 
 data = cur.execute(f"SELECT id, url FROM sec_filings WHERE form_type_id IN {form_ids} AND parsed IS NULL ORDER BY ts_filed ASC").fetchall()
 no_files = len(data)
+print(no_files)
 
 for index, (filing_id, url) in enumerate(data):
     print(f"{index} of {no_files}", url)
@@ -50,7 +51,6 @@ for index, (filing_id, url) in enumerate(data):
             cur.execute("UPDATE companies SET sic_industry_id = ? WHERE security_id = (SELECT id FROM securities WHERE cik = ?)", (sic_code_filer, cik_filer))
         except:
             pass
-
         cur.execute(
             "INSERT OR IGNORE INTO acquisitions VALUES (?, ?, ?, ?, ?, ?, ?)",
             (cik_filer, cik_subject, cusip_id, ts_filed, shares, percentage, filing_id)
@@ -61,6 +61,7 @@ for index, (filing_id, url) in enumerate(data):
     if index % 100 == 0:
         con.commit()
 
+con.commit()
 con.close()
 
 
