@@ -201,7 +201,7 @@ for index, ticker in enumerate(tickers):
                         cur.execute("INSERT OR IGNORE INTO fundamental_variables_yahoo (name, statement_id) VALUES (?, ?)", (variable, statement_id))
                         variable_id = cur.execute("SELECT id FROM fundamental_variables_yahoo WHERE name = ? AND statement_id = ?", (variable, statement_id)).fetchone()[0]
                         cur.execute(
-                            "INSERT OR IGNORE INTO fundamental_data_yahoo VALUES (?, ?, ?, ?, ?, ?)",
+                            "REPLACE INTO fundamental_data_yahoo VALUES (?, ?, ?, ?, ?, ?)",
                             (security_id, variable_id, 0, year, ts_statement, statements[statement][date_iso][variable])
                         )
             fiscal_end_quarter = (date.month - 1 // 3) + 1
@@ -224,7 +224,7 @@ for index, ticker in enumerate(tickers):
                             cur.execute("INSERT OR IGNORE INTO fundamental_variables_yahoo (name, statement_id) VALUES (?, ?)", (variable, statement_id))
                             variable_id = cur.execute("SELECT id FROM fundamental_variables_yahoo WHERE name = ? AND statement_id = ?", (variable, statement_id)).fetchone()[0]
                             cur.execute(
-                                "INSERT OR IGNORE INTO fundamental_data_yahoo VALUES (?, ?, ?, ?, ?, ?)",
+                                "REPLACE INTO fundamental_data_yahoo VALUES (?, ?, ?, ?, ?, ?)",
                                 (security_id, variable_id, quarter, year, ts_statement, statements[statement][date_iso][variable])
                             )
 
@@ -239,8 +239,6 @@ for index, ticker in enumerate(tickers):
                 name = dct["firm"]
                 old = dct["old"]
                 new = dct["new"]
-                if old == "":
-                    old = new
                 change = dct["change"]
                 
                 cur.execute("INSERT OR IGNORE INTO analysts (name) VALUES (?)", (name, ))
@@ -256,7 +254,7 @@ for index, ticker in enumerate(tickers):
                 change_id = cur.execute("SELECT id FROM ratings WHERE name = ?", (change, )).fetchone()[0]
 
                 cur.execute(
-                    "INSERT OR IGNORE INTO analyst_recommendations VALUES (?, ?, ?, ?, ?, ?)",
+                    "REPLACE INTO analyst_recommendations VALUES (?, ?, ?, ?, ?, ?)",
                     (analyst_id, security_id, ts_rated, old_id, new_id, change_id)
                 )
 
@@ -282,7 +280,7 @@ for index, ticker in enumerate(tickers):
                 ts_month = int((date_month - dt.date(1970, 1, 1)).total_seconds())
 
                 cur.execute(
-                    "INSERT OR IGNORE INTO recommendation_trend VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    "INSERT INTO recommendation_trend VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (security_id,
                     ts_today,
                     ts_month,
