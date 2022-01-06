@@ -28,8 +28,12 @@ for row in table.find_all("tr")[1:]:
         country_name = cells[0].find("a").get("title")
         country_name = "Ireland" if country_name == "Republic of Ireland" else country_name
         flag_url = "https:" + cells[0].find("img").get("src")
-        flag_url = re.sub("[0-9]+px", "800px", flag_url)
-        flag_bytes = requests.get(url=flag_url, headers=_headers).content
+        flag_url_50 = re.sub("[0-9]+px", "50px", flag_url)
+        flag_url_100 = re.sub("[0-9]+px", "100px", flag_url)
+        flag_url_200 = re.sub("[0-9]+px", "200px", flag_url)
+        flag_bytes_50 = requests.get(url=flag_url_50, headers=_headers).content
+        flag_bytes_100 = requests.get(url=flag_url_100, headers=_headers).content
+        flag_bytes_200 = requests.get(url=flag_url_200, headers=_headers).content
         i = 1
     else:
         i = 0
@@ -53,10 +57,10 @@ for row in table.find_all("tr")[1:]:
 
     cur.execute(
         """
-        INSERT OR IGNORE INTO countries (name, flag)
-        VALUES (?, ?)
+        INSERT OR IGNORE INTO countries (name, flag_small, flag_medium, flag_large)
+        VALUES (?, ?, ?, ?)
         """,
-        (country_name, flag_bytes)
+        (country_name, flag_bytes_50, flag_bytes_100, flag_bytes_200)
     )
     print(country_name)
     country_id = cur.execute("SELECT id FROM countries WHERE name = ?", (country_name,)).fetchone()[0]
