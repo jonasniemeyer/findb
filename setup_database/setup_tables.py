@@ -15,7 +15,9 @@ cur.execute(
     CREATE TABLE IF NOT EXISTS countries (
         id INTEGER PRIMARY KEY,
         name TEXT UNIQUE,
-        flag BLOB
+        flag_small BLOB,
+        flag_medium BLOB,
+        flag_large BLOB
     )
     """
 )
@@ -151,6 +153,7 @@ cur.execute(
         ticker TEXT,
         yahoo_name TEXT,
         description TEXT,
+        logo BLOB,
         type_id INTEGER,
         currency_id INTEGER,
         sec_name TEXT,
@@ -182,7 +185,6 @@ cur.execute(
         sic_industry_id INTEGER,
         gics_industry_id INTEGER,
         website TEXT,
-        "logo"	BLOB,
         country_id INTEGER,
         city_id INTEGER,
         address1 TEXT,
