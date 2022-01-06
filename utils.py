@@ -1,6 +1,6 @@
 from pathlib import Path
 
-db_path = r"{}\financial_data.db".format(Path(__file__).parent)
+db_path = rf"{Path(__file__).parent}\financial_data.db"
 
 sec_base_url = "https://www.sec.gov/Archives"
 

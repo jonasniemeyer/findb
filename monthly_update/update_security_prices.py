@@ -10,8 +10,8 @@ cur = db.cursor
 
 securities = cur.execute(
     """
-    SELECT id, ticker FROM securities 
-    WHERE 
+    SELECT id, ticker FROM securities
+    WHERE
     discontinued IS NULL
     ORDER BY ticker
     """

@@ -50,12 +50,8 @@ for index, ticker in enumerate(tickers):
     except:
         print("\t", ticker, "failed")
         continue
-    try:
-        logo = reader.logo()
-        if logo == b"\n":
-            raise KeyError
-    except KeyError:
-        logo = None
+
+    logo = reader.logo()
     
     security_id = cur.execute("SELECT id FROM securities WHERE ticker = ?", (ticker,)).fetchone()[0]
     cik = cur.execute("SELECT cik FROM securities WHERE ticker = ?", (ticker,)).fetchone()[0]
