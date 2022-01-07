@@ -1,14 +1,12 @@
 from finance_data import margin_debt
 from finance_database import Database
-import datetime as dt
 
 def insert_margin_debt(db_connection):
     cur = db_connection.cursor()
-    df = margin_debt()["combined full"]
+    df = margin_debt(timestamps=True)["combined full"]
     data = []
-    for index in df.index:
-        ts = int((index - dt.date(1970,1,1)).total_seconds())
-        data.append((ts, int(df.loc[index, "debit"]), int(df.loc[index, "credit"])))
+    for ts in df.index:
+        data.append((ts, int(df.loc[ts, "debit"]), int(df.loc[ts, "credit"])))
 
     cur.executemany("INSERT OR IGNORE INTO margin_debt VALUES (?, ?, ?)", data)
     con.commit()
