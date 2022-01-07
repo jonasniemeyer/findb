@@ -156,6 +156,7 @@ cur.execute(
         logo BLOB,
         type_id INTEGER,
         currency_id INTEGER,
+        utc_offset INTEGER,
         sec_name TEXT,
         isin TEXT,
         exchange INTEGER,
