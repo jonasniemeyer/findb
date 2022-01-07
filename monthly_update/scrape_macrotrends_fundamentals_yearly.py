@@ -16,8 +16,7 @@ def scrape_data(ticker):
         return
     reader = MacrotrendsReader(ticker, frequency="Y")
     try:
-        reader.open_website()
-        data = reader.parse()
+        data = reader.read()
     except:
         data = {}
     with open(f"fundamentals/yearly/{ticker}.json", "w") as file:
