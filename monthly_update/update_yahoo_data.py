@@ -62,9 +62,12 @@ for index, ticker in enumerate(tickers):
     cur.execute("INSERT OR IGNORE INTO security_types (name) VALUES (?)", (security_type,))
     type_id = cur.execute("SELECT id FROM security_types WHERE name = ?", (security_type,)).fetchone()[0]
 
-    description = profile["description"]
+    try:
+        description = profile["description"]
+    except:
+        description = None
 
-    cur.execute("UPDATE securities SET yahoo_name = ?, type_id = ?, description = ?, isin = ? WHERE ticker = ?", (security_name, type_id, description, isin, ticker))
+    cur.execute("UPDATE securities SET yahoo_name = ?, logo = ?, type_id = ?, description = ?, isin = ? WHERE ticker = ?", (security_name, logo, type_id, description, isin, ticker))
 
     # check if company and insert company data
     if security_type == "EQUITY" and cur.execute(f"SELECT * FROM sec_filings WHERE cik = ? AND form_type_id IN {form_ids}", (cik,)).fetchone() is not None:
@@ -101,7 +104,10 @@ for index, ticker in enumerate(tickers):
             data["country"] = "The Bahamas"
         
         if data["country"] != "Netherlands Antilles":
-            country_id = cur.execute("SELECT id FROM countries WHERE name = ?", (data["country"],)).fetchone()[0]
+            if data["country"] is None:
+                country_id = cur.execute("SELECT id FROM countries WHERE name IS NULL").fetchone()[0]
+            else:
+                country_id = cur.execute("SELECT id FROM countries WHERE name = ?", (data["country"],)).fetchone()[0]
         else:
             country_id = None
             print(ticker, "failed", "country Netherlands Antilles")
@@ -116,68 +122,69 @@ for index, ticker in enumerate(tickers):
 
         cur.execute(
             """
-            UPDATE companies SET gics_industry_id = ?, website = ?, logo = ?, country_id = ?, city_id = ?,
+            UPDATE companies SET gics_industry_id = ?, website = ?, country_id = ?, city_id = ?,
             address1 = ?, address2 = ?, zip = ?, employees = ?
             WHERE security_id = ?
             """,
-            (industry_id, data["website"], logo, country_id, city_id, data["address1"], data["address2"], data["zip"], data["fullTimeEmployees"], security_id)
+            (industry_id, data["website"], country_id, city_id, data["address1"], data["address2"], data["zip"], data["fullTimeEmployees"], security_id)
         )
 
         # executives
-        executives = {}
-        for item in profile["executives"]:
-            name = item["name"]
-            position = item["position"]
-            salary = item["salary"]
-            age = item["age"]
-            born = item["born"]
+        if "executives" in profile.keys():
+            executives = {}
+            for item in profile["executives"]:
+                name = item["name"]
+                position = item["position"]
+                salary = item["salary"]
+                age = item["age"]
+                born = item["born"]
 
-            cur.execute("UPDATE executives SET age = ? WHERE name = ? AND born = ?", (age, name, born))
-            cur.execute("INSERT OR IGNORE INTO executives (name, age, born) VALUES (?, ?, ?)", (name, age, born))
-            executive_id = cur.execute("SELECT id FROM executives WHERE name = ?", (name,)).fetchone()[0]
+                cur.execute("UPDATE executives SET age = ? WHERE name = ? AND born = ?", (age, name, born))
+                cur.execute("INSERT OR IGNORE INTO executives (name, age, born) VALUES (?, ?, ?)", (name, age, born))
+                executive_id = cur.execute("SELECT id FROM executives WHERE name = ?", (name,)).fetchone()[0]
 
-            cur.execute("INSERT OR IGNORE INTO executive_positions (name) VALUES (?)", (position,))
-            position_id = cur.execute("SELECT id FROM executive_positions WHERE name = ?", (position,)).fetchone()[0]
+                cur.execute("INSERT OR IGNORE INTO executive_positions (name) VALUES (?)", (position,))
+                position_id = cur.execute("SELECT id FROM executive_positions WHERE name = ?", (position,)).fetchone()[0]
 
-            executives[(security_id, executive_id, position_id)] = salary
+                executives[(security_id, executive_id, position_id)] = salary
 
-        for (security_id, executive_id, position_id, salary) in \
-            cur.execute(
-                "SELECT security_id, executive_id, position_id, salary FROM company_executive_match WHERE security_id = ? AND executive_id = ? AND position_id = ?",
-                (security_id, executive_id, position_id)
-            ).fetchall():
-            if (security_id, executive_id, position_id) not in executives.keys():
-                if cur.execute(
-                    "SELECT discontinued FROM company_executive_match WHERE security_id = ? AND security_id = ? AND position_id = ?",
-                    (security_id, executive_id, position_id)
-                ).fetchone()[0] is None:
-                    cur.execute(
-                        "UPDATE company_executive_match SET discontinued = ? WHERE security_id = ? AND executive_id = ? AND position_id = ?", 
-                        (ts_today, security_id, executive_id, position_id)
-                    )
-                elif executives[(security_id, executive_id, position_id)] != salary:
-                    cur.execute(
-                        "UPDATE company_executive_match SET salary = ? WHERE security_id = ? AND executive_id = ? AND position_id = ?",
-                        (executives[(security_id, executive_id, position_id)], security_id, executive_id, position_id)
-                    )
-        
-        con.commit()
-
-        entries = cur.execute("SELECT security_id, executive_id, position_id FROM company_executive_match").fetchall()
-
-        for (security_id, executive_id, position_id), salary in executives.items():
-            if (security_id, executive_id, position_id) not in entries:
+            for (security_id, executive_id, position_id, salary) in \
                 cur.execute(
-                    "INSERT INTO company_executive_match (security_id, executive_id, position_id, salary, added) VALUES (?, ?, ?, ?, ?)",
-                    (security_id, executive_id, position_id, salary, ts_today)
-                )
-            else:
-                cur.execute(
-                    "UPDATE company_executive_match SET discontinued = NULL WHERE security_id = ? AND executive_id = ? AND position_id = ?",
+                    "SELECT security_id, executive_id, position_id, salary FROM company_executive_match WHERE security_id = ? AND executive_id = ? AND position_id = ?",
                     (security_id, executive_id, position_id)
-                )
-        
-        con.commit()
+                ).fetchall():
+                if (security_id, executive_id, position_id) not in executives.keys():
+                    if cur.execute(
+                        "SELECT discontinued FROM company_executive_match WHERE security_id = ? AND security_id = ? AND position_id = ?",
+                        (security_id, executive_id, position_id)
+                    ).fetchone()[0] is None:
+                        cur.execute(
+                            "UPDATE company_executive_match SET discontinued = ? WHERE security_id = ? AND executive_id = ? AND position_id = ?", 
+                            (ts_today, security_id, executive_id, position_id)
+                        )
+                    elif executives[(security_id, executive_id, position_id)] != salary:
+                        cur.execute(
+                            "UPDATE company_executive_match SET salary = ? WHERE security_id = ? AND executive_id = ? AND position_id = ?",
+                            (executives[(security_id, executive_id, position_id)], security_id, executive_id, position_id)
+                        )
+            
+            con.commit()
+
+            entries = cur.execute("SELECT security_id, executive_id, position_id FROM company_executive_match").fetchall()
+
+            for (security_id, executive_id, position_id), salary in executives.items():
+                if (security_id, executive_id, position_id) not in entries:
+                    cur.execute(
+                        "INSERT INTO company_executive_match (security_id, executive_id, position_id, salary, added) VALUES (?, ?, ?, ?, ?)",
+                        (security_id, executive_id, position_id, salary, ts_today)
+                    )
+                else:
+                    cur.execute(
+                        "UPDATE company_executive_match SET discontinued = NULL WHERE security_id = ? AND executive_id = ? AND position_id = ?",
+                        (security_id, executive_id, position_id)
+                    )
+            
+            con.commit()
 
         # fundamental data
 
@@ -276,11 +283,12 @@ for index, ticker in enumerate(tickers):
                 ts_month = int((date_month - dt.date(1970, 1, 1)).total_seconds())
 
                 cur.execute(
-                    "INSERT INTO recommendation_trend VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    "INSERT OR IGNORE INTO recommendation_trend VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (security_id,
                     ts_today,
                     ts_month,
-                    trend[calendar]["recommendations"],
+                    trend[calendar]["count"],
+
                     trend[calendar]["average"],
                     trend[calendar]["strong_buy"],
                     trend[calendar]["buy"],
