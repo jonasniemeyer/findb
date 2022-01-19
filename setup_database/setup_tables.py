@@ -156,7 +156,7 @@ cur.execute(
         utc_offset INTEGER,
         sec_name TEXT,
         isin TEXT,
-        exchange INTEGER,
+        exchange_id INTEGER,
         added INTEGER,
         discontinued INTEGER,
         old_name TEXT,
@@ -202,6 +202,7 @@ cur.execute(
         id INTEGER PRIMARY KEY,
         security_id INTEGER,
         source_id INTEGER,
+        type_id INTEGER,
         ts INTEGER,
         header TEXT,
         url TEXT,
@@ -213,6 +214,15 @@ cur.execute(
 cur.execute(
     """
     CREATE TABLE IF NOT EXISTS news_source (
+        id INTEGER PRIMARY KEY,
+        name TEXT UNIQUE
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS news_type (
         id INTEGER PRIMARY KEY,
         name TEXT UNIQUE
     )
