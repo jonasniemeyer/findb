@@ -1,9 +1,9 @@
 import os
-import datetime as dt
+import pandas as pd
 import json
 from finance_database import Database
 
-timestamp_today = int((dt.date.today() - dt.date(1970, 1, 1)).total_seconds())
+timestamp_today = int(pd.to_datetime(pd.to_datetime("today").date()).timestamp())
 
 db = Database()
 con = db.connection
@@ -23,14 +23,14 @@ for index, ticker in enumerate(tickers):
             data = data.items()
             financial_data = []
             for date, value in data:
-                date = dt.date.fromisoformat(date)
+                date = pd.to_datetime(date)
                 year = date.year
-                timestamp =  int((date - dt.date(1970, 1, 1)).total_seconds())
+                timestamp =  int(date.timestamp())
                 try:
                     fiscal_year_end = cur.execute("SELECT ts FROM fundamental_data_macrotrends WHERE security_id = ? AND quarter = 0", (security_id,)).fetchone()[0]
                 except:
                     break
-                fiscal_year_end = dt.date.fromtimestamp(fiscal_year_end)
+                fiscal_year_end = pd.to_datetime(fiscal_year_end, unit="s")
                 quarter = int(((date.month-fiscal_year_end.month)/3 + 3) % 4 + 1)
                 date.month - fiscal_year_end.month
                 financial_data.append((security_id, var_id, quarter, year, timestamp, value))

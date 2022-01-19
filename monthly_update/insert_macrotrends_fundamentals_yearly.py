@@ -1,9 +1,9 @@
 import os
-import datetime as dt
+import pandas as pd
 import json
 from finance_database import Database
 
-timestamp_today = int((dt.date.today() - dt.date(1970, 1, 1)).total_seconds())
+timestamp_today = int(pd.to_datetime(pd.to_datetime("today").date()).timestamp())
 
 db = Database()
 con = db.connection
@@ -23,9 +23,9 @@ for index, ticker in enumerate(tickers):
             data = data.items()
             financial_data = []
             for date, value in data:
-                date = dt.date.fromisoformat(date)
+                date = pd.to_datetime(date)
                 year = date.year
-                timestamp =  int((date - dt.date(1970, 1, 1)).total_seconds())
+                timestamp =  int(date.timestamp())
                 financial_data.append((security_id, var_id, 0, year, timestamp, value))
             cur.executemany("REPLACE INTO fundamental_data_macrotrends VALUES (?, ?, ?, ?, ?, ?)", financial_data)
     
