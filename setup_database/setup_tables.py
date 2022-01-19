@@ -95,17 +95,14 @@ cur.execute(
     """
 )
 
-try:
-    cur.executescript(
-        """
-        INSERT INTO financial_statement_types (name) VALUES ("income statement");
-        INSERT INTO financial_statement_types (name) VALUES ("balance sheet");
-        INSERT INTO financial_statement_types (name) VALUES ("cashflow statement");
-        INSERT INTO financial_statement_types (name) VALUES ("statement of changes in equity");
-        """
-    )
-except sqlite3.IntegrityError:
-    pass
+cur.executescript(
+    """
+    INSERT OR IGNORE INTO financial_statement_types (name) VALUES ("income statement");
+    INSERT OR IGNORE INTO financial_statement_types (name) VALUES ("balance sheet");
+    INSERT OR IGNORE INTO financial_statement_types (name) VALUES ("cashflow statement");
+    INSERT OR IGNORE INTO financial_statement_types (name) VALUES ("statement of changes in equity");
+    """
+)
 
 cur.execute(
     """
@@ -195,6 +192,29 @@ cur.execute(
         fiscal_year_end INTEGER,
         yahoo_fundamentals_updated INTEGER,
         macrotrends_fundamentals_updated INTEGER
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS news (
+        id INTEGER PRIMARY KEY,
+        security_id INTEGER,
+        source_id INTEGER,
+        ts INTEGER,
+        header TEXT,
+        url TEXT,
+        UNIQUE(security_id, source_id, url)
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS news_source (
+        id INTEGER PRIMARY KEY,
+        name TEXT UNIQUE
     )
     """
 )
@@ -433,7 +453,7 @@ cur.execute(
 cur.execute(
     """
     CREATE TABLE IF NOT EXISTS investment_managers (
-        id INTEGER PRIMARY KEY
+        id INTEGER PRIMARY KEY,
         cik INTEGER UNIQUE,
         name TEXT
     )
@@ -598,13 +618,12 @@ cur.execute(
     """
     CREATE TABLE IF NOT EXISTS commodity_prices (
         commodity_id INTEGER,
-        maturity_month INTEGER,
-        maturity_year INTEGER,
-        ts_maturity INTEGER,
+        maturity_date INTEGER,
         ts INTEGER,
         price REAL,
         volume INTEGER,
-        PRIMARY KEY(commodity_id, maturity_month, maturity_year, ts)
+        open_interest INTEGER,
+        PRIMARY KEY(commodity_id, maturity_date, ts)
     )
     """
 )
