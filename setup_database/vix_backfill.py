@@ -32,7 +32,7 @@ for url in urls:
         if isinstance(price, pd.Series):
             price = price.iloc[0]
             volume = volume.iloc[0]
-        items.append((maturity_ts, ts, price, volume))
+        items.append((maturity_ts, ts, price, int(volume)))
     cur.executemany(
         """
         INSERT OR IGNORE INTO vix_prices VALUES(?, ?, ?, ?)
