@@ -198,15 +198,24 @@ cur.execute(
 
 cur.execute(
     """
-    CREATE TABLE IF NOT EXISTS news (
+    CREATE TABLE IF NOT EXISTS security_news (
         id INTEGER PRIMARY KEY,
-        security_id INTEGER,
         source_id INTEGER,
         type_id INTEGER,
         ts INTEGER,
         header TEXT,
         url TEXT,
-        UNIQUE(security_id, source_id, url)
+        UNIQUE(source_id, type_id, url)
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS security_news_match (
+        security_id INTEGER,
+        news_id INTEGER,
+        PRIMARY KEY(security_id, news_id)
     )
     """
 )
