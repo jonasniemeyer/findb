@@ -364,7 +364,7 @@ cur.execute(
         ts INTEGER,
         value INTEGER,
         filing_id INTEGER,
-        PRIMARY KEY(security_id, quarter, year, variable_id)
+        PRIMARY KEY(security_id, variable_id, ts)
     )
     """
 )
@@ -389,7 +389,7 @@ cur.execute(
         year INTEGER,
         ts INTEGER,
         value INTEGER,
-        PRIMARY KEY(security_id, variable_id, quarter, year)
+        PRIMARY KEY(security_id, variable_id, ts)
     )
     """
 )
@@ -414,7 +414,7 @@ cur.execute(
         year INTEGER,
         ts INTEGER,
         value INTEGER,
-        PRIMARY KEY(security_id, variable_id, quarter, year)
+        PRIMARY KEY(security_id, variable_id, ts)
     )
     """
 )
