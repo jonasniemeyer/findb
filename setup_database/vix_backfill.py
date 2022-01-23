@@ -1,9 +1,14 @@
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
+import numpy as np
 from io import StringIO
 import datetime as dt
 from finance_database import Database
+from sqlite3 import register_adapter
+
+register_adapter(np.int64, lambda val: int(val))
+register_adapter(np.float64, lambda val: float(val))
 
 db = Database()
 con = db.connection
@@ -29,10 +34,10 @@ for url in urls:
         ts = int((index.date() - dt.date(1970,1,1)).total_seconds())
         price = df.loc[index, "Settle"]
         volume = df.loc[index, "Total Volume"]
-        if isinstance(price, pd.Series):
+        if isinstance(price, pd.Series): #some data is duplicate
             price = price.iloc[0]
             volume = volume.iloc[0]
-        items.append((maturity_ts, ts, price, int(volume)))
+        items.append((maturity_ts, ts, price, volume))
     cur.executemany(
         """
         INSERT OR IGNORE INTO vix_prices VALUES(?, ?, ?, ?)
