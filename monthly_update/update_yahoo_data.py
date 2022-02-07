@@ -82,7 +82,7 @@ for index, ticker in enumerate(tickers):
             "address1",
             "address2",
             "zip",
-            "fullTimeEmployees",
+            "employees",
             "industry",
             "sector"
         ):
@@ -90,57 +90,48 @@ for index, ticker in enumerate(tickers):
                 data[var] = profile[var]
             except:
                 data[var] = None
+            
+            if data[var] is None:
+                data[var] = ""
 
         #industry
-        if data["industry"] is not None:
-            cur.execute("INSERT OR IGNORE INTO gics_sectors (name) VALUES (?)", (data["sector"],))
-            sector_id = cur.execute("SELECT id FROM gics_sectors WHERE name = ?", (data["sector"],)).fetchone()[0]
-            cur.execute("INSERT OR IGNORE INTO gics_industries (name, sector_id) VALUES (?, ?)", (data["industry"], sector_id))
-            industry_id = cur.execute("SELECT id FROM gics_industries WHERE name = ?", (data["industry"],)).fetchone()[0]
-        else:
-            industry_id = None
+        cur.execute("INSERT OR IGNORE INTO gics_sectors (name) VALUES (?)", (data["sector"],))
+        sector_id = cur.execute("SELECT id FROM gics_sectors WHERE name = ?", (data["sector"],)).fetchone()[0]
+        cur.execute("INSERT OR IGNORE INTO gics_industries (name, sector_id) VALUES (?, ?)", (data["industry"], sector_id))
+        industry_id = cur.execute("SELECT id FROM gics_industries WHERE name = ?", (data["industry"],)).fetchone()[0]
         
         if data["country"] == "Bahamas":
             data["country"] = "The Bahamas"
         
         if data["country"] != "Netherlands Antilles":
-            if data["country"] is None:
-                country_id = cur.execute("SELECT id FROM countries WHERE name IS NULL").fetchone()[0]
-            else:
-                country_id = cur.execute("SELECT id FROM countries WHERE name = ?", (data["country"],)).fetchone()[0]
+            country_id = cur.execute("SELECT id FROM countries WHERE name = ?", (data["country"],)).fetchone()[0]
         else:
-            country_id = None
             print(ticker, "failed", "country Netherlands Antilles")
             continue
 
         cur.execute("INSERT OR IGNORE INTO cities (name, country_id) VALUES (?, ?)", (data["city"], country_id))
-        if data["city"] is None:
-            city_id = cur.execute("SELECT id FROM cities WHERE name IS NULL AND country_id = ?", (country_id,)).fetchone()[0]
-        else:
-            city_id = cur.execute("SELECT id FROM cities WHERE name = ? AND country_id = ?", (data["city"], country_id)).fetchone()[0]
+        city_id = cur.execute("SELECT id FROM cities WHERE name = ? AND country_id = ?", (data["city"], country_id)).fetchone()[0]
         
-
         cur.execute(
             """
             UPDATE companies SET gics_industry_id = ?, website = ?, country_id = ?, city_id = ?,
             address1 = ?, address2 = ?, zip = ?, employees = ?
             WHERE security_id = ?
             """,
-            (industry_id, data["website"], country_id, city_id, data["address1"], data["address2"], data["zip"], data["fullTimeEmployees"], security_id)
+            (industry_id, data["website"], country_id, city_id, data["address1"], data["address2"], data["zip"], data["employees"], security_id)
         )
 
         # executives
         if "executives" in profile.keys():
             executives = {}
             for item in profile["executives"]:
-                name = item["name"]
-                position = item["position"]
-                salary = item["salary"]
-                age = item["age"]
-                born = item["born"]
+                name = item["name"] if item["name"] is not None else ""
+                position = item["position"] if item["position"] is not None else ""
+                salary = item["salary"] if item["salary"] is not None else ""
+                age = item["age"] if item["age"] is not None else ""
+                born = item["born"] if item["born"] is not None else ""
 
-                cur.execute("UPDATE executives SET age = ? WHERE name = ? AND born = ?", (age, name, born))
-                cur.execute("INSERT OR IGNORE INTO executives (name, age, born) VALUES (?, ?, ?)", (name, age, born))
+                cur.execute("REPLACE INTO executives (name, age, born) VALUES (?, ?, ?)", (name, age, born))
                 executive_id = cur.execute("SELECT id FROM executives WHERE name = ?", (name,)).fetchone()[0]
 
                 cur.execute("INSERT OR IGNORE INTO executive_positions (name) VALUES (?)", (position,))
@@ -187,7 +178,6 @@ for index, ticker in enumerate(tickers):
             con.commit()
 
         # fundamental data
-
         try:
             statements = reader.financial_statement()
         except:
