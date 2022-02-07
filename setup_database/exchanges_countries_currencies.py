@@ -81,6 +81,10 @@ cur.execute(
     ("Europe",)
 )
 
+europe_id = cur.execute("SELECT id FROM countries WHERE name = ?", ("Europe",)).fetchone()[0]
+eur_id = cur.execute("SELECT id FROM currencies WHERE name = ?", ("Euro",)).fetchone()[0]
+cur.execute("INSERT OR IGNORE INTO country_currency_match VALUES (?, ?)", (europe_id, eur_id))
+
 cur.execute(
     """
     INSERT OR IGNORE INTO countries (name)
@@ -88,10 +92,6 @@ cur.execute(
     """,
     (None,)
 )
-
-europe_id = cur.execute("SELECT id FROM countries WHERE name = ?", ("Europe",)).fetchone()[0]
-eur_id = cur.execute("SELECT id FROM currencies WHERE name = ?", ("Euro",)).fetchone()[0]
-cur.execute("INSERT OR IGNORE INTO country_currency_match VALUES (?, ?)", (europe_id, eur_id))
 
 cur.execute(
     """
