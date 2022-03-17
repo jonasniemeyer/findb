@@ -32,6 +32,7 @@ for index, ticker in enumerate(tickers):
                 year = date.year
                 timestamp =  int(date.timestamp())
                 quarter = (date.quarter+3-fiscal_year_end_quarter)%4+1
+                year = year + 1 if (fiscal_year_end_quarter < 4 and date.quarter > fiscal_year_end_quarter) else year
                 financial_data.append((security_id, var_id, quarter, year, timestamp, value))
             cur.executemany("REPLACE INTO fundamental_data_macrotrends VALUES (?, ?, ?, ?, ?, ?)", financial_data)
     
