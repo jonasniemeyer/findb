@@ -1,9 +1,9 @@
 from finance_data import YahooReader
 from finance_database import Database
-import datetime as dt
+import pandas as pd
 from dateutil.relativedelta import relativedelta
 
-ts_today = int((dt.date.today() - dt.date(1970,1,1)).total_seconds())
+ts_today = int(pd.to_datetime(pd.to_datetime("today").date()).timestamp())
 
 db = Database()
 con = db.connection
@@ -177,7 +177,7 @@ for index, ticker in enumerate(tickers):
             
             con.commit()
 
-        # fundamental data
+        #fundamental data
         try:
             statements = reader.financial_statement()
         except:
@@ -186,9 +186,9 @@ for index, ticker in enumerate(tickers):
             for statement in statements.keys():
                 statement_name = statement.replace("_", " ")
                 for date_iso in statements[statement].keys():
-                    date = dt.date.fromisoformat(date_iso)
+                    date = pd.to_datetime(date_iso)
                     year = date.year
-                    ts_statement = int((date - dt.date(1970, 1, 1)).total_seconds())
+                    ts_statement = int(date.timestamp())
                     for variable in statements[statement][date_iso]:
                         statement_id = cur.execute("SELECT id FROM financial_statement_types WHERE name = ?", (statement_name, )).fetchone()[0]
                         cur.execute("INSERT OR IGNORE INTO fundamental_variables_yahoo (name, statement_id) VALUES (?, ?)", (variable, statement_id))
@@ -197,7 +197,7 @@ for index, ticker in enumerate(tickers):
                             "REPLACE INTO fundamental_data_yahoo VALUES (?, ?, ?, ?, ?, ?)",
                             (security_id, variable_id, 0, year, ts_statement, statements[statement][date_iso][variable])
                         )
-            fiscal_end_quarter = (date.month - 1 // 3) + 1
+            fiscal_year_end_quarter = date.quarter
             cur.execute("UPDATE companies SET fiscal_year_end = ? WHERE security_id = ?",(date.month ,security_id))
             try:
                 statements = reader.financial_statement(quarterly=True)
@@ -207,11 +207,11 @@ for index, ticker in enumerate(tickers):
                 for statement in statements.keys():
                     statement_name = statement.replace("_", " ")
                     for date_iso in statements[statement].keys():
-                        date = dt.date.fromisoformat(date_iso)
+                        date = pd.to_datetime(date_iso)
                         year = date.year
-                        quarter = (date.month - 1 // 3) + 1
-                        quarter = (quarter + 4 - fiscal_end_quarter - 1) // 4 + 1
-                        ts_statement = int((date - dt.date(1970, 1, 1)).total_seconds())
+                        ts_statement = int(date.timestamp())
+                        quarter = (date.quarter+3-fiscal_year_end_quarter)%4+1
+                        year = year + 1 if (fiscal_year_end_quarter < 4 and date.quarter > fiscal_year_end_quarter) else year
                         for variable in statements[statement][date_iso]:
                             statement_id = cur.execute("SELECT id FROM financial_statement_types WHERE name = ?", (statement_name, )).fetchone()[0]
                             cur.execute("INSERT OR IGNORE INTO fundamental_variables_yahoo (name, statement_id) VALUES (?, ?)", (variable, statement_id))
@@ -228,7 +228,7 @@ for index, ticker in enumerate(tickers):
             pass
         else:
             for dct in recommendations:
-                ts_rated = int((dt.date.fromisoformat(dct["date"]) - dt.date(1970, 1, 1)).total_seconds())
+                ts_rated = int(pd.to_datetime(dct["date"]).timestamp())
                 name = dct["firm"]
                 old = dct["old"]
                 new = dct["new"]
@@ -257,10 +257,10 @@ for index, ticker in enumerate(tickers):
         except:
             pass
         else:
-            year = dt.date.today().year
-            month = dt.date.today().month
+            year = pd.to_datetime("today").year
+            month = pd.to_datetime("today").month
             for calendar in trend.keys():
-                date_month = dt.date(year, month, 1)
+                date_month = pd.to_datetime(f"{year}-{month}-01")
                 if calendar == "today":
                     pass
                 elif calendar == "-1month":
@@ -270,7 +270,7 @@ for index, ticker in enumerate(tickers):
                 elif calendar == "-3months":
                     date_month = date_month - relativedelta(months=3)
                 
-                ts_month = int((date_month - dt.date(1970, 1, 1)).total_seconds())
+                ts_month = int(date_month.timestamp())
 
                 cur.execute(
                     "INSERT OR IGNORE INTO recommendation_trend VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
