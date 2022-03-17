@@ -3,6 +3,7 @@ from finance_database import Database
 import os
 import json
 import concurrent.futures
+import selenium
 
 db = Database()
 con = db.connection
@@ -24,7 +25,7 @@ def scrape_data(ticker):
 
 if __name__ == "__main__":
     print(len(tickers))
-    if not os.path.exists("fundamentals"):
+    if not os.path.exists("fundamentals/quarterly"):
         os.mkdir("fundamentals/quarterly")
     with concurrent.futures.ProcessPoolExecutor(4) as p:
         p.map(scrape_data, tickers)
