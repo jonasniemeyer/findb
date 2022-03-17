@@ -11,8 +11,7 @@ if __name__ == '__main__':
     data = reader.parse()
 
     for statement in data.keys():
-        statement_ = statement.replace("_", " ")
-        statement_id = cur.execute("SELECT id FROM financial_statement_types WHERE name = ?", (statement_,)).fetchone()[0]
+        statement_id = cur.execute("SELECT id FROM financial_statement_types WHERE name = ?", (statement,)).fetchone()[0]
         for variable in data[statement]:
             cur.execute("INSERT OR IGNORE INTO fundamental_variables_macrotrends (name, statement_id) VALUES (?, ?)", (variable, statement_id))
 

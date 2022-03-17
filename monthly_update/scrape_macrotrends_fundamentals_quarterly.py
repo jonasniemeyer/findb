@@ -3,7 +3,6 @@ from finance_database import Database
 import os
 import json
 import concurrent.futures
-import selenium
 
 db = Database()
 con = db.connection
