@@ -3,7 +3,9 @@ from finance_database import Database
 import pandas as pd
 from dateutil.relativedelta import relativedelta
 
-ts_today = int(pd.to_datetime(pd.to_datetime("today").date()).timestamp())
+date_today = pd.to_datetime("today").date()
+ts_today = int(pd.to_datetime(date_today).timestamp())
+ts_today_month_start = int(pd.to_datetime(f"{date_today.year}-{date_today.month}-01").timestamp())
 
 db = Database()
 con = db.connection
@@ -100,6 +102,7 @@ for index, ticker in enumerate(tickers):
         cur.execute("INSERT OR IGNORE INTO gics_industries (name, sector_id) VALUES (?, ?)", (data["industry"], sector_id))
         industry_id = cur.execute("SELECT id FROM gics_industries WHERE name = ?", (data["industry"],)).fetchone()[0]
         
+        #profile data
         if data["country"] == "Bahamas":
             data["country"] = "The Bahamas"
         
@@ -275,10 +278,9 @@ for index, ticker in enumerate(tickers):
                 cur.execute(
                     "INSERT OR IGNORE INTO recommendation_trend VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (security_id,
-                    ts_today,
+                    ts_today_month_start,
                     ts_month,
                     trend[calendar]["count"],
-
                     trend[calendar]["average"],
                     trend[calendar]["strong_buy"],
                     trend[calendar]["buy"],
