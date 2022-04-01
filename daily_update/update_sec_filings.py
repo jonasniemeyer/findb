@@ -37,12 +37,11 @@ def get_filing_lists(first_year=1900, first_quarter=0):
                     if day_url in filing_lists:
                         continue
                     ts_today = int((dt.date.fromisoformat(date) - dt.date(1970, 1, 1)).total_seconds())
-                    if cur.execute("SELECT url FROM sec_daily_filings_lists WHERE ts = ?", (ts_today, )).fetchone() is None:
-                        cur.execute("INSERT INTO sec_daily_filings_lists (ts, url) VALUES (?, ?)", (ts_today, day_url))
+                    cur.execute("INSERT OR IGNORE INTO sec_daily_filings_lists (ts, url, parsed) VALUES (?, ?, ?)", (ts_today, day_url, False))
             con.commit()
 
 def get_filings():
-    filing_lists = cur.execute("SELECT url FROM sec_daily_filings_lists WHERE parsed IS ?", (None,)).fetchall()
+    filing_lists = cur.execute("SELECT url FROM sec_daily_filings_lists WHERE parsed = ?", (False,)).fetchall()
     filing_lists = [item[0] for item in filing_lists]
     for index, day_url in enumerate(filing_lists):
         print(f"{index} of {len(filing_lists)}: {day_url}")
@@ -60,17 +59,15 @@ def get_filings():
             ts_filed = int((dt.date.fromisoformat(date) - dt.date(1970, 1, 1)).total_seconds())
             href_split = href.strip().split("/")
             href = f"{sec_base_url}/edgar/data/{href_split[-2]}/{href_split[-1]}"
-            if cur.execute("SELECT id FROM form_types WHERE name = ?", (form,)).fetchone() is None:
-                cur.execute("INSERT INTO form_types (name) VALUES (?)", (form,))
+            cur.execute("INSERT OR IGNORE INTO form_types (name) VALUES (?)", (form,))
             form_id = cur.execute("SELECT id FROM form_types WHERE name = ?", (form,)).fetchone()[0]
-            if cur.execute("SELECT url FROM sec_filings WHERE cik = ? AND form_type_id = ? AND ts_filed = ? AND url = ?", (cik, form_id, ts_filed, href)).fetchone() is None:
-                cur.execute(
-                    """
-                    INSERT INTO sec_filings (cik, form_type_id, ts_filed, url)
-                    VALUES (?, ?, ?, ?)
-                    """,
-                    (cik, form_id, ts_filed, href)
-                )
+            cur.execute(
+                """
+                INSERT OR IGNORE INTO sec_filings (cik, form_type_id, ts_filed, url, parsed)
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (cik, form_id, ts_filed, href, False)
+            )
         cur.execute("UPDATE sec_daily_filings_lists SET parsed = ? WHERE url = ?", (True, day_url))
         con.commit()
 
