@@ -40,7 +40,7 @@ for url in urls:
         items.append((maturity_ts, ts, price, volume))
     cur.executemany(
         """
-        INSERT OR IGNORE INTO vix_prices VALUES(?, ?, ?, ?)
+        REPLACE INTO vix_prices VALUES(?, ?, ?, ?)
         """,
         items
     )
