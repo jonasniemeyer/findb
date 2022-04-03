@@ -29,8 +29,7 @@ for index, ticker in enumerate(tickers):
                 financial_data.append((security_id, var_id, 0, year, timestamp, value))
             cur.executemany("REPLACE INTO fundamental_data_macrotrends VALUES (?, ?, ?, ?, ?, ?)", financial_data)
     
-    cur.execute("UPDATE companies SET macrotrends_fundamentals_updated = ? WHERE security_id = ?", (timestamp_today, security_id))
-    #os.remove(f"fundamentals/yearly/{ticker}.json")
+    cur.execute("UPDATE companies SET macrotrends_fundamentals_updated = ?, fiscal_year_end = ? WHERE security_id = ?", (timestamp_today, date.month, security_id))
     
 con.commit()
 con.close()

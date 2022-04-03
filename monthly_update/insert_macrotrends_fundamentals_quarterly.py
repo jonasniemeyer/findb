@@ -19,7 +19,8 @@ for index, ticker in enumerate(tickers):
         fiscal_year_end = cur.execute("SELECT ts FROM fundamental_data_macrotrends WHERE security_id = ? AND quarter = 0", (security_id,)).fetchone()[0]
     except:
         continue
-    fiscal_year_end_quarter = pd.to_datetime(fiscal_year_end, unit="s").quarter
+    fiscal_year_end = pd.to_datetime(fiscal_year_end, unit="s")
+    fiscal_year_end_quarter = fiscal_year_end.quarter
     with open(fr"fundamentals/quarterly/{ticker}.json", "r") as f:
         dct = json.load(f)
     for statement in dct.keys():
@@ -36,8 +37,7 @@ for index, ticker in enumerate(tickers):
                 financial_data.append((security_id, var_id, quarter, year, timestamp, value))
             cur.executemany("REPLACE INTO fundamental_data_macrotrends VALUES (?, ?, ?, ?, ?, ?)", financial_data)
     
-    cur.execute("UPDATE companies SET macrotrends_fundamentals_updated = ? WHERE security_id = ?", (timestamp_today, security_id))
-    #os.remove(f"fundamentals/quarterly/{ticker}.json")
+    cur.execute("UPDATE companies SET macrotrends_fundamentals_updated = ?, fiscal_year_end = ? WHERE security_id = ?", (timestamp_today, fiscal_year_end.month, security_id))
     
 con.commit()
 con.close()
