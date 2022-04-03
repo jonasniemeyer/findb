@@ -106,11 +106,10 @@ for index, ticker in enumerate(tickers):
         if data["country"] == "Bahamas":
             data["country"] = "The Bahamas"
         
-        if data["country"] != "Netherlands Antilles":
-            country_id = cur.execute("SELECT id FROM countries WHERE name = ?", (data["country"],)).fetchone()[0]
-        else:
+        if data["country"] == "Netherlands Antilles":
             print(ticker, "failed", "country Netherlands Antilles")
             continue
+        country_id = cur.execute("SELECT id FROM countries WHERE name = ?", (data["country"],)).fetchone()[0]
 
         cur.execute("INSERT OR IGNORE INTO cities (name, country_id) VALUES (?, ?)", (data["city"], country_id))
         city_id = cur.execute("SELECT id FROM cities WHERE name = ? AND country_id = ?", (data["city"], country_id)).fetchone()[0]
@@ -201,7 +200,7 @@ for index, ticker in enumerate(tickers):
                             (security_id, variable_id, 0, year, ts_statement, statements[statement][date_iso][variable])
                         )
             fiscal_year_end_quarter = date.quarter
-            cur.execute("UPDATE companies SET fiscal_year_end = ? WHERE security_id = ?",(date.month ,security_id))
+            cur.execute("UPDATE companies SET fiscal_year_end = ? WHERE security_id = ?", (date.month ,security_id))
             try:
                 statements = reader.financial_statement(quarterly=True)
             except:
@@ -232,14 +231,14 @@ for index, ticker in enumerate(tickers):
         else:
             for dct in recommendations:
                 ts_rated = int(pd.to_datetime(dct["date"]).timestamp())
-                name = dct["firm"]
+                name = dct["company"]
                 old = dct["old"]
                 new = dct["new"]
                 change = dct["change"]
                 
                 cur.execute("INSERT OR IGNORE INTO analysts (name) VALUES (?)", (name, ))
                 analyst_id = cur.execute("SELECT id FROM analysts WHERE name = ?", (name, )).fetchone()[0]
-
+                
                 cur.execute("INSERT OR IGNORE INTO ratings (name) VALUES (?)", (old, ))
                 old_id = cur.execute("SELECT id FROM ratings WHERE name = ?", (old, )).fetchone()[0]
 
