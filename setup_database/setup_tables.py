@@ -191,7 +191,8 @@ cur.execute(
         employees INTEGER,
         fiscal_year_end INTEGER,
         yahoo_fundamentals_updated INTEGER,
-        macrotrends_fundamentals_updated INTEGER
+        macrotrends_fundamentals_updated INTEGER,
+        tipranks_data_updated INTEGER
     )
     """
 )
