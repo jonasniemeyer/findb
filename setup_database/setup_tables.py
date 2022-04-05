@@ -329,7 +329,6 @@ cur.execute(
     """
     CREATE TABLE IF NOT EXISTS recommendation_trend (
         security_id INTEGER,
-        ts INTEGER,
         month INTEGER,
         number INTEGER,
         average REAL,
@@ -699,6 +698,11 @@ cur.execute(
     )
     """
 )
+
+# ===========================================================
+# ===================== Tipranks ============================
+# ===========================================================
+
 
 con.commit()
 con.close()

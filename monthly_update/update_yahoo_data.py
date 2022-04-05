@@ -5,7 +5,6 @@ from dateutil.relativedelta import relativedelta
 
 date_today = pd.to_datetime("today").date()
 ts_today = int(pd.to_datetime(date_today).timestamp())
-ts_today_month_start = int(pd.to_datetime(f"{date_today.year}-{date_today.month}-01").timestamp())
 
 db = Database()
 con = db.connection
@@ -275,9 +274,8 @@ for index, ticker in enumerate(tickers):
                 ts_month = int(date_month.timestamp())
 
                 cur.execute(
-                    "INSERT OR IGNORE INTO recommendation_trend VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    "REPLACE INTO recommendation_trend VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (security_id,
-                    ts_today_month_start,
                     ts_month,
                     trend[calendar]["count"],
                     trend[calendar]["average"],
