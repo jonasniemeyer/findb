@@ -769,8 +769,8 @@ cur.execute(
         security_id INTEGER,
         ts INTEGER,
         price_target REAL,
-        url TEXT,
         title TEXT,
+        url TEXT,
         PRIMARY KEY(analyst_id, security_id, ts)
     )
     """
