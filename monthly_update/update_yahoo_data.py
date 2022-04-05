@@ -159,8 +159,6 @@ for index, ticker in enumerate(tickers):
                             "UPDATE company_executive_match SET salary = ? WHERE security_id = ? AND executive_id = ? AND position_id = ?",
                             (executives[(security_id, executive_id, position_id)], security_id, executive_id, position_id)
                         )
-            
-            con.commit()
 
             entries = cur.execute("SELECT security_id, executive_id, position_id FROM company_executive_match").fetchall()
 
@@ -175,8 +173,6 @@ for index, ticker in enumerate(tickers):
                         "UPDATE company_executive_match SET discontinued = NULL WHERE security_id = ? AND executive_id = ? AND position_id = ?",
                         (security_id, executive_id, position_id)
                     )
-            
-            con.commit()
 
         #fundamental data
         try:

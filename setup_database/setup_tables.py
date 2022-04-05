@@ -743,7 +743,7 @@ cur.execute(
         name TEXT UNIQUE,
         image BLOB,
         analyst_company_id INTEGER,
-        rank REAL,
+        rank INTEGER,
         stars REAL,
         successful_recommendations INTEGER,
         total_recommendations INTEGER,
