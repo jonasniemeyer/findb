@@ -397,7 +397,7 @@ cur.execute(
     """
     CREATE TABLE IF NOT EXISTS fundamental_variables_yahoo (
         id INTEGER PRIMARY KEY,
-        name TEXT, NOT NULL
+        name TEXT NOT NULL,
         statement_id INTEGER NOT NULL,
         UNIQUE(name, statement_id)
     )
@@ -553,7 +553,7 @@ cur.execute(
     CREATE TABLE IF NOT EXISTS sic_industries (
         id INTEGER PRIMARY KEY,
         name TEXT NOT NULL,
-        no_businesses INTEGER NOT NULL
+        no_businesses INTEGER NOT NULL,
         industry_group_id INTEGER,
         major_group_id INTEGER,
         division_id INTEGER NOT NULL,
