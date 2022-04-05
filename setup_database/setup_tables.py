@@ -295,7 +295,7 @@ cur.execute(
 
 cur.execute(
     """
-    CREATE TABLE IF NOT EXISTS analysts (
+    CREATE TABLE IF NOT EXISTS analysts_yahoo (
         id INTEGER PRIMARY KEY,
         name TEXT UNIQUE NOT NULL
     )
@@ -304,7 +304,7 @@ cur.execute(
 
 cur.execute(
     """
-    CREATE TABLE IF NOT EXISTS ratings (
+    CREATE TABLE IF NOT EXISTS ratings_yahoo (
         id INTEGER PRIMARY KEY,
         name TEXT UNIQUE NOT NULL
     )
@@ -313,7 +313,7 @@ cur.execute(
 
 cur.execute(
     """
-    CREATE TABLE IF NOT EXISTS analyst_recommendations (
+    CREATE TABLE IF NOT EXISTS analyst_recommendations_yahoo (
         analyst_id INTEGER,
         security_id INTEGER,
         ts INTEGER,
@@ -327,7 +327,7 @@ cur.execute(
 
 cur.execute(
     """
-    CREATE TABLE IF NOT EXISTS recommendation_trend (
+    CREATE TABLE IF NOT EXISTS recommendation_trend_yahoo (
         security_id INTEGER,
         month INTEGER,
         number INTEGER,
