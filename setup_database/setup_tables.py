@@ -337,7 +337,7 @@ cur.execute(
         hold INTEGER,
         sell INTEGER,
         strong_sell INTEGER,
-        PRIMARY KEY(security_id, ts, month)
+        PRIMARY KEY(security_id, month)
     )
     """
 )
@@ -703,6 +703,118 @@ cur.execute(
 # ===================== Tipranks ============================
 # ===========================================================
 
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT exists recommendation_trend_tipranks (
+        security_id INTEGER,
+        week INTEGER,
+        number INTEGER,
+        average REAL,
+        buy INTEGER,
+        hold INTEGER,
+        sell INTEGER,
+        average_price_target REAL,
+        PRIMARY KEY(security_id, week)
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT exists news_sentiment_tipranks (
+        security_id INTEGER,
+        week INTEGER,
+        number INTEGER,
+        average REAL,
+        buy INTEGER,
+        hold INTEGER,
+        sell INTEGER,
+        PRIMARY KEY(security_id, week)
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT exists analysts_tipranks (
+        id INTEGER PRIMARY KEY,
+        name TEXT UNIQUE,
+        image BLOB,
+        company_id INTEGER,
+        rank REAL,
+        stars REAL,
+        successful_recommendations INTEGER,
+        total_recommendations INTEGER,
+        percentage_successful_recommendations REAL,
+        average_rating_return REAL
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT exists analyst_companies_tipranks (
+        id INTEGER PRIMARY KEY,
+        name TEXT UNIQUE
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS analyst_recommendations_tipranks (
+        analyst_id INTEGER,
+        security_id INTEGER,
+        ts INTEGER,
+        price_target REAL,
+        url TEXT,
+        title TEXT,
+        PRIMARY KEY(analyst_id, security_id, ts)
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS analyst_stock_summary_tipranks (
+        analyst_id INTEGER,
+        security_id INTEGER,
+        success_rate REAL,
+        average_rating_return REAL,
+        total_recommendations INTEGER,
+        positive_recommendations INTEGER,
+        PRIMARY KEY(analyst_id, security_id)
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT exists institutionals_tipranks (
+        id INTEGER PRIMARY KEY,
+        name TEXT UNIQUE,
+        manager TEXT,
+        image BLOB,
+        rank INTEGER,
+        stars REAL
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS institutional_holdings_tipranks (
+        institutional_id INTEGER,
+        security_id INTEGER,
+        ts INTEGER,
+        value INTEGER,
+        change REAL,
+        percentage_of_portfolio REAL,
+        PRIMARY KEY(institutional_id, security_id, ts)
+    )
+    """
+)
 
 con.commit()
 con.close()
