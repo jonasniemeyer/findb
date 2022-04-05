@@ -235,20 +235,20 @@ for index, ticker in enumerate(tickers):
                 new = dct["new"]
                 change = dct["change"]
                 
-                cur.execute("INSERT OR IGNORE INTO analysts (name) VALUES (?)", (name, ))
-                analyst_id = cur.execute("SELECT id FROM analysts WHERE name = ?", (name, )).fetchone()[0]
+                cur.execute("INSERT OR IGNORE INTO analyst_companies_yahoo (name) VALUES (?)", (name, ))
+                analyst_id = cur.execute("SELECT id FROM analyst_companies_yahoo WHERE name = ?", (name, )).fetchone()[0]
                 
-                cur.execute("INSERT OR IGNORE INTO ratings (name) VALUES (?)", (old, ))
-                old_id = cur.execute("SELECT id FROM ratings WHERE name = ?", (old, )).fetchone()[0]
+                cur.execute("INSERT OR IGNORE INTO ratings_yahoo (name) VALUES (?)", (old, ))
+                old_id = cur.execute("SELECT id FROM ratings_yahoo WHERE name = ?", (old, )).fetchone()[0]
 
-                cur.execute("INSERT OR IGNORE INTO ratings (name) VALUES (?)", (new, ))
-                new_id = cur.execute("SELECT id FROM ratings WHERE name = ?", (new, )).fetchone()[0]
+                cur.execute("INSERT OR IGNORE INTO ratings_yahoo (name) VALUES (?)", (new, ))
+                new_id = cur.execute("SELECT id FROM ratings_yahoo WHERE name = ?", (new, )).fetchone()[0]
 
-                cur.execute("INSERT OR IGNORE INTO ratings (name) VALUES (?)", (change, ))
-                change_id = cur.execute("SELECT id FROM ratings WHERE name = ?", (change, )).fetchone()[0]
+                cur.execute("INSERT OR IGNORE INTO ratings_yahoo (name) VALUES (?)", (change, ))
+                change_id = cur.execute("SELECT id FROM ratings_yahoo WHERE name = ?", (change, )).fetchone()[0]
 
                 cur.execute(
-                    "REPLACE INTO analyst_recommendations VALUES (?, ?, ?, ?, ?, ?)",
+                    "REPLACE INTO analyst_recommendations_yahoo VALUES (?, ?, ?, ?, ?, ?)",
                     (analyst_id, security_id, ts_rated, old_id, new_id, change_id)
                 )
 
@@ -274,7 +274,7 @@ for index, ticker in enumerate(tickers):
                 ts_month = int(date_month.timestamp())
 
                 cur.execute(
-                    "REPLACE INTO recommendation_trend VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    "REPLACE INTO recommendation_trend_yahoo VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (security_id,
                     ts_month,
                     trend[calendar]["count"],
@@ -291,5 +291,3 @@ for index, ticker in enumerate(tickers):
 
 con.commit()
 con.close()
-
-
