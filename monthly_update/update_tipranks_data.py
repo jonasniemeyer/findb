@@ -53,7 +53,9 @@ for index, ticker in enumerate(tickers):
     
     try:
         isin = reader.isin
-        cur.execute("UPDATE securities SET isin = ? WHERE ticker = ?", (isin, ticker))
+        isin_stored = cur.execute("SELECT isin FROM securities ticker = ?", (ticker,)).fetchone()[0]
+        if isin_stored is None:
+            cur.execute("UPDATE securities SET isin = ? WHERE ticker = ?", (isin, ticker))
     except:
         pass
 
