@@ -1,4 +1,4 @@
-from finance_data import FrenchReader
+from finance_data import FrenchReader, DatasetError
 from finance_database import Database
 import datetime as dt
 
@@ -9,11 +9,16 @@ con = db.connection
 cur = db.cursor
 
 datasets = FrenchReader.datasets()
+length = len(datasets)
 for index, dataset in enumerate(datasets):
-    print(f"{index} of {len(datasets)}")
+    print(f"{index} of {length}: {dataset}")
     cur.execute("INSERT OR IGNORE INTO french_datasets (name, updated) VALUES (?, ?)", (dataset, ts))
     dataset_id = cur.execute("SELECT id FROM french_datasets WHERE name = ?", (dataset,)).fetchone()[0]
-    dfs = FrenchReader(dataset, timestamps=True).read()
+    try:
+        dfs = FrenchReader(dataset, timestamps=True).read()
+    except DatasetError:
+        print("\tfailed")
+        continue
     for category in dfs.keys():
         cur.execute("INSERT OR IGNORE INTO french_categories (name) VALUES (?)", (category,))
         category_id = cur.execute("SELECT id FROM french_categories WHERE name = ?", (category, )).fetchone()[0]
