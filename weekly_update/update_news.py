@@ -10,8 +10,8 @@ if dt.date.today().weekday() == 6:
 
     tickers = cur.execute("SELECT id, ticker FROM securities WHERE discontinued IS NULL ORDER BY ticker ASC").fetchall()
 
-    cur.execute("INSERT OR IGNORE INTO news_source (name) VALUES (?)", ("seeking alpha",))
-    source_id = cur.execute("SELECT id FROM news_source WHERE name = ?", ("seeking alpha",)).fetchone()[0]
+    cur.execute("INSERT OR IGNORE INTO news_source (name) VALUES (?)", ("Seeking Alpha",))
+    source_id = cur.execute("SELECT id FROM news_source WHERE name = ?", ("Seeking Alpha",)).fetchone()[0]
 
     length = len(tickers)
 
