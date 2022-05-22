@@ -41,12 +41,12 @@ tickers = cur.execute(
     """
 ).fetchall()
 tickers = [item[0] for item in tickers]
-
 length = len(tickers)
+
 for index, ticker in enumerate(tickers):
     if index % 100 == 0:
         con.commit()
-    print(ticker, index, "of", length)
+    print(f"{index} of {length}: {ticker}")
     reader = TipranksReader(ticker)
 
     security_id = cur.execute("SELECT id FROM securities WHERE ticker = ?", (ticker,)).fetchone()[0]

@@ -21,10 +21,11 @@ soup = BeautifulSoup(html, "lxml")
 tags = soup.find_all("a", {"class": "link"})
 
 urls = [base_url + tag.get("href") for tag in tags if "products/csv/VX" in tag.get("href")]
+length = len(urls)
 
-for url in urls:
+for i, url in enumerate(urls):
     items = []
-    print(url)
+    print(f"{i} of {length}: {url}")
     data = requests.get(url).text
     df = pd.read_csv(StringIO(data), index_col=0)
     df.index = pd.to_datetime(df.index)
