@@ -318,7 +318,7 @@ cur.execute(
         analyst_company_id INTEGER,
         security_id INTEGER,
         ts INTEGER,
-        old INTEGER NOT NULL,
+        old INTEGER,
         new INTEGER NOT NULL,
         change INTEGER NOT NULL,
         PRIMARY KEY(analyst_company_id, security_id, ts)
@@ -813,6 +813,40 @@ cur.execute(
         change REAL,
         percentage_of_portfolio REAL,
         PRIMARY KEY(institutional_id, security_id, ts)
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS analyst_companies_finviz (
+        id INTEGER PRIMARY KEY,
+        name TEXT UNIQUE NOT NULL
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS ratings_finviz (
+        id INTEGER PRIMARY KEY,
+        name TEXT UNIQUE NOT NULL
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS analyst_recommendations_finviz (
+        analyst_company_id INTEGER,
+        security_id INTEGER,
+        ts INTEGER,
+        old_rating INTEGER,
+        new_rating INTEGER NOT NULL,
+        change INTEGER NOT NULL,
+        old_price REAL,
+        new_price REAL,
+        PRIMARY KEY(analyst_company_id, security_id, ts)
     )
     """
 )
