@@ -231,17 +231,20 @@ for index, ticker in enumerate(tickers):
                 new = dct["new"]
                 change = dct["change"]
                 
-                cur.execute("INSERT OR IGNORE INTO analyst_companies_yahoo (name) VALUES (?)", (name, ))
-                analyst_id = cur.execute("SELECT id FROM analyst_companies_yahoo WHERE name = ?", (name, )).fetchone()[0]
+                cur.execute("INSERT OR IGNORE INTO analyst_companies_yahoo (name) VALUES (?)", (name,))
+                analyst_id = cur.execute("SELECT id FROM analyst_companies_yahoo WHERE name = ?", (name,)).fetchone()[0]
                 
-                cur.execute("INSERT OR IGNORE INTO ratings_yahoo (name) VALUES (?)", (old, ))
-                old_id = cur.execute("SELECT id FROM ratings_yahoo WHERE name = ?", (old, )).fetchone()[0]
+                if old is None:
+                    old_id = None
+                else:  
+                    cur.execute("INSERT OR IGNORE INTO ratings_yahoo (name) VALUES (?)", (old,))
+                    old_id = cur.execute("SELECT id FROM ratings_yahoo WHERE name = ?", (old,)).fetchone()[0]
 
-                cur.execute("INSERT OR IGNORE INTO ratings_yahoo (name) VALUES (?)", (new, ))
-                new_id = cur.execute("SELECT id FROM ratings_yahoo WHERE name = ?", (new, )).fetchone()[0]
+                cur.execute("INSERT OR IGNORE INTO ratings_yahoo (name) VALUES (?)", (new,))
+                new_id = cur.execute("SELECT id FROM ratings_yahoo WHERE name = ?", (new,)).fetchone()[0]
 
-                cur.execute("INSERT OR IGNORE INTO ratings_yahoo (name) VALUES (?)", (change, ))
-                change_id = cur.execute("SELECT id FROM ratings_yahoo WHERE name = ?", (change, )).fetchone()[0]
+                cur.execute("INSERT OR IGNORE INTO ratings_yahoo (name) VALUES (?)", (change,))
+                change_id = cur.execute("SELECT id FROM ratings_yahoo WHERE name = ?", (change,)).fetchone()[0]
 
                 cur.execute(
                     "REPLACE INTO analyst_recommendations_yahoo VALUES (?, ?, ?, ?, ?, ?)",
