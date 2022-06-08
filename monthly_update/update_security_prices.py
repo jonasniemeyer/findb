@@ -19,7 +19,7 @@ securities = cur.execute(
 length = len(securities)
 
 for index, (security_id, ticker) in enumerate(securities):
-    print(f"{ticker}, {index} of {length}")
+    print(f"{index} of {length}: {ticker}")
     try:
         reader = YahooReader(ticker=ticker).historical_data(
             frequency="1d",
