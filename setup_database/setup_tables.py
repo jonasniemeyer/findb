@@ -705,7 +705,7 @@ cur.execute(
 
 cur.execute(
     """
-    CREATE TABLE IF NOT exists recommendation_trend_tipranks (
+    CREATE TABLE IF NOT EXISTS recommendation_trend_tipranks (
         security_id INTEGER,
         week INTEGER,
         number INTEGER,
@@ -721,7 +721,7 @@ cur.execute(
 
 cur.execute(
     """
-    CREATE TABLE IF NOT exists news_sentiment_tipranks (
+    CREATE TABLE IF NOT EXISTS news_sentiment_tipranks (
         security_id INTEGER,
         week INTEGER,
         number INTEGER,
@@ -736,24 +736,47 @@ cur.execute(
 
 cur.execute(
     """
-    CREATE TABLE IF NOT exists analysts_tipranks (
+    CREATE TABLE IF NOT EXISTS analysts_tipranks (
         id INTEGER PRIMARY KEY,
         name TEXT UNIQUE,
         image BLOB,
         analyst_company_id INTEGER,
+        sector_id INTEGER,
+        country_id INTEGER,
         rank INTEGER,
         stars REAL,
         successful_recommendations INTEGER,
         total_recommendations INTEGER,
         percentage_successful_recommendations REAL,
-        average_rating_return REAL
+        average_rating_return REAL,
+        buy_percentage REAL,
+        hold_percentage REAL,
+        sell_percentage REAL
     )
     """
 )
 
 cur.execute(
     """
-    CREATE TABLE IF NOT exists analyst_companies_tipranks (
+    CREATE TABLE IF NOT EXISTS analyst_companies_tipranks (
+        id INTEGER PRIMARY KEY,
+        name TEXT UNIQUE
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS sectors_tipranks (
+        id INTEGER PRIMARY KEY,
+        name TEXT UNIQUE
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS countries_tipranks (
         id INTEGER PRIMARY KEY,
         name TEXT UNIQUE
     )
