@@ -1,9 +1,9 @@
-from finance_database.utils import db_path
+from finance_database.utils import DB_PATH
 from sqlite3 import connect
 
 class Database:
-    db_path = db_path
+    path = DB_PATH
     
     def __init__(self):
-        self.connection = connect(self.db_path)
+        self.connection = connect(self.path)
         self.cursor = self.connection.cursor()

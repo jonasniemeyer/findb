@@ -1,11 +1,10 @@
 import requests
 import datetime as dt
-from finance_database import Database, utils
-
-sec_base_url = utils.sec_base_url
+from finance_database import Database
+from finance_database.utils import SEC_BASE_URL
 
 def get_filing_lists(first_year=1900, first_quarter=0):
-    years_url = f"{sec_base_url}/edgar/daily-index/index.json"
+    years_url = f"{SEC_BASE_URL}/edgar/daily-index/index.json"
     years = requests.get(years_url, headers=utils.headers).json()
     for year in years["directory"]["item"]:
         try:
@@ -13,14 +12,14 @@ def get_filing_lists(first_year=1900, first_quarter=0):
                 continue
         except:
             continue
-        quarters_url = f"{sec_base_url}/edgar/daily-index/{year['name']}/index.json"
+        quarters_url = f"{SEC_BASE_URL}/edgar/daily-index/{year['name']}/index.json"
         print(year["name"])
         quarters = requests.get(quarters_url, headers=utils.headers).json()
         for quarter in quarters["directory"]["item"]:
             if int(year["name"]) < first_year and int(quarter['name'][-1]) < first_quarter:
                 continue
             print(quarter['name'])
-            days_url = f"{sec_base_url}/edgar/daily-index/{year['name']}/{quarter['name']}/index.json"
+            days_url = f"{SEC_BASE_URL}/edgar/daily-index/{year['name']}/{quarter['name']}/index.json"
             days = requests.get(days_url, headers=utils.headers).json()
             for day in days["directory"]["item"]:
                 if day["name"].startswith("master"):
@@ -33,7 +32,7 @@ def get_filing_lists(first_year=1900, first_quarter=0):
                         date = "19{}-{}-{}".format(date[:2], date[2:4], date[4:])
                     else:
                         raise ValueError(year["name"])
-                    day_url = f"{sec_base_url}/edgar/daily-index/{year['name']}/{quarter['name']}/{day['href']}".rstrip(".gz")
+                    day_url = f"{SEC_BASE_URL}/edgar/daily-index/{year['name']}/{quarter['name']}/{day['href']}".rstrip(".gz")
                     if day_url in filing_lists:
                         continue
                     ts_today = int((dt.date.fromisoformat(date) - dt.date(1970, 1, 1)).total_seconds())
@@ -58,7 +57,7 @@ def get_filings():
             date = "{}-{}-{}".format(date[:4], date[4:6], date[6:])
             ts_filed = int((dt.date.fromisoformat(date) - dt.date(1970, 1, 1)).total_seconds())
             href_split = href.strip().split("/")
-            href = f"{sec_base_url}/edgar/data/{href_split[-2]}/{href_split[-1]}"
+            href = f"{SEC_BASE_URL}/edgar/data/{href_split[-2]}/{href_split[-1]}"
             cur.execute("INSERT OR IGNORE INTO form_types (name) VALUES (?)", (form,))
             form_id = cur.execute("SELECT id FROM form_types WHERE name = ?", (form,)).fetchone()[0]
             cur.execute(

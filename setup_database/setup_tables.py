@@ -1,6 +1,4 @@
-from pathlib import Path
 from finance_database import Database
-import sqlite3
 
 db = Database()
 con = db.connection

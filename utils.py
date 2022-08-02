@@ -1,10 +1,10 @@
 from pathlib import Path
 
-db_path = rf"{Path(__file__).parent}\database.db"
+DB_PATH = rf"{Path(__file__).parent}\database.db"
 
-sec_base_url = "https://www.sec.gov/Archives"
+SEC_BASE_URL = "https://www.sec.gov/Archives"
 
-headers = {
+HEADERS = {
         "Connection": "keep-alive",
         "Expires": "-1",
         "Upgrade-Insecure-Requests": "1",
@@ -14,7 +14,7 @@ headers = {
         )
     }
 
-commodities = {
+COMMODITIES = {
     "WTI Crude Oil": {
         "exchange": "CME",
         "sector": "energy",

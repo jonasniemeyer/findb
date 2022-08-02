@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 from finance_database import Database
 import re
-from finance_database.utils import headers
+from finance_database.utils import HEADERS
 
 db = Database()
 con = db.connection
@@ -10,21 +10,21 @@ cur = db.cursor
 
 countries = {}
 country_url = "https://en.wikipedia.org/wiki/List_of_circulating_currencies"
-html = requests.get(url=country_url, headers=headers).text
+html = requests.get(url=country_url, headers=HEADERS).text
 soup = BeautifulSoup(html, "lxml")
 table = soup.find("table")
 for row in table.find_all("tr")[1:]:
     cells = row.find_all("td")
     if len(cells) == 6:
         country_name = cells[0].find("a").get("title")
-        country_name = "Ireland" if country_name == "Republic of Ireland" else country_name
+        country_name = "Ireland" if country_name == "Republic of Ireland" else country_name.split("(")[0]
         flag_url = "https:" + cells[0].find("img").get("src")
         flag_url_50 = re.sub("[0-9]+px", "50px", flag_url)
         flag_url_100 = re.sub("[0-9]+px", "100px", flag_url)
         flag_url_200 = re.sub("[0-9]+px", "200px", flag_url)
-        flag_bytes_50 = requests.get(url=flag_url_50, headers=headers).content
-        flag_bytes_100 = requests.get(url=flag_url_100, headers=headers).content
-        flag_bytes_200 = requests.get(url=flag_url_200, headers=headers).content
+        flag_bytes_50 = requests.get(url=flag_url_50, headers=HEADERS).content
+        flag_bytes_100 = requests.get(url=flag_url_100, headers=HEADERS).content
+        flag_bytes_200 = requests.get(url=flag_url_200, headers=HEADERS).content
         i = 1
     else:
         i = 0
@@ -95,7 +95,7 @@ cur.execute(
 con.commit()
 
 exchange_url = "https://help.yahoo.com/kb/exchanges-data-providers-yahoo-finance-sln2310.html"
-html = requests.get(url=exchange_url, headers=headers).text
+html = requests.get(url=exchange_url, headers=HEADERS).text
 soup = BeautifulSoup(html, "lxml")
 table = soup.find("table")
 
