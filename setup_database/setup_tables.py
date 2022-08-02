@@ -747,7 +747,7 @@ cur.execute(
         stars REAL,
         successful_recommendations INTEGER,
         total_recommendations INTEGER,
-        percentage_successful_recommendations REAL,
+        success_rate REAL,
         average_rating_return REAL,
         buy_percentage REAL,
         hold_percentage REAL,
@@ -802,10 +802,10 @@ cur.execute(
     CREATE TABLE IF NOT EXISTS analyst_stock_summary_tipranks (
         analyst_id INTEGER,
         security_id INTEGER,
-        success_rate REAL,
-        average_rating_return REAL,
         total_recommendations INTEGER,
         positive_recommendations INTEGER,
+        success_rate REAL,
+        average_rating_return REAL,
         PRIMARY KEY(analyst_id, security_id)
     )
     """
