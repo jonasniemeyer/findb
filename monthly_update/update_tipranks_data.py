@@ -1,6 +1,6 @@
-from finance_data import TipranksReader
+from finance_data import TipranksAnalystReader, TipranksStockReader
 from finance_database import Database
-from finance_database.utils import headers
+from finance_database.utils import HEADERS
 import pandas as pd
 import requests
 
@@ -47,7 +47,7 @@ for index, ticker in enumerate(tickers):
     if index % 100 == 0:
         con.commit()
     print(f"{index} of {length}: {ticker}")
-    reader = TipranksReader(ticker)
+    reader = TipranksStockReader(ticker)
 
     security_id = cur.execute("SELECT id FROM securities WHERE ticker = ?", (ticker,)).fetchone()[0]
     
@@ -59,7 +59,7 @@ for index, ticker in enumerate(tickers):
     except:
         pass
 
-    #analysts
+    #covering analysts
     try:
         analysts = reader.covering_analysts(include_retail=False, timestamps=True)
     except:
@@ -67,32 +67,32 @@ for index, ticker in enumerate(tickers):
     else:
         for dct in analysts:
             rank_data = dct["analyst_ranking"]
-
+            
             if dct["image_url"] is None:
                 image = b"\n"
             else:
-                image = requests.get(url=dct["image_url"], headers=headers).content
+                image = requests.get(url=dct["image_url"], headers=HEADERS).content
+            
+            cur.execute("INSERT OR IGNORE INTO analysts_tipranks (name) VALUES (?)", (dct["name"], ))
+            analyst_id = cur.execute("SELECT id FROM analysts_tipranks WHERE name = ?", (dct["name"], )).fetchone()[0]
             
             cur.execute("INSERT OR IGNORE INTO analyst_companies_tipranks (name) VALUES (?)", (dct["company"], ))
             company_id = cur.execute("SELECT id FROM analyst_companies_tipranks WHERE name = ?", (dct["company"], )).fetchone()[0]
 
-            cur.execute("INSERT OR IGNORE INTO analysts_tipranks (name) VALUES (?)", (dct["name"], ))
-            analyst_id = cur.execute("SELECT id FROM analysts_tipranks WHERE name = ?", (dct["name"], )).fetchone()[0]
-
             cur.execute(
                 """
                 UPDATE analysts_tipranks SET image = ?, analyst_company_id = ?, rank = ?, stars = ?, successful_recommendations = ?,
-                total_recommendations = ?, percentage_successful_recommendations = ?, average_rating_return = ? WHERE id = ?
+                total_recommendations = ?, success_rate = ?, average_rating_return = ? WHERE id = ?
                 """,
                 (
                     image, company_id, rank_data["rank"], rank_data["stars"], rank_data["successful_recommendations"], rank_data["total_recommendations"],
-                    rank_data["percentage_successful_recommendations"], rank_data["average_rating_return"], analyst_id
+                    rank_data["success_rate"], rank_data["average_rating_return"], analyst_id
                 )
             )
 
             cur.execute(
                 "REPLACE INTO analyst_stock_summary_tipranks VALUES (?, ?, ?, ?, ?, ?)",
-                (analyst_id, security_id, dct["stock_success_rate"], dct["average_rating_return_stock"], dct["total_recommendations_stock"], dct["positive_recommendations_stock"])
+                (analyst_id, security_id, dct["successful_recommendations_stock"], dct["total_recommendations_stock"], dct["success_rate_stock"], dct["average_rating_return_stock"])
             )
 
             for rating in dct["ratings"]:
@@ -135,7 +135,7 @@ for index, ticker in enumerate(tickers):
             if dct["image_url"] is None:
                 image = b"\n"
             else:
-                image = requests.get(url=dct["image_url"], headers=headers).content
+                image = requests.get(url=dct["image_url"], headers=HEADERS).content
             
             cur.execute("INSERT OR IGNORE INTO institutionals_tipranks (name, manager) VALUES (?, ?)", (dct["company"], dct["name"]))
             institutional_id = cur.execute("SELECT id FROM institutionals_tipranks WHERE name = ? and manager = ?", (dct["company"], dct["name"])).fetchone()[0]
