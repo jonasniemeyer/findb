@@ -1,4 +1,6 @@
+from posixpath import split
 from finance_data import TipranksAnalystReader, TipranksStockReader
+from finance_data.utils import DatasetError
 from finance_database import Database
 from finance_database.utils import HEADERS
 import pandas as pd
@@ -47,6 +49,7 @@ for index, ticker in enumerate(tickers):
     if index % 100 == 0:
         con.commit()
     print(f"{index} of {length}: {ticker}")
+
     reader = TipranksStockReader(ticker)
 
     security_id = cur.execute("SELECT id FROM securities WHERE ticker = ?", (ticker,)).fetchone()[0]
@@ -68,16 +71,16 @@ for index, ticker in enumerate(tickers):
         for dct in analysts:
             rank_data = dct["analyst_ranking"]
             
-            if dct["image_url"] is None:
-                image = b"\n"
-            else:
-                image = requests.get(url=dct["image_url"], headers=HEADERS).content
-            
             cur.execute("INSERT OR IGNORE INTO analysts_tipranks (name) VALUES (?)", (dct["name"], ))
             analyst_id = cur.execute("SELECT id FROM analysts_tipranks WHERE name = ?", (dct["name"], )).fetchone()[0]
             
             cur.execute("INSERT OR IGNORE INTO analyst_companies_tipranks (name) VALUES (?)", (dct["company"], ))
             company_id = cur.execute("SELECT id FROM analyst_companies_tipranks WHERE name = ?", (dct["company"], )).fetchone()[0]
+
+            if dct["image_url"] is None:
+                image = b"\n"
+            else:
+                image = requests.get(url=dct["image_url"], headers=HEADERS).content
 
             cur.execute(
                 """
@@ -96,9 +99,10 @@ for index, ticker in enumerate(tickers):
             )
 
             for rating in dct["ratings"]:
+                cur.execute("INSERT OR IGNORE INTO analyst_recommendations_tipranks (analyst_id, security_id, ts) VALUES (?, ?, ?)", (analyst_id, security_id, rating["date"]))
                 cur.execute(
-                    "REPLACE INTO analyst_recommendations_tipranks VALUES (?, ?, ?, ?, ?, ?)",
-                    (analyst_id, security_id, rating["date"], rating["price_target"], rating["news_title"], rating["news_url"])
+                    "UPDATE analyst_recommendations_tipranks SET price_target = ?, title = ?, url = ? WHERE analyst_id = ? AND security_id = ? AND ts = ?",
+                    (rating["price_target"], rating["news_title"], rating["news_url"], analyst_id, security_id, rating["date"])
                 )
 
     #recommendation trend
@@ -150,6 +154,97 @@ for index, ticker in enumerate(tickers):
             )
 
     cur.execute("UPDATE companies SET tipranks_data_updated = ? WHERE security_id = ?", (ts_today, security_id))
+
+con.commit()
+
+analysts = cur.execute("SELECT name FROM analysts_tipranks ORDER BY name").fetchall()
+analysts = [item[0] for item in analysts]
+length = len(analysts)
+
+for index, analyst in enumerate(analysts):
+    if index < 1400:
+        continue
+    if index % 100 == 0:
+        con.commit()
+    print(f"{index} of {length}: {analyst}")
+
+    reader = TipranksAnalystReader(analyst)
+
+    # profile
+    try:
+        profile = reader.profile()
+    except DatasetError:
+        print("failed")
+        continue
+    cur.execute("INSERT OR IGNORE INTO analysts_tipranks (name) VALUES (?)", (profile["name"],))
+    analyst_id = cur.execute("SELECT id FROM analysts_tipranks WHERE name = ?", (profile["name"],)).fetchone()[0]
+
+    cur.execute("INSERT OR IGNORE INTO analyst_companies_tipranks (name) VALUES (?)", (profile["company"], ))
+    company_id = cur.execute("SELECT id FROM analyst_companies_tipranks WHERE name = ?", (profile["company"], )).fetchone()[0]
+
+    if profile["image_url"] is None:
+        image = b"\n"
+    else:
+        image = requests.get(url=profile["image_url"], headers=HEADERS).content
+
+    if profile["sector"] is None:
+        sector_id = None
+    else:
+        cur.execute("INSERT OR IGNORE INTO sectors_tipranks (name) VALUES (?)", (profile["sector"],))
+        sector_id = cur.execute("SELECT id FROM sectors_tipranks WHERE name = ?", (profile["sector"],)).fetchone()[0]
+
+    if profile["country"] is None:
+        country_id = None
+    else:
+        cur.execute("INSERT OR IGNORE INTO countries_tipranks (name) VALUES (?)", (profile["country"],))
+        country_id = cur.execute("SELECT id FROM countries_tipranks WHERE name = ?", (profile["country"],)).fetchone()[0]
+
+    cur.execute(
+        """
+        UPDATE analysts_tipranks SET image = ?, analyst_company_id = ?, sector_id = ?, country_id = ?, rank = ?, successful_recommendations = ?,
+        total_recommendations = ?, success_rate = ?, average_rating_return = ?, buy_percentage = ?, hold_percentage = ?, sell_percentage = ? WHERE id = ?
+        """,
+        (
+            image, company_id, sector_id, country_id, profile["rank"], profile["successful_recommendations"], profile["total_recommendations"],
+            profile["success_rate"], profile["average_rating_return"], profile["buy_percentage"], profile["hold_percentage"], profile["sell_percentage"], analyst_id
+        )
+    )
+
+    # ratings
+    ratings = reader.ratings(timestamps=True)
+    for rating in ratings:
+        security_id = cur.execute("SELECT id FROM securities WHERE ticker = ?", (rating["ticker"],)).fetchone()
+        if security_id is None:
+            print(f"\tno security_id for ticker {rating['ticker']}")
+            continue
+        else:
+            security_id = security_id[0]
+        
+        splits = cur.execute("SELECT ts, split_ratio FROM security_prices WHERE security_id = ? AND split_ratio NOT NULL ORDER BY ts DESC", (security_id,)).fetchall()
+
+        cur.execute("INSERT OR IGNORE INTO ratings_tipranks (name) VALUES (?)", (rating["rating"],))
+        rating_id = cur.execute("SELECT id FROM ratings_tipranks WHERE name = ?", (rating["rating"],)).fetchone()[0]
+    
+        cur.execute("INSERT OR IGNORE INTO ratings_tipranks (name) VALUES (?)", (rating["change"],))
+        change_id = cur.execute("SELECT id FROM ratings_tipranks WHERE name = ?", (rating["change"],)).fetchone()[0]
+
+        cur.execute("INSERT OR IGNORE INTO analyst_recommendations_tipranks (analyst_id, security_id, ts) VALUES (?, ?, ?)", (analyst_id, security_id, rating["date"]))
+
+        price_target = rating["price_target"]
+        date = rating["date"]
+        if price_target is not None:
+            split_ratio = 1
+            for item in splits:
+                if date < item[0]:
+                    split_ratio *= item[1]
+            adjusted_target = price_target * split_ratio
+        else:
+            adjusted_target = None
+
+        cur.execute(
+            "UPDATE analyst_recommendations_tipranks SET rating_id = ?, change_id = ?, price_target = ? WHERE analyst_id = ? AND security_id = ? AND ts = ?",
+            (rating_id, change_id, adjusted_target, analyst_id, security_id, date)
+        )
 
 con.commit()
 con.close()
