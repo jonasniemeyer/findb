@@ -1,11 +1,11 @@
 import requests
 import datetime as dt
 from finance_database import Database
-from finance_database.utils import SEC_BASE_URL
+from finance_database.utils import SEC_BASE_URL, HEADERS
 
 def get_filing_lists(first_year=1900, first_quarter=0):
     years_url = f"{SEC_BASE_URL}/edgar/daily-index/index.json"
-    years = requests.get(years_url, headers=utils.headers).json()
+    years = requests.get(years_url, headers=HEADERS).json()
     for year in years["directory"]["item"]:
         try:
             if int(year["name"]) < first_year:
@@ -14,13 +14,13 @@ def get_filing_lists(first_year=1900, first_quarter=0):
             continue
         quarters_url = f"{SEC_BASE_URL}/edgar/daily-index/{year['name']}/index.json"
         print(year["name"])
-        quarters = requests.get(quarters_url, headers=utils.headers).json()
+        quarters = requests.get(quarters_url, headers=HEADERS).json()
         for quarter in quarters["directory"]["item"]:
             if int(year["name"]) < first_year and int(quarter['name'][-1]) < first_quarter:
                 continue
             print(quarter['name'])
             days_url = f"{SEC_BASE_URL}/edgar/daily-index/{year['name']}/{quarter['name']}/index.json"
-            days = requests.get(days_url, headers=utils.headers).json()
+            days = requests.get(days_url, headers=HEADERS).json()
             for day in days["directory"]["item"]:
                 if day["name"].startswith("master"):
                     date = day["name"].split(".")[1]
@@ -44,7 +44,7 @@ def get_filings():
     filing_lists = [item[0] for item in filing_lists]
     for index, day_url in enumerate(filing_lists):
         print(f"{index} of {len(filing_lists)}: {day_url}")
-        day = requests.get(day_url, headers=utils.headers).text.split("\n")
+        day = requests.get(day_url, headers=HEADERS).text.split("\n")
         for row in day:
             row = row.split("|")
             if len(row) != 5 or any([item == "" for item in row]):
