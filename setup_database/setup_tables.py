@@ -22,17 +22,6 @@ cur.execute(
 
 cur.execute(
     """
-    CREATE TABLE IF NOT EXISTS cities (
-        id INTEGER PRIMARY KEY,
-        name TEXT NOT NULL,
-        country_id INTEGER NOT NULL,
-        UNIQUE(name, country_id)
-    )
-    """
-)
-
-cur.execute(
-    """
     CREATE TABLE IF NOT EXISTS currencies (
         id INTEGER PRIMARY KEY,
         name TEXT UNIQUE NOT NULL,
@@ -47,18 +36,6 @@ cur.execute(
         country_id INTEGER,
         currency_id INTEGER,
         PRIMARY KEY(country_id, currency_id)
-    )
-    """
-)
-
-cur.execute(
-    """
-    CREATE TABLE IF NOT EXISTS exchanges (
-        id INTEGER PRIMARY KEY,
-        name TEXT NOT NULL,
-        yahoo_suffix TEXT NOT NULL,
-        country_id INTEGER NOT NULL,
-        UNIQUE(name, country_id, yahoo_suffix)
     )
     """
 )
@@ -104,44 +81,6 @@ cur.executescript(
 
 cur.execute(
     """
-    CREATE TABLE IF NOT EXISTS sec_daily_filings_lists (
-        id INTEGER PRIMARY KEY,
-        ts INTEGER UNIQUE NOT NULL,
-        url TEXT UNIQUE NOT NULL,
-        parsed INTEGER NOT NULL
-    )
-    """
-)
-
-cur.execute(
-    """
-    CREATE TABLE IF NOT EXISTS form_types (
-        id INTEGER PRIMARY KEY,
-        name TEXT UNIQUE NOT NULL
-    )
-    """
-)
-
-cur.execute(
-    """
-    CREATE TABLE IF NOT EXISTS sec_filings (
-        id INTEGER PRIMARY KEY,
-        cik INTEGER NOT NULL,
-        form_type_id INTEGER NOT NULL,
-        ts_filed INTEGER NOT NULL,
-        url TEXT NOT NULL,
-        parsed INTEGER NOT NULL,
-        UNIQUE(cik, form_type_id, ts_filed, url)
-    )
-    """
-)
-
-# ===========================================================
-# ====================== Securities =========================
-# ===========================================================
-
-cur.execute(
-    """
     CREATE TABLE IF NOT EXISTS securities (
         id INTEGER PRIMARY KEY,
         cik INTEGER NOT NULL,
@@ -161,15 +100,6 @@ cur.execute(
         profile_updated INTEGER,
         prices_updated INTEGER,
         UNIQUE(cik, ticker)
-    )
-    """
-)
-
-cur.execute(
-    """
-    CREATE TABLE IF NOT EXISTS security_types (
-        id INTEGER PRIMARY KEY,
-        name TEXT UNIQUE NOT NULL
     )
     """
 )
@@ -237,188 +167,164 @@ cur.execute(
     """
 )
 
-cur.execute(
-    """
-    CREATE TABLE IF NOT EXISTS executives (
-        id INTEGER PRIMARY KEY,
-        name TEXT NOT NULL,
-        age INTEGER,
-        born INTEGER,
-        UNIQUE(name, born)
-    )
-    """
-)
+# ===========================================================
+# ======================== CBOE =============================
+# ===========================================================
 
 cur.execute(
     """
-    CREATE TABLE IF NOT EXISTS executive_positions (
-        id INTEGER PRIMARY KEY,
-        name TEXT UNIQUE NOT NULL
-    )
-    """
-)
-
-cur.execute(
-    """
-    CREATE TABLE IF NOT EXISTS company_executive_match (
-        security_id INTEGER,
-        executive_id INTEGER,
-        position_id INTEGER,
-        salary REAL,
-        added INTEGER NOT NULL,
-        discontinued INTEGER,
-        PRIMARY KEY(security_id, executive_id, position_id)
-    )
-    """
-)
-
-cur.execute(
-    """
-    CREATE TABLE IF NOT EXISTS security_prices (
-        security_id INTEGER,
+    CREATE TABLE IF NOT EXISTS cboe_vix_prices (
+        maturity_date INTEGER,
         ts INTEGER,
-        open REAL,
-        high REAL,
-        low REAL,
-        close REAL,
-        adj_close REAL,
-        volume INTEGER,
-        dividends REAL,
-        split_ratio REAL,
-        simple_return REAL,
-        log_return REAL,
-        PRIMARY KEY(security_id, ts)
-    )
-    """
-)
-
-cur.execute(
-    """
-    CREATE TABLE IF NOT EXISTS analyst_companies_yahoo (
-        id INTEGER PRIMARY KEY,
-        name TEXT UNIQUE NOT NULL
-    )
-    """
-)
-
-cur.execute(
-    """
-    CREATE TABLE IF NOT EXISTS ratings_yahoo (
-        id INTEGER PRIMARY KEY,
-        name TEXT UNIQUE NOT NULL
-    )
-    """
-)
-
-cur.execute(
-    """
-    CREATE TABLE IF NOT EXISTS analyst_recommendations_yahoo (
-        analyst_company_id INTEGER,
-        security_id INTEGER,
-        ts INTEGER,
-        old INTEGER,
-        new INTEGER NOT NULL,
-        change INTEGER NOT NULL,
-        PRIMARY KEY(analyst_company_id, security_id, ts)
-    )
-    """
-)
-
-cur.execute(
-    """
-    CREATE TABLE IF NOT EXISTS recommendation_trend_yahoo (
-        security_id INTEGER,
-        month INTEGER,
-        number INTEGER,
-        average REAL,
-        strong_buy INTEGER,
-        buy INTEGER,
-        hold INTEGER,
-        sell INTEGER,
-        strong_sell INTEGER,
-        PRIMARY KEY(security_id, month)
-    )
-    """
-)
-
-cur.execute(
-    """
-    CREATE TABLE IF NOT EXISTS fundamental_variables_sec (
-        id INTEGER PRIMARY KEY,
-        name TEXT NOT NULL,
-        statement_id INTEGER NOT NULL,
-        UNIQUE(name, statement_id)
-    )
-    """
-)
-
-cur.execute(
-    """
-    CREATE TABLE IF NOT EXISTS fundamental_data_sec (
-        security_id INTEGER,
-        variable_id INTEGER,
-        quarter INTEGER,
-        year INTEGER,
-        ts INTEGER NOT NULL,
-        value INTEGER,
-        filing_id INTEGER NOT NULL,
-        PRIMARY KEY(security_id, variable_id, quarter, year)
-    )
-    """
-)
-
-cur.execute(
-    """
-    CREATE TABLE IF NOT EXISTS fundamental_variables_macrotrends (
-        id INTEGER PRIMARY KEY,
-        name TEXT NOT NULL,
-        statement_id INTEGER NOT NULL,
-        UNIQUE(name, statement_id)
-    )
-    """
-)
-
-cur.execute(
-    """
-    CREATE TABLE IF NOT EXISTS fundamental_data_macrotrends (
-        security_id INTEGER,
-        variable_id INTEGER,
-        quarter INTEGER,
-        year INTEGER,
-        ts INTEGER NOT NULL,
-        value INTEGER,
-        PRIMARY KEY(security_id, variable_id, quarter, year)
-    )
-    """
-)
-
-cur.execute(
-    """
-    CREATE TABLE IF NOT EXISTS fundamental_variables_yahoo (
-        id INTEGER PRIMARY KEY,
-        name TEXT NOT NULL,
-        statement_id INTEGER NOT NULL,
-        UNIQUE(name, statement_id)
-    )
-    """
-)
-
-cur.execute(
-    """
-    CREATE TABLE IF NOT EXISTS fundamental_data_yahoo (
-        security_id INTEGER,
-        variable_id INTEGER,
-        quarter INTEGER,
-        year INTEGER,
-        ts INTEGER NOT NULL,
-        value INTEGER,
-        PRIMARY KEY(security_id, variable_id, quarter, year)
+        price REAL NOT NULL,
+        volume INTEGER NOT NULL,
+        PRIMARY KEY(maturity_date, ts)
     )
     """
 )
 
 # ===========================================================
-# ===================== Factors =============================
+# ========= Chicago Mercantile Exchange (CME) ===============
+# ===========================================================
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS cme_commodities (
+        id INTEGER PRIMARY KEY,
+        name TEXT UNIQUE NOT NULL,
+        exchange_id INTEGER NOT NULL,
+        sector_id INTEGER NOT NULL,
+        prices_updated INTEGER NOT NULL
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS cme_commodity_sectors (
+        id INTEGER PRIMARY KEY,
+        name TEXT UNIQUE NOT NULL
+    )
+    """
+)
+
+cur.executescript(
+    """
+    INSERT OR IGNORE INTO commodity_sectors (name) VALUES("Agriculture");
+    INSERT OR IGNORE INTO commodity_sectors (name) VALUES("Energy");
+    INSERT OR IGNORE INTO commodity_sectors (name) VALUES("Industrial Metals");
+    INSERT OR IGNORE INTO commodity_sectors (name) VALUES("Livestock");
+    INSERT OR IGNORE INTO commodity_sectors (name) VALUES("Precious Metals");
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS cme_commodity_prices (
+        commodity_id INTEGER,
+        maturity_date INTEGER,
+        ts INTEGER,
+        price REAL,
+        volume INTEGER,
+        open_interest INTEGER,
+        PRIMARY KEY(commodity_id, maturity_date, ts)
+    )
+    """
+)
+
+# ===========================================================
+# ======================== Finra ============================
+# ===========================================================
+
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS finra_margin_debt (
+        ts INTEGER PRIMARY KEY,
+        debit INTEGER NOT NULL,
+        credit INTEGER NOT NULL
+    )
+    """
+)
+
+# ===========================================================
+# ======================== Finviz ===========================
+# ===========================================================
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS finviz_analyst_companies (
+        id INTEGER PRIMARY KEY,
+        name TEXT UNIQUE NOT NULL
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS finviz_ratings (
+        id INTEGER PRIMARY KEY,
+        name TEXT UNIQUE NOT NULL
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS finviz_analyst_recommendations (
+        analyst_company_id INTEGER,
+        security_id INTEGER,
+        ts INTEGER,
+        old_rating INTEGER,
+        new_rating INTEGER NOT NULL,
+        change INTEGER NOT NULL,
+        old_price REAL,
+        new_price REAL,
+        PRIMARY KEY(analyst_company_id, security_id, ts)
+    )
+    """
+)
+
+# ===========================================================
+# ========================= FRED ============================
+# ===========================================================
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS fred_categories(
+        id INTEGER PRIMARY KEY,
+        name TEXT NOT NULL,
+        super_category_id INTEGER
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS fred_series (
+        id INTEGER PRIMARY KEY,
+        abbr TEXT NOT NULL,
+        name TEXT NOT NULL,
+        description TEXT NOT NULL,
+        category_id INTEGER NOT NULL,
+        UNIQUE(abbr, name)
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS fred_data (
+        series_id INTEGER,
+        ts INTEGER,
+        value REAL,
+        PRIMARY KEY(series_id, ts)
+    )
+    """
+)
+
+# ===========================================================
+# ======================== French ===========================
 # ===========================================================
 
 cur.execute(
@@ -464,12 +370,101 @@ cur.execute(
 )
 
 # ===========================================================
-# ================== 13F Filings ============================
+# ===================== Macrotrends =========================
 # ===========================================================
 
 cur.execute(
     """
-    CREATE TABLE IF NOT EXISTS investment_managers (
+    CREATE TABLE IF NOT EXISTS macrotrends_fundamental_variables (
+        id INTEGER PRIMARY KEY,
+        name TEXT NOT NULL,
+        statement_id INTEGER NOT NULL,
+        UNIQUE(name, statement_id)
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS macrotrends_fundamental_data (
+        security_id INTEGER,
+        variable_id INTEGER,
+        quarter INTEGER,
+        year INTEGER,
+        ts INTEGER NOT NULL,
+        value INTEGER,
+        PRIMARY KEY(security_id, variable_id, quarter, year)
+    )
+    """
+)
+
+# ===========================================================
+# ====================== SEC ================================
+# ===========================================================
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS sec_daily_filings_lists (
+        id INTEGER PRIMARY KEY,
+        ts INTEGER UNIQUE NOT NULL,
+        url TEXT UNIQUE NOT NULL,
+        parsed INTEGER NOT NULL
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS sec_form_types (
+        id INTEGER PRIMARY KEY,
+        name TEXT UNIQUE NOT NULL
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS sec_filings (
+        id INTEGER PRIMARY KEY,
+        cik INTEGER NOT NULL,
+        form_type_id INTEGER NOT NULL,
+        ts_filed INTEGER NOT NULL,
+        url TEXT NOT NULL,
+        parsed INTEGER NOT NULL,
+        UNIQUE(cik, form_type_id, ts_filed, url)
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS sec_fundamental_variables (
+        id INTEGER PRIMARY KEY,
+        name TEXT NOT NULL,
+        statement_id INTEGER NOT NULL,
+        UNIQUE(name, statement_id)
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS sec_fundamental_data (
+        security_id INTEGER,
+        variable_id INTEGER,
+        quarter INTEGER,
+        year INTEGER,
+        ts INTEGER NOT NULL,
+        value INTEGER,
+        filing_id INTEGER NOT NULL,
+        PRIMARY KEY(security_id, variable_id, quarter, year)
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS sec_investment_managers (
         id INTEGER PRIMARY KEY,
         cik INTEGER UNIQUE NOT NULL,
         name TEXT NOT NULL
@@ -479,7 +474,7 @@ cur.execute(
 
 cur.execute(
     """
-    CREATE TABLE IF NOT EXISTS investment_manager_holdings (
+    CREATE TABLE IF NOT EXISTS sec_investment_manager_holdings (
         investment_manager_id INTEGER,
         quarter INTEGER,
         year INTEGER,
@@ -497,20 +492,16 @@ cur.execute(
 
 cur.execute(
     """
-    CREATE TABLE IF NOT EXISTS options (
+    CREATE TABLE IF NOT EXISTS sec_options (
         id INTEGER PRIMARY KEY,
         name TEXT UNIQUE NOT NULL
     )
     """
 )
 
-# ===========================================================
-# ================== 13D/G Filings ==========================
-# ===========================================================
-
 cur.execute(
     """
-    CREATE TABLE IF NOT EXISTS cusips (
+    CREATE TABLE IF NOT EXISTS sec_cusips (
         id INTEGER PRIMARY KEY,
         cusip TEXT UNIQUE NOT NULL
     )
@@ -519,7 +510,7 @@ cur.execute(
 
 cur.execute(
     """
-    CREATE TABLE IF NOT EXISTS acquisitions (
+    CREATE TABLE IF NOT EXISTS sec_acquisitions (
         cik_filer INTEGER NOT NULL,
         cik_subject INTEGER NOT NULL,
         cusip_id INTEGER NOT NULL,
@@ -533,7 +524,7 @@ cur.execute(
 )
 
 # ===========================================================
-# =================== Industry Groups =======================
+# ========================== SIC ============================
 # ===========================================================
 
 cur.execute(
@@ -561,143 +552,6 @@ cur.execute(
     """
 )
 
-cur.execute(
-    """
-    CREATE TABLE IF NOT EXISTS gics_sectors (
-        id INTEGER PRIMARY KEY,
-        name TEXT UNIQUE NOT NULL
-    )
-    """
-)
-
-cur.execute(
-    """
-    CREATE TABLE IF NOT EXISTS gics_industries (
-        id INTEGER PRIMARY KEY,
-        name TEXT UNIQUE NOT NULL,
-        sector_id INTEGER NOT NULL
-    )
-    """
-)
-
-# ===========================================================
-# ================== Volatility =============================
-# ===========================================================
-
-cur.execute(
-    """
-    CREATE TABLE IF NOT EXISTS vix_prices (
-        maturity_date INTEGER,
-        ts INTEGER,
-        price REAL NOT NULL,
-        volume INTEGER NOT NULL,
-        PRIMARY KEY(maturity_date, ts)
-    )
-    """
-)
-
-# ===========================================================
-# ================== Commodities ============================
-# ===========================================================
-
-cur.execute(
-    """
-    CREATE TABLE IF NOT EXISTS commodities (
-        id INTEGER PRIMARY KEY,
-        name TEXT UNIQUE NOT NULL,
-        exchange_id INTEGER NOT NULL,
-        sector_id INTEGER NOT NULL,
-        prices_updated INTEGER NOT NULL
-    )
-    """
-)
-
-cur.execute(
-    """
-    CREATE TABLE IF NOT EXISTS commodity_sectors (
-        id INTEGER PRIMARY KEY,
-        name TEXT UNIQUE NOT NULL
-    )
-    """
-)
-
-cur.executescript(
-    """
-    INSERT OR IGNORE INTO commodity_sectors (name) VALUES("Agriculture");
-    INSERT OR IGNORE INTO commodity_sectors (name) VALUES("Energy");
-    INSERT OR IGNORE INTO commodity_sectors (name) VALUES("Industrial Metals");
-    INSERT OR IGNORE INTO commodity_sectors (name) VALUES("Livestock");
-    INSERT OR IGNORE INTO commodity_sectors (name) VALUES("Precious Metals");
-    """
-)
-
-cur.execute(
-    """
-    CREATE TABLE IF NOT EXISTS commodity_prices (
-        commodity_id INTEGER,
-        maturity_date INTEGER,
-        ts INTEGER,
-        price REAL,
-        volume INTEGER,
-        open_interest INTEGER,
-        PRIMARY KEY(commodity_id, maturity_date, ts)
-    )
-    """
-)
-
-# ===========================================================
-# ================== Margin Debt ============================
-# ===========================================================
-
-
-cur.execute(
-    """
-    CREATE TABLE IF NOT EXISTS margin_debt (
-        ts INTEGER PRIMARY KEY,
-        debit INTEGER NOT NULL,
-        credit INTEGER NOT NULL
-    )
-    """
-)
-
-# ===========================================================
-# ================= Macroeconomic Data ======================
-# ===========================================================
-
-cur.execute(
-    """
-    CREATE TABLE IF NOT EXISTS fred_categories(
-        id INTEGER PRIMARY KEY,
-        name TEXT NOT NULL,
-        super_category_id INTEGER
-    )
-    """
-)
-
-cur.execute(
-    """
-    CREATE TABLE IF NOT EXISTS fred_series (
-        id INTEGER PRIMARY KEY,
-        abbr TEXT NOT NULL,
-        name TEXT NOT NULL,
-        description TEXT NOT NULL,
-        category_id INTEGER NOT NULL,
-        UNIQUE(abbr, name)
-    )
-    """
-)
-
-cur.execute(
-    """
-    CREATE TABLE IF NOT EXISTS fred_data (
-        series_id INTEGER,
-        ts INTEGER,
-        value REAL,
-        PRIMARY KEY(series_id, ts)
-    )
-    """
-)
-
 # ===========================================================
 # ===================== Tipranks ============================
 # ===========================================================
@@ -705,7 +559,7 @@ cur.execute(
 
 cur.execute(
     """
-    CREATE TABLE IF NOT EXISTS recommendation_trend_tipranks (
+    CREATE TABLE IF NOT EXISTS tipranks_recommendation_trend (
         security_id INTEGER,
         week INTEGER,
         number INTEGER,
@@ -721,7 +575,7 @@ cur.execute(
 
 cur.execute(
     """
-    CREATE TABLE IF NOT EXISTS news_sentiment_tipranks (
+    CREATE TABLE IF NOT EXISTS tipranks_news_sentiment (
         security_id INTEGER,
         week INTEGER,
         number INTEGER,
@@ -736,7 +590,7 @@ cur.execute(
 
 cur.execute(
     """
-    CREATE TABLE IF NOT EXISTS analysts_tipranks (
+    CREATE TABLE IF NOT EXISTS tipranks_analysts (
         id INTEGER PRIMARY KEY,
         name TEXT UNIQUE,
         image BLOB,
@@ -758,7 +612,7 @@ cur.execute(
 
 cur.execute(
     """
-    CREATE TABLE IF NOT EXISTS analyst_companies_tipranks (
+    CREATE TABLE IF NOT EXISTS tipranks_analyst_companies (
         id INTEGER PRIMARY KEY,
         name TEXT UNIQUE
     )
@@ -767,7 +621,7 @@ cur.execute(
 
 cur.execute(
     """
-    CREATE TABLE IF NOT EXISTS sectors_tipranks (
+    CREATE TABLE IF NOT EXISTS tipranks_sectors (
         id INTEGER PRIMARY KEY,
         name TEXT UNIQUE
     )
@@ -776,7 +630,7 @@ cur.execute(
 
 cur.execute(
     """
-    CREATE TABLE IF NOT EXISTS countries_tipranks (
+    CREATE TABLE IF NOT EXISTS tipranks_countries (
         id INTEGER PRIMARY KEY,
         name TEXT UNIQUE
     )
@@ -785,7 +639,7 @@ cur.execute(
 
 cur.execute(
     """
-    CREATE TABLE IF NOT EXISTS ratings_tipranks (
+    CREATE TABLE IF NOT EXISTS tipranks_ratings (
         id INTEGER PRIMARY KEY,
         name TEXT UNIQUE
     )
@@ -794,7 +648,7 @@ cur.execute(
 
 cur.execute(
     """
-    CREATE TABLE IF NOT EXISTS analyst_recommendations_tipranks (
+    CREATE TABLE IF NOT EXISTS tipranks_analyst_recommendations (
         analyst_id INTEGER,
         security_id INTEGER,
         ts INTEGER,
@@ -810,7 +664,7 @@ cur.execute(
 
 cur.execute(
     """
-    CREATE TABLE IF NOT EXISTS analyst_stock_summary_tipranks (
+    CREATE TABLE IF NOT EXISTS tipranks_analyst_stock_summary (
         analyst_id INTEGER,
         security_id INTEGER,
         successful_recommendations INTEGER,
@@ -824,7 +678,7 @@ cur.execute(
 
 cur.execute(
     """
-    CREATE TABLE IF NOT exists institutionals_tipranks (
+    CREATE TABLE IF NOT exists tipranks_institutionals (
         id INTEGER PRIMARY KEY,
         name TEXT UNIQUE,
         manager TEXT,
@@ -837,7 +691,7 @@ cur.execute(
 
 cur.execute(
     """
-    CREATE TABLE IF NOT EXISTS institutional_holdings_tipranks (
+    CREATE TABLE IF NOT EXISTS tipranks_institutional_holdings (
         institutional_id INTEGER,
         security_id INTEGER,
         ts INTEGER,
@@ -849,9 +703,48 @@ cur.execute(
     """
 )
 
+# ===========================================================
+# ======================== Yahoo ============================
+# ===========================================================
+
 cur.execute(
     """
-    CREATE TABLE IF NOT EXISTS analyst_companies_finviz (
+    CREATE TABLE IF NOT EXISTS yahoo_cities (
+        id INTEGER PRIMARY KEY,
+        name TEXT NOT NULL,
+        country_id INTEGER NOT NULL,
+        UNIQUE(name, country_id)
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS yahoo_exchanges (
+        id INTEGER PRIMARY KEY,
+        name TEXT NOT NULL,
+        yahoo_suffix TEXT NOT NULL,
+        country_id INTEGER NOT NULL,
+        UNIQUE(name, country_id, yahoo_suffix)
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS yahoo_executives (
+        id INTEGER PRIMARY KEY,
+        name TEXT NOT NULL,
+        age INTEGER,
+        born INTEGER,
+        UNIQUE(name, born)
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS yahoo_executive_positions (
         id INTEGER PRIMARY KEY,
         name TEXT UNIQUE NOT NULL
     )
@@ -860,7 +753,41 @@ cur.execute(
 
 cur.execute(
     """
-    CREATE TABLE IF NOT EXISTS ratings_finviz (
+    CREATE TABLE IF NOT EXISTS yahoo_company_executive_match (
+        security_id INTEGER,
+        executive_id INTEGER,
+        position_id INTEGER,
+        salary REAL,
+        added INTEGER NOT NULL,
+        discontinued INTEGER,
+        PRIMARY KEY(security_id, executive_id, position_id)
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS yahoo_security_prices (
+        security_id INTEGER,
+        ts INTEGER,
+        open REAL,
+        high REAL,
+        low REAL,
+        close REAL,
+        adj_close REAL,
+        volume INTEGER,
+        dividends REAL,
+        split_ratio REAL,
+        simple_return REAL,
+        log_return REAL,
+        PRIMARY KEY(security_id, ts)
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS yahoo_security_types (
         id INTEGER PRIMARY KEY,
         name TEXT UNIQUE NOT NULL
     )
@@ -869,16 +796,93 @@ cur.execute(
 
 cur.execute(
     """
-    CREATE TABLE IF NOT EXISTS analyst_recommendations_finviz (
+    CREATE TABLE IF NOT EXISTS yahoo_analyst_companies (
+        id INTEGER PRIMARY KEY,
+        name TEXT UNIQUE NOT NULL
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS yahoo_ratings (
+        id INTEGER PRIMARY KEY,
+        name TEXT UNIQUE NOT NULL
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS yahoo_analyst_recommendations (
         analyst_company_id INTEGER,
         security_id INTEGER,
         ts INTEGER,
-        old_rating INTEGER,
-        new_rating INTEGER NOT NULL,
+        old INTEGER,
+        new INTEGER NOT NULL,
         change INTEGER NOT NULL,
-        old_price REAL,
-        new_price REAL,
         PRIMARY KEY(analyst_company_id, security_id, ts)
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS yahoo_recommendation_trend (
+        security_id INTEGER,
+        month INTEGER,
+        number INTEGER,
+        average REAL,
+        strong_buy INTEGER,
+        buy INTEGER,
+        hold INTEGER,
+        sell INTEGER,
+        strong_sell INTEGER,
+        PRIMARY KEY(security_id, month)
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS yahoo_fundamental_variables (
+        id INTEGER PRIMARY KEY,
+        name TEXT NOT NULL,
+        statement_id INTEGER NOT NULL,
+        UNIQUE(name, statement_id)
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS yahoo_fundamental_data (
+        security_id INTEGER,
+        variable_id INTEGER,
+        quarter INTEGER,
+        year INTEGER,
+        ts INTEGER NOT NULL,
+        value INTEGER,
+        PRIMARY KEY(security_id, variable_id, quarter, year)
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS yahoo_gics_sectors (
+        id INTEGER PRIMARY KEY,
+        name TEXT UNIQUE NOT NULL
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS yahoo_gics_industries (
+        id INTEGER PRIMARY KEY,
+        name TEXT UNIQUE NOT NULL,
+        sector_id INTEGER NOT NULL
     )
     """
 )

@@ -39,23 +39,23 @@ if dt.date.today().weekday() == 6:
             price_new = rec["price_new"]
             change = rec["change"]
 
-            cur.execute("INSERT OR IGNORE INTO analyst_companies_finviz (name) VALUES (?)", (name,))
-            analyst_id = cur.execute("SELECT id FROM analyst_companies_finviz WHERE name = ?", (name,)).fetchone()[0]
+            cur.execute("INSERT OR IGNORE INTO finviz_analyst_companies (name) VALUES (?)", (name,))
+            analyst_id = cur.execute("SELECT id FROM finviz_analyst_companies WHERE name = ?", (name,)).fetchone()[0]
             
             if rating_old is None:
                 old_id = None
             else:  
-                cur.execute("INSERT OR IGNORE INTO ratings_finviz (name) VALUES (?)", (rating_old,))
-                old_id = cur.execute("SELECT id FROM ratings_finviz WHERE name = ?", (rating_old,)).fetchone()[0]
+                cur.execute("INSERT OR IGNORE INTO finviz_ratings (name) VALUES (?)", (rating_old,))
+                old_id = cur.execute("SELECT id FROM finviz_ratings WHERE name = ?", (rating_old,)).fetchone()[0]
 
-            cur.execute("INSERT OR IGNORE INTO ratings_finviz (name) VALUES (?)", (rating_new,))
-            new_id = cur.execute("SELECT id FROM ratings_finviz WHERE name = ?", (rating_new,)).fetchone()[0]
+            cur.execute("INSERT OR IGNORE INTO finviz_ratings (name) VALUES (?)", (rating_new,))
+            new_id = cur.execute("SELECT id FROM finviz_ratings WHERE name = ?", (rating_new,)).fetchone()[0]
 
-            cur.execute("INSERT OR IGNORE INTO ratings_finviz (name) VALUES (?)", (change,))
-            change_id = cur.execute("SELECT id FROM ratings_finviz WHERE name = ?", (change,)).fetchone()[0]
+            cur.execute("INSERT OR IGNORE INTO finviz_ratings (name) VALUES (?)", (change,))
+            change_id = cur.execute("SELECT id FROM finviz_ratings WHERE name = ?", (change,)).fetchone()[0]
 
             cur.execute(
-                "REPLACE INTO analyst_recommendations_finviz VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                "REPLACE INTO finviz_analyst_recommendations VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                 (analyst_id, security_id, ts, old_id, new_id, change_id, price_old, price_new)
             )
         

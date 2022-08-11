@@ -26,7 +26,7 @@ forms = (
 )
 
 form_ids = cur.execute(
-    f"SELECT id FROM form_types WHERE name IN {forms}",
+    f"SELECT id FROM sec_form_types WHERE name IN {forms}",
 ).fetchall()
 form_ids = tuple([item[0] for item in form_ids])
 
@@ -60,8 +60,8 @@ for index, ticker in enumerate(tickers):
     security_name = reader.name
     security_type = reader.security_type
     isin = reader.isin
-    cur.execute("INSERT OR IGNORE INTO security_types (name) VALUES (?)", (security_type,))
-    type_id = cur.execute("SELECT id FROM security_types WHERE name = ?", (security_type,)).fetchone()[0]
+    cur.execute("INSERT OR IGNORE INTO yahoo_security_types (name) VALUES (?)", (security_type,))
+    type_id = cur.execute("SELECT id FROM yahoo_security_types WHERE name = ?", (security_type,)).fetchone()[0]
 
     try:
         description = profile["description"]
@@ -96,10 +96,10 @@ for index, ticker in enumerate(tickers):
                 data[var] = ""
 
         #industry
-        cur.execute("INSERT OR IGNORE INTO gics_sectors (name) VALUES (?)", (data["sector"],))
-        sector_id = cur.execute("SELECT id FROM gics_sectors WHERE name = ?", (data["sector"],)).fetchone()[0]
-        cur.execute("INSERT OR IGNORE INTO gics_industries (name, sector_id) VALUES (?, ?)", (data["industry"], sector_id))
-        industry_id = cur.execute("SELECT id FROM gics_industries WHERE name = ?", (data["industry"],)).fetchone()[0]
+        cur.execute("INSERT OR IGNORE INTO yahoo_gics_sectors (name) VALUES (?)", (data["sector"],))
+        sector_id = cur.execute("SELECT id FROM yahoo_gics_sectors WHERE name = ?", (data["sector"],)).fetchone()[0]
+        cur.execute("INSERT OR IGNORE INTO yahoo_gics_industries (name, sector_id) VALUES (?, ?)", (data["industry"], sector_id))
+        industry_id = cur.execute("SELECT id FROM yahoo_gics_industries WHERE name = ?", (data["industry"],)).fetchone()[0]
         
         #profile data
         if data["country"] == "Bahamas":
@@ -110,8 +110,8 @@ for index, ticker in enumerate(tickers):
             continue
         country_id = cur.execute("SELECT id FROM countries WHERE name = ?", (data["country"],)).fetchone()[0]
 
-        cur.execute("INSERT OR IGNORE INTO cities (name, country_id) VALUES (?, ?)", (data["city"], country_id))
-        city_id = cur.execute("SELECT id FROM cities WHERE name = ? AND country_id = ?", (data["city"], country_id)).fetchone()[0]
+        cur.execute("INSERT OR IGNORE INTO yahoo_cities (name, country_id) VALUES (?, ?)", (data["city"], country_id))
+        city_id = cur.execute("SELECT id FROM yahoo_cities WHERE name = ? AND country_id = ?", (data["city"], country_id)).fetchone()[0]
         
         cur.execute(
             """
@@ -132,45 +132,45 @@ for index, ticker in enumerate(tickers):
                 age = item["age"] if item["age"] is not None else ""
                 born = item["born"] if item["born"] is not None else ""
 
-                cur.execute("REPLACE INTO executives (name, age, born) VALUES (?, ?, ?)", (name, age, born))
-                executive_id = cur.execute("SELECT id FROM executives WHERE name = ?", (name,)).fetchone()[0]
+                cur.execute("REPLACE INTO yahoo_executives (name, age, born) VALUES (?, ?, ?)", (name, age, born))
+                executive_id = cur.execute("SELECT id FROM yahoo_executives WHERE name = ?", (name,)).fetchone()[0]
 
-                cur.execute("INSERT OR IGNORE INTO executive_positions (name) VALUES (?)", (position,))
-                position_id = cur.execute("SELECT id FROM executive_positions WHERE name = ?", (position,)).fetchone()[0]
+                cur.execute("INSERT OR IGNORE INTO yahoo_executive_positions (name) VALUES (?)", (position,))
+                position_id = cur.execute("SELECT id FROM yahoo_executive_positions WHERE name = ?", (position,)).fetchone()[0]
 
                 executives[(security_id, executive_id, position_id)] = salary
 
             for (security_id, executive_id, position_id, salary) in \
                 cur.execute(
-                    "SELECT security_id, executive_id, position_id, salary FROM company_executive_match WHERE security_id = ? AND executive_id = ? AND position_id = ?",
+                    "SELECT security_id, executive_id, position_id, salary FROM yahoo_company_executive_match WHERE security_id = ? AND executive_id = ? AND position_id = ?",
                     (security_id, executive_id, position_id)
                 ).fetchall():
                 if (security_id, executive_id, position_id) not in executives.keys():
                     if cur.execute(
-                        "SELECT discontinued FROM company_executive_match WHERE security_id = ? AND security_id = ? AND position_id = ?",
+                        "SELECT discontinued FROM yahoo_company_executive_match WHERE security_id = ? AND security_id = ? AND position_id = ?",
                         (security_id, executive_id, position_id)
                     ).fetchone()[0] is None:
                         cur.execute(
-                            "UPDATE company_executive_match SET discontinued = ? WHERE security_id = ? AND executive_id = ? AND position_id = ?", 
+                            "UPDATE yahoo_company_executive_match SET discontinued = ? WHERE security_id = ? AND executive_id = ? AND position_id = ?", 
                             (ts_today, security_id, executive_id, position_id)
                         )
                     elif executives[(security_id, executive_id, position_id)] != salary:
                         cur.execute(
-                            "UPDATE company_executive_match SET salary = ? WHERE security_id = ? AND executive_id = ? AND position_id = ?",
+                            "UPDATE yahoo_company_executive_match SET salary = ? WHERE security_id = ? AND executive_id = ? AND position_id = ?",
                             (executives[(security_id, executive_id, position_id)], security_id, executive_id, position_id)
                         )
 
-            entries = cur.execute("SELECT security_id, executive_id, position_id FROM company_executive_match").fetchall()
+            entries = cur.execute("SELECT security_id, executive_id, position_id FROM yahoo_company_executive_match").fetchall()
 
             for (security_id, executive_id, position_id), salary in executives.items():
                 if (security_id, executive_id, position_id) not in entries:
                     cur.execute(
-                        "INSERT INTO company_executive_match (security_id, executive_id, position_id, salary, added) VALUES (?, ?, ?, ?, ?)",
+                        "INSERT INTO yahoo_company_executive_match (security_id, executive_id, position_id, salary, added) VALUES (?, ?, ?, ?, ?)",
                         (security_id, executive_id, position_id, salary, ts_today)
                     )
                 else:
                     cur.execute(
-                        "UPDATE company_executive_match SET discontinued = NULL WHERE security_id = ? AND executive_id = ? AND position_id = ?",
+                        "UPDATE yahoo_company_executive_match SET discontinued = NULL WHERE security_id = ? AND executive_id = ? AND position_id = ?",
                         (security_id, executive_id, position_id)
                     )
 
@@ -188,10 +188,10 @@ for index, ticker in enumerate(tickers):
                     ts_statement = int(date.timestamp())
                     for variable in statements[statement][date_iso]:
                         statement_id = cur.execute("SELECT id FROM financial_statement_types WHERE name = ?", (statement_name, )).fetchone()[0]
-                        cur.execute("INSERT OR IGNORE INTO fundamental_variables_yahoo (name, statement_id) VALUES (?, ?)", (variable, statement_id))
-                        variable_id = cur.execute("SELECT id FROM fundamental_variables_yahoo WHERE name = ? AND statement_id = ?", (variable, statement_id)).fetchone()[0]
+                        cur.execute("INSERT OR IGNORE INTO yahoo_fundamental_variables(name, statement_id) VALUES (?, ?)", (variable, statement_id))
+                        variable_id = cur.execute("SELECT id FROM yahoo_fundamental_variablesWHERE name = ? AND statement_id = ?", (variable, statement_id)).fetchone()[0]
                         cur.execute(
-                            "REPLACE INTO fundamental_data_yahoo VALUES (?, ?, ?, ?, ?, ?)",
+                            "REPLACE INTO yahoo_fundamental_data VALUES (?, ?, ?, ?, ?, ?)",
                             (security_id, variable_id, 0, year, ts_statement, statements[statement][date_iso][variable])
                         )
             fiscal_year_end_quarter = date.quarter
@@ -211,10 +211,10 @@ for index, ticker in enumerate(tickers):
                         year = year + 1 if (fiscal_year_end_quarter < 4 and date.quarter > fiscal_year_end_quarter) else year
                         for variable in statements[statement][date_iso]:
                             statement_id = cur.execute("SELECT id FROM financial_statement_types WHERE name = ?", (statement_name, )).fetchone()[0]
-                            cur.execute("INSERT OR IGNORE INTO fundamental_variables_yahoo (name, statement_id) VALUES (?, ?)", (variable, statement_id))
-                            variable_id = cur.execute("SELECT id FROM fundamental_variables_yahoo WHERE name = ? AND statement_id = ?", (variable, statement_id)).fetchone()[0]
+                            cur.execute("INSERT OR IGNORE INTO yahoo_fundamental_variables (name, statement_id) VALUES (?, ?)", (variable, statement_id))
+                            variable_id = cur.execute("SELECT id FROM yahoo_fundamental_variables WHERE name = ? AND statement_id = ?", (variable, statement_id)).fetchone()[0]
                             cur.execute(
-                                "REPLACE INTO fundamental_data_yahoo VALUES (?, ?, ?, ?, ?, ?)",
+                                "REPLACE INTO yahoo_fundamental_data VALUES (?, ?, ?, ?, ?, ?)",
                                 (security_id, variable_id, quarter, year, ts_statement, statements[statement][date_iso][variable])
                             )
 
@@ -231,23 +231,23 @@ for index, ticker in enumerate(tickers):
                 new = dct["new"]
                 change = dct["change"]
                 
-                cur.execute("INSERT OR IGNORE INTO analyst_companies_yahoo (name) VALUES (?)", (name,))
-                analyst_id = cur.execute("SELECT id FROM analyst_companies_yahoo WHERE name = ?", (name,)).fetchone()[0]
+                cur.execute("INSERT OR IGNORE INTO yahoo_analyst_companies (name) VALUES (?)", (name,))
+                analyst_id = cur.execute("SELECT id FROM yahoo_analyst_companies WHERE name = ?", (name,)).fetchone()[0]
                 
                 if old is None:
                     old_id = None
                 else:  
-                    cur.execute("INSERT OR IGNORE INTO ratings_yahoo (name) VALUES (?)", (old,))
-                    old_id = cur.execute("SELECT id FROM ratings_yahoo WHERE name = ?", (old,)).fetchone()[0]
+                    cur.execute("INSERT OR IGNORE INTO yahoo_ratings (name) VALUES (?)", (old,))
+                    old_id = cur.execute("SELECT id FROM yahoo_ratings WHERE name = ?", (old,)).fetchone()[0]
 
-                cur.execute("INSERT OR IGNORE INTO ratings_yahoo (name) VALUES (?)", (new,))
-                new_id = cur.execute("SELECT id FROM ratings_yahoo WHERE name = ?", (new,)).fetchone()[0]
+                cur.execute("INSERT OR IGNORE INTO yahoo_ratings (name) VALUES (?)", (new,))
+                new_id = cur.execute("SELECT id FROM yahoo_ratings WHERE name = ?", (new,)).fetchone()[0]
 
-                cur.execute("INSERT OR IGNORE INTO ratings_yahoo (name) VALUES (?)", (change,))
-                change_id = cur.execute("SELECT id FROM ratings_yahoo WHERE name = ?", (change,)).fetchone()[0]
+                cur.execute("INSERT OR IGNORE INTO yahoo_ratings (name) VALUES (?)", (change,))
+                change_id = cur.execute("SELECT id FROM yahoo_ratings WHERE name = ?", (change,)).fetchone()[0]
 
                 cur.execute(
-                    "REPLACE INTO analyst_recommendations_yahoo VALUES (?, ?, ?, ?, ?, ?)",
+                    "REPLACE INTO yahoo_analyst_recommendations VALUES (?, ?, ?, ?, ?, ?)",
                     (analyst_id, security_id, ts_rated, old_id, new_id, change_id)
                 )
 
@@ -273,7 +273,7 @@ for index, ticker in enumerate(tickers):
                 ts_month = int(date_month.timestamp())
 
                 cur.execute(
-                    "REPLACE INTO recommendation_trend_yahoo VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    "REPLACE INTO yahoo_recommendation_trend VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (security_id,
                     ts_month,
                     trend[calendar]["count"],

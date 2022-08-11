@@ -111,7 +111,7 @@ for row in table.find_all("tr")[1:]:
     country_id = cur.execute("SELECT id FROM countries WHERE name = ?", (country_name,)).fetchone()[0]
     cur.execute(
         """
-        INSERT OR IGNORE INTO exchanges (name, country_id, yahoo_suffix)
+        INSERT OR IGNORE INTO yahoo_exchanges (name, country_id, yahoo_suffix)
         VALUES (?, ?, ?)
         """,
         (exchange_name, country_id, suffix)

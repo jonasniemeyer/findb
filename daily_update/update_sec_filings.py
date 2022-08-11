@@ -58,8 +58,8 @@ def get_filings():
             ts_filed = int((dt.date.fromisoformat(date) - dt.date(1970, 1, 1)).total_seconds())
             href_split = href.strip().split("/")
             href = f"{SEC_BASE_URL}/edgar/data/{href_split[-2]}/{href_split[-1]}"
-            cur.execute("INSERT OR IGNORE INTO form_types (name) VALUES (?)", (form,))
-            form_id = cur.execute("SELECT id FROM form_types WHERE name = ?", (form,)).fetchone()[0]
+            cur.execute("INSERT OR IGNORE INTO sec_form_types (name) VALUES (?)", (form,))
+            form_id = cur.execute("SELECT id FROM sec_form_types WHERE name = ?", (form,)).fetchone()[0]
             cur.execute(
                 """
                 INSERT OR IGNORE INTO sec_filings (cik, form_type_id, ts_filed, url, parsed)

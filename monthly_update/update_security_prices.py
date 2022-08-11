@@ -42,7 +42,7 @@ for index, (security_id, ticker) in enumerate(securities):
     df["ts"] = df.index
     data = df.reindex(columns = ["security id", "ts", "open", "high", "low", "close", "adj_close", "volume", "dividends", "splits", "simple_returns", "log_returns"]).values
 
-    cur.executemany("REPLACE INTO security_prices VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", data)
+    cur.executemany("REPLACE INTO yahoo_security_prices VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", data)
     cur.execute("UPDATE securities SET prices_updated = ?, currency_id = ?, utc_offset = ? WHERE id = ?", (ts_today, currency_id, offset, security_id))
     if index % 100 == 0:
         con.commit()

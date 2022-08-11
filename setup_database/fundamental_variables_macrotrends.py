@@ -13,7 +13,7 @@ if __name__ == '__main__':
     for statement in data.keys():
         statement_id = cur.execute("SELECT id FROM financial_statement_types WHERE name = ?", (statement,)).fetchone()[0]
         for variable in data[statement]:
-            cur.execute("INSERT OR IGNORE INTO fundamental_variables_macrotrends (name, statement_id) VALUES (?, ?)", (variable, statement_id))
+            cur.execute("INSERT OR IGNORE INTO macrotrends_fundamental_variables (name, statement_id) VALUES (?, ?)", (variable, statement_id))
 
     con.commit()
     con.close()

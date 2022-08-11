@@ -8,7 +8,7 @@ def insert_margin_debt(db_connection):
     for ts in df.index:
         data.append((ts, int(df.loc[ts, "debit"]), int(df.loc[ts, "credit"])))
 
-    cur.executemany("INSERT OR IGNORE INTO margin_debt VALUES (?, ?, ?)", data)
+    cur.executemany("INSERT OR IGNORE INTO finra_margin_debt VALUES (?, ?, ?)", data)
     con.commit()
 
 if __name__ == "__main__":

@@ -41,7 +41,7 @@ for i, url in enumerate(urls):
         items.append((maturity_ts, ts, price, volume))
     cur.executemany(
         """
-        REPLACE INTO vix_prices VALUES(?, ?, ?, ?)
+        REPLACE INTO cboe_vix_prices VALUES(?, ?, ?, ?)
         """,
         items
     )
