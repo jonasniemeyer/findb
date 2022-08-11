@@ -785,10 +785,21 @@ cur.execute(
 
 cur.execute(
     """
+    CREATE TABLE IF NOT EXISTS ratings_tipranks (
+        id INTEGER PRIMARY KEY,
+        name TEXT UNIQUE
+    )
+    """
+)
+
+cur.execute(
+    """
     CREATE TABLE IF NOT EXISTS analyst_recommendations_tipranks (
         analyst_id INTEGER,
         security_id INTEGER,
         ts INTEGER,
+        rating_id INTEGER,
+        change_id INTEGER,
         price_target REAL,
         title TEXT,
         url TEXT,
@@ -802,8 +813,8 @@ cur.execute(
     CREATE TABLE IF NOT EXISTS analyst_stock_summary_tipranks (
         analyst_id INTEGER,
         security_id INTEGER,
+        successful_recommendations INTEGER,
         total_recommendations INTEGER,
-        positive_recommendations INTEGER,
         success_rate REAL,
         average_rating_return REAL,
         PRIMARY KEY(analyst_id, security_id)
