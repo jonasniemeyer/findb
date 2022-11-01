@@ -2,6 +2,7 @@ from finance_data import FinvizReader
 from finance_database import Database
 import pandas as pd
 import datetime as dt
+from time import sleep
 
 if dt.date.today().weekday() == 6:
 
@@ -27,7 +28,13 @@ if dt.date.today().weekday() == 6:
 
         security_id = cur.execute("SELECT id FROM securities WHERE ticker = ?", (ticker,)).fetchone()[0]
 
-        reader = FinvizReader(ticker)
+        fetched = False
+        while not fetched:
+            try:
+                reader = FinvizReader(ticker)
+                fetched = True
+            except PermissionError:
+                sleep(1)
 
         recommendations = reader.analyst_recommendations(timestamps=True)
         for rec in recommendations:
