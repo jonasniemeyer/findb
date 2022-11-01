@@ -210,11 +210,11 @@ cur.execute(
 
 cur.executescript(
     """
-    INSERT OR IGNORE INTO commodity_sectors (name) VALUES("Agriculture");
-    INSERT OR IGNORE INTO commodity_sectors (name) VALUES("Energy");
-    INSERT OR IGNORE INTO commodity_sectors (name) VALUES("Industrial Metals");
-    INSERT OR IGNORE INTO commodity_sectors (name) VALUES("Livestock");
-    INSERT OR IGNORE INTO commodity_sectors (name) VALUES("Precious Metals");
+    INSERT OR IGNORE INTO cme_commodity_sectors (name) VALUES("Agriculture");
+    INSERT OR IGNORE INTO cme_commodity_sectors (name) VALUES("Energy");
+    INSERT OR IGNORE INTO cme_commodity_sectors (name) VALUES("Industrial Metals");
+    INSERT OR IGNORE INTO cme_commodity_sectors (name) VALUES("Livestock");
+    INSERT OR IGNORE INTO cme_commodity_sectors (name) VALUES("Precious Metals");
     """
 )
 
@@ -524,30 +524,38 @@ cur.execute(
 )
 
 # ===========================================================
-# ========================== SIC ============================
+# =================== GICS & SIC ============================
 # ===========================================================
+
+cur.execute("DROP TABLE IF EXISTS gics_classification")
+cur.execute("DROP TABLE IF EXISTS sic_classification")
 
 cur.execute(
     """
-    CREATE TABLE IF NOT EXISTS sic_divisions (
-        id INTEGER PRIMARY KEY,
-        character TEXT UNIQUE NOT NULL,
-        name TEXT UNIQUE NOT NULL,
-        no_businesses INTEGER NOT NULL
+    CREATE TABLE IF NOT EXISTS gics_classification (
+        code INTEGER UNIQUE,
+        name TEXT NOT NULL,
+        is_sector INTEGER,
+        is_industry_group INTEGER,
+        is_industry INTEGER,
+        is_sub_industry INTEGER,
+        parent_id INTEGER
     )
     """
 )
 
 cur.execute(
     """
-    CREATE TABLE IF NOT EXISTS sic_industries (
-        id INTEGER PRIMARY KEY,
+    CREATE TABLE IF NOT EXISTS sic_classification (
+        code INTEGER UNIQUE,
         name TEXT NOT NULL,
         no_businesses INTEGER NOT NULL,
-        industry_group_id INTEGER,
-        major_group_id INTEGER,
-        division_id INTEGER NOT NULL,
-        UNIQUE(name, industry_group_id, major_group_id, division_id)
+        is_division INTEGER,
+        is_major_group INTEGER,
+        is_industry_group INTEGER,
+        is_industry INTEGER,
+        description TEXT,
+        parent_id INTEGER
     )
     """
 )

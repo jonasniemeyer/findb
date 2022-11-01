@@ -1,0 +1,336 @@
+import requests
+import re
+from bs4 import BeautifulSoup, element
+from finance_database import Database
+from finance_database.utils import HEADERS
+
+def get_gsci_classification() -> dict:
+    url = "https://en.wikipedia.org/wiki/Global_Industry_Classification_Standard"
+    html = requests.get(url=url, headers=HEADERS).text
+    soup = BeautifulSoup(html, "lxml")
+    
+    sectors = {}
+    table = soup.find("table", {"class": "wikitable"}).find("tbody")
+    for row in table.find_all("tr")[1:]:
+        cells = row.find_all("td")
+        if len(cells) == 8:
+            sector_id = int(cells[0].text)
+            sector = cells[1].text.split("(")[0].strip()        
+            industry_group_id = int(cells[2].text)
+            industry_group = cells[3].text   .strip()      
+            industry_id = int(cells[4].text)
+            industry = cells[5].text.strip() 
+            sub_industry_id = int(cells[6].text)
+            sub_industry = cells[7].text.strip()
+
+        elif len(cells) == 6:
+            industry_group_id = int(cells[0].text)
+            industry_group = cells[1].text   .strip()      
+            industry_id = int(cells[2].text)
+            industry = cells[3].text.strip() 
+            sub_industry_id = int(cells[4].text)
+            sub_industry = cells[5].text.strip() 
+
+        elif len(cells) == 4:
+            industry_id = int(cells[0].text)
+            industry = cells[1].text.strip() 
+            sub_industry_id = int(cells[2].text)
+            sub_industry = cells[3].text.strip()
+
+        elif len(cells) == 2:
+            sub_industry_id = int(cells[0].text)
+            sub_industry = cells[1].text.strip()
+
+        if sector not in sectors:
+            sectors[sector] = {
+                "id": sector_id,
+                "industry_groups": {}
+            }
+
+        if industry_group not in sectors[sector]["industry_groups"]:
+            sectors[sector]["industry_groups"][industry_group] = {
+                "id": industry_group_id,
+                "industries": {}
+            }
+
+        if industry not in sectors[sector]["industry_groups"][industry_group]["industries"]:
+            sectors[sector]["industry_groups"][industry_group]["industries"][industry] = {
+                "id": industry_id,
+                "sub_industries": {}
+            }
+
+        if sub_industry not in sectors[sector]["industry_groups"][industry_group]["industries"][industry]["sub_industries"]:
+            sectors[sector]["industry_groups"][industry_group]["industries"][industry]["sub_industries"][sub_industry] = {
+                "id": sub_industry_id
+            }
+    
+    return sectors
+
+def get_sic_classification() -> dict:
+    html = requests.get("https://www.naics.com/search/").text
+    soup = BeautifulSoup(html, "lxml")
+    table = soup.find_all("table")[-1]
+    
+    divisions = {}
+    total_divisions = len(table.find_all("tr")[1:])
+    for index, row in enumerate(table.find_all("tr")[1:]):
+        division_name = row.find_all("td")[1].text
+        print(f"Division {index+1} of {total_divisions}: {division_name}")
+        
+        url = row.find("td").find("a").get("href")
+        html = requests.get(url).text
+        soup = BeautifulSoup(html, "lxml")
+        rows = soup.find("table").find_all("tr")
+        
+        no_businesses = int(rows[-1].find_all("td")[-1].text.replace(",", ""))
+        description = soup.find("div", {"id": "sicdivdescr"}).text
+
+        divisions[division_name] = {
+            "code": index+1,
+            "no_businesses": no_businesses,
+            "description": description.strip(),
+            "major_groups": {}
+        }
+        
+        for row in rows[1:-1]:
+            cells = row.find_all("td")
+            code = cells[0].text.strip()
+            
+            if len(code) == 2:
+                code = int(code + "00")
+                no_businesses = int(cells[2].text.replace(",", ""))
+                
+                url = cells[0].find("a").get("href")
+                major_group_name, description, industry_groups = parse_sic_major_group_page(url)
+                
+                divisions[division_name]["major_groups"][major_group_name] = {
+                    "code": code,
+                    "no_businesses": no_businesses,
+                    "description": description.strip(),
+                    "industry_groups": industry_groups
+                }
+    
+    return divisions
+
+
+def parse_sic_major_group_page(url) -> tuple:
+    html = requests.get(url).text
+    soup = BeautifulSoup(html, "lxml")
+    content = soup.find('div', {'class':'entry-content'})
+
+    anchor_table = content.find("table")
+    header = anchor_table.find_previous("h4")
+    
+    name = re.findall('Major Group: [0-9]+—(.+)', header.text)[0]
+    
+    description = ""
+    for tag in header.next_siblings:
+        if isinstance(tag, element.Tag) and tag.name != "br":
+            break
+        description += tag.text
+    
+    description = description.strip()
+    
+    industry_groups = {}
+    industry_group_tags = content.find_all('h6')
+    for industry_group in industry_group_tags:
+        group_code, group_name = re.findall('Industry Group ([0-9]+): (.+)', industry_group.text)[0]
+        group_code = int(group_code + '0')
+        
+        industry_groups[group_name] = {
+            "code": group_code,
+            "no_businesses": None,
+            "description": None,
+            "industries": {}
+        }
+        
+        total_businesses = 0
+        industries = {}
+        industry_tags = industry_group.find_next("table").find_all('tr')
+        for industry in industry_tags:
+            cells = industry.find_all("td")
+            code = int(cells[0].text)
+            no_businesses = int(cells[2].text.replace(",", ""))
+
+            url = cells[0].find("a").get("href")
+            name, description = parse_sic_industry_page(url)
+            industries[name] = {
+                "code": code,
+                "no_businesses": no_businesses,
+                "description": description
+            }
+            
+            total_businesses += no_businesses
+        
+        industry_groups[group_name]["no_businesses"] = no_businesses
+        industry_groups[group_name]["industries"] = industries
+            
+    return name, description, industry_groups
+    
+def parse_sic_industry_page(url) -> tuple:
+    html = requests.get(url).text
+    soup = BeautifulSoup(html, "lxml")
+
+    anchor_table = soup.find("table")
+    header = anchor_table.find_previous("h6")
+    
+    name = re.findall('Industry: [0-9]+—(.+)', header.text)[0]
+
+    description = ""
+    for tag in header.next_siblings:
+        if isinstance(tag, element.Tag) and tag.name != "br":
+            break
+        description += tag.text
+    
+    description = description.strip()    
+    return name, description
+
+def insert_sic_data(data, db_con) -> None:
+    cur = db_con.cursor()
+    for division_id in data.keys():
+        cur.execute(
+            "INSERT INTO sic_divisions VALUES (?, ?, ?, ?)",
+            (
+                division_id,
+                data[division_id]['character'],
+                data[division_id]['name'],
+                data[division_id]['no_businesses']
+            )
+        )
+        db_con.commit()
+        for major_group_id in data[division_id]['major_groups'].keys():
+            cur.execute(
+                """
+                INSERT INTO sic_industries(id, name, no_businesses, division_id)
+                VALUES (?, ?, ?, ?)
+                """,
+                (
+                    major_group_id,
+                    data[division_id]['major_groups'][major_group_id]['name'],
+                    data[division_id]['major_groups'][major_group_id]['no_businesses'],
+                    division_id
+                )
+            )
+            for group_id in data[division_id]['major_groups'][major_group_id]['industry_groups'].keys():
+                cur.execute(
+                    """
+                    INSERT INTO sic_industries(id, name, no_businesses, major_group_id, division_id)
+                    VALUES (?, ?, ?, ?, ?)
+                    """,
+                    (
+                        group_id,
+                        data[division_id]['major_groups'][major_group_id]['industry_groups'][group_id]['name'],
+                        data[division_id]['major_groups'][major_group_id]['industry_groups'][group_id]['no_businesses'],
+                        major_group_id,
+                        division_id
+                    )
+                )
+                for industry_id in data[division_id]['major_groups'][major_group_id]['industry_groups'][group_id]['industries'].keys():
+                    cur.execute(
+                        """
+                        INSERT INTO sic_industries VALUES (?, ?, ?, ?, ?, ?)
+                        """,
+                        (
+                            industry_id,
+                            data[division_id]['major_groups'][major_group_id]['industry_groups'][group_id]['industries'][industry_id]['name'],
+                            data[division_id]['major_groups'][major_group_id]['industry_groups'][group_id]['industries'][industry_id]['no_businesses'],
+                            group_id,
+                            major_group_id,
+                            division_id
+                        )
+                    )
+    db_con.commit()
+
+if __name__ == '__main__':
+    db = Database()
+    con = db.connection
+    cur = db.cursor
+
+    # insert gics data
+    gics_sectors = get_gsci_classification()
+    for sector in gics_sectors.keys():
+        cur.execute(
+            "INSERT INTO gics_classification (code, name, is_sector) VALUES(?, ?, ?)",
+            (gics_sectors[sector]["id"], sector, True)
+        )
+
+        for industry_group in gics_sectors[sector]["industry_groups"].keys():
+            cur.execute(
+                "INSERT INTO gics_classification (code, name, is_industry_group, parent_id) VALUES(?, ?, ?, ?)",
+                (gics_sectors[sector]["industry_groups"][industry_group]["id"], industry_group, True, gics_sectors[sector]["id"])
+            )
+
+            for industry in gics_sectors[sector]["industry_groups"][industry_group]["industries"]:
+                cur.execute(
+                    "INSERT INTO gics_classification (code, name, is_industry, parent_id) VALUES(?, ?, ?, ?)",
+                    (
+                        gics_sectors[sector]["industry_groups"][industry_group]["industries"][industry]["id"],
+                        industry,
+                        True,
+                        gics_sectors[sector]["industry_groups"][industry_group]["id"]
+                    )
+                )
+
+                for sub_industry in gics_sectors[sector]["industry_groups"][industry_group]["industries"][industry]["sub_industries"]:
+                    cur.execute(
+                        "INSERT INTO gics_classification (code, name, is_sub_industry, parent_id) VALUES(?, ?, ?, ?)",
+                        (
+                            gics_sectors[sector]["industry_groups"][industry_group]["industries"][industry]["sub_industries"][sub_industry]["id"],
+                            sub_industry,
+                            True,
+                            gics_sectors[sector]["industry_groups"][industry_group]["industries"][industry]["id"]
+                        )
+                    )
+    
+    # insert sic data
+    sic_divisions = get_sic_classification()
+    for division in sic_divisions:
+        cur.execute(
+            "INSERT INTO sic_classification (code, name, no_businesses, is_division, description) VALUES (?, ?, ?, ?, ?)",
+            (
+                sic_divisions[division]["code"],
+                division,
+                sic_divisions[division]["no_businesses"],
+                True,
+                sic_divisions[division]["description"]
+            )
+        )
+
+        for major_group in sic_divisions[division]["major_groups"]:
+            cur.execute(
+                "INSERT INTO sic_classification (code, name, no_businesses, is_major_group, description) VALUES (?, ?, ?, ?, ?)",
+                (
+                    sic_divisions[division]["major_groups"][major_group]["code"],
+                    major_group,
+                    sic_divisions[division]["major_groups"][major_group]["no_businesses"],
+                    True,
+                    sic_divisions[division]["major_groups"][major_group]["description"]
+                )
+            )
+
+            for industry_group in sic_divisions[division]["major_groups"][major_group]["industry_groups"]:
+                cur.execute(
+                    "INSERT INTO sic_classification (code, name, no_businesses, is_industry_group, description) VALUES (?, ?, ?, ?, ?)",
+                    (
+                        sic_divisions[division]["major_groups"][major_group]["industry_groups"][industry_group]["code"],
+                        industry_group,
+                        sic_divisions[division]["major_groups"][major_group]["industry_groups"][industry_group]["no_businesses"],
+                        True,
+                        sic_divisions[division]["major_groups"][major_group]["industry_groups"][industry_group]["description"]
+                    )
+                )
+
+                for industry in sic_divisions[division]["major_groups"][major_group]["industry_groups"][industry_group]["industries"]:
+                    cur.execute(
+                        "INSERT INTO sic_classification (code, name, no_businesses, is_industry, description) VALUES (?, ?, ?, ?, ?)",
+                        (
+                            sic_divisions[division]["major_groups"][major_group]["industry_groups"][industry_group]["industries"][industry]["code"],
+                            industry,
+                            sic_divisions[division]["major_groups"][major_group]["industry_groups"][industry_group]["industries"][industry]["no_businesses"],
+                            True,
+                            sic_divisions[division]["major_groups"][major_group]["industry_groups"][industry_group]["industries"][industry]["description"]
+                        )
+                    ) 
+
+    con.commit()
+    con.close()
