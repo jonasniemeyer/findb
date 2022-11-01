@@ -1,4 +1,3 @@
-from posixpath import split
 from finance_data import TipranksAnalystReader, TipranksStockReader
 from finance_data.utils import DatasetError
 from finance_database import Database
@@ -162,8 +161,6 @@ analysts = [item[0] for item in analysts]
 length = len(analysts)
 
 for index, analyst in enumerate(analysts):
-    if index < 1400:
-        continue
     if index % 100 == 0:
         con.commit()
     print(f"{index} of {length}: {analyst}")
@@ -220,7 +217,7 @@ for index, analyst in enumerate(analysts):
         else:
             security_id = security_id[0]
         
-        splits = cur.execute("SELECT ts, split_ratio FROM security_prices WHERE security_id = ? AND split_ratio NOT NULL ORDER BY ts DESC", (security_id,)).fetchall()
+        splits = cur.execute("SELECT ts, split_ratio FROM yahoo_security_prices WHERE security_id = ? AND split_ratio NOT NULL ORDER BY ts DESC", (security_id,)).fetchall()
 
         cur.execute("INSERT OR IGNORE INTO tipranks_ratings (name) VALUES (?)", (rating["rating"],))
         rating_id = cur.execute("SELECT id FROM tipranks_ratings WHERE name = ?", (rating["rating"],)).fetchone()[0]

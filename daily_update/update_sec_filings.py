@@ -23,6 +23,8 @@ def get_filing_lists(first_year=1900, first_quarter=0):
             days = requests.get(days_url, headers=HEADERS).json()
             for day in days["directory"]["item"]:
                 if day["name"].startswith("master"):
+                    if len(day["name"].split(".")) == 2:
+                        continue
                     date = day["name"].split(".")[1]
                     if len(date) == 8:
                         date = "{}-{}-{}".format(date[:4], date[4:6], date[6:])
