@@ -83,16 +83,16 @@ cur.execute(
     """
     CREATE TABLE IF NOT EXISTS securities (
         id INTEGER PRIMARY KEY,
-        cik INTEGER NOT NULL,
+        cik TEXT NOT NULL,
         ticker TEXT NOT NULL,
         isin TEXT,
         yahoo_name TEXT,
+        sec_name TEXT,
         description TEXT,
         logo BLOB,
         type_id INTEGER,
         currency_id INTEGER,
         utc_offset INTEGER,
-        sec_name TEXT,
         exchange_id INTEGER,
         added INTEGER NOT NULL,
         discontinued INTEGER,
@@ -493,8 +493,6 @@ cur.execute(
     """
     CREATE TABLE IF NOT EXISTS sec_mutualfund_classes (
         security_id INTEGER PRIMARY KEY,
-        cik TEXT UNIQUE,
-        name TEXT UNIQUE,
         series_id INTEGER
     )
     """
