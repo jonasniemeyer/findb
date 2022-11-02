@@ -99,6 +99,8 @@ cur.execute(
         old_name TEXT,
         profile_updated INTEGER,
         prices_updated INTEGER,
+        is_sec_company INTEGER,
+        is_sec_mutualfund INTEGER,
         UNIQUE(cik, ticker)
     )
     """
@@ -464,6 +466,42 @@ cur.execute(
 
 cur.execute(
     """
+    CREATE TABLE IF NOT EXISTS sec_mutualfund_entities (
+        id INTEGER PRIMARY KEY,
+        cik INTEGER UNIQUE,
+        name TEXT UNIQUE,
+        added INTEGER,
+        discontinued INTEGER
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS sec_mutualfund_series (
+        id INTEGER PRIMARY KEY,
+        cik TEXT UNIQUE,
+        name TEXT UNIQUE,
+        entity_id INTEGER,
+        added INTEGER,
+        discontinued INTEGER
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS sec_mutualfund_classes (
+        security_id INTEGER PRIMARY KEY,
+        cik TEXT UNIQUE,
+        name TEXT UNIQUE,
+        series_id INTEGER
+    )
+    """
+)
+
+cur.execute(
+    """
     CREATE TABLE IF NOT EXISTS sec_investment_managers (
         id INTEGER PRIMARY KEY,
         cik INTEGER UNIQUE NOT NULL,
@@ -526,9 +564,6 @@ cur.execute(
 # ===========================================================
 # =================== GICS & SIC ============================
 # ===========================================================
-
-cur.execute("DROP TABLE IF EXISTS gics_classification")
-cur.execute("DROP TABLE IF EXISTS sic_classification")
 
 cur.execute(
     """
