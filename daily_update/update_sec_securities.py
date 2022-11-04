@@ -25,8 +25,8 @@ def update_companies(db_connection):
                 (new_companies[(cik, ticker)], name, cik, ticker)
             )
             print(f"Company Name Updated: {cik:>10} {ticker:>6} {name}")
-            print(f"\tOld Name: {name}")
             print(f"\tNew Name: {new_companies[(cik, ticker)]}")
+            print(f"\tOld Name: {name}")
         
         con.commit()
     
@@ -59,24 +59,33 @@ def update_mutualfunds(db_connection):
     new_class_ciks = set([class_["class_cik"] for class_ in new_classes])
     database_classes = cur.execute("SELECT cik, ticker FROM securities WHERE is_sec_mutualfund = 1").fetchall()
 
-    # set entities to discontinued that are IN the database but are NOT IN the new classes dict
+    # set entities to discontinued that are IN the database but are NOT IN the new classes dict if not already done
     for cik in database_entities:
-        if cik not in new_entity_ciks:
+        if (
+            cik not in new_entity_ciks
+            and cur.execute("SELECT discontinued FROM sec_mutualfund_entities WHERE cik = ?", (cik,)).fetchone()[0] is None
+        ):
             cur.execute("UPDATE sec_mutualfund_entities SET discontinued = ? WHERE cik = ?", (ts_today, cik))
             print(f"Discontinued Mutual Fund Entity: {cik:>10}")
     con.commit()
 
-    # set series to discontinued that are IN the database but are NOT IN the new classes dict
+    # set series to discontinued that are IN the database but are NOT IN the new classes dict if not already done
     for cik in database_series:
-        if cik not in new_series_ciks:
+        if (
+            cik not in new_series_ciks
+            and cur.execute("SELECT discontinued FROM sec_mutualfund_series WHERE cik = ?", (cik,)).fetchone()[0] is None
+        ):
             cur.execute("UPDATE sec_mutualfund_series SET discontinued = ? WHERE cik = ?", (ts_today, cik))
             print(f"Discontinued Mutual Fund Series: {cik:>10}")
     con.commit()
 
-    # set classes to discontinued that are IN the database but are NOT IN the new classes dict
+    # set classes to discontinued that are IN the database but are NOT IN the new classes dict if not already done
     for cik, ticker in database_classes:
-        if cik not in new_class_ciks:
-            cur.execute("UPDATE securities SET discontinued = ? WHERE cik = ?", (ts_today, cik))
+        if (
+            cik not in new_class_ciks
+            and cur.execute("SELECT discontinued FROM securities WHERE cik = ? AND ticker = ?", (cik, ticker)).fetchone()[0] is None
+        ):
+            cur.execute("UPDATE securities SET discontinued = ? WHERE cik = ? AND ticker = ?", (ts_today, cik, ticker))
             print(f"Discontinued Mutual Fund Class: {cik:>10} {ticker:>6}")
     con.commit()
 
