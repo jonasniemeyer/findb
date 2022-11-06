@@ -8,7 +8,7 @@ if dt.date.today().weekday() == 6:
     con = db.connection
     cur = db.cursor
 
-    tickers = cur.execute("SELECT id, ticker FROM securities WHERE discontinued IS NULL ORDER BY ticker ASC").fetchall()
+    tickers = cur.execute("SELECT id, ticker FROM securities WHERE discontinued IS NULL AND is_sec_company NOT NULL ORDER BY ticker ASC").fetchall()
 
     cur.execute("INSERT OR IGNORE INTO news_source (name) VALUES (?)", ("Seeking Alpha",))
     source_id = cur.execute("SELECT id FROM news_source WHERE name = ?", ("Seeking Alpha",)).fetchone()[0]
@@ -16,7 +16,7 @@ if dt.date.today().weekday() == 6:
     length = len(tickers)
 
     for index, (security_id, ticker) in enumerate(tickers):
-        print(f"{index} of {length}: {ticker}")
+        print(f"{index+1} of {length}: {ticker}")
         news = RSSReader.seekingalpha(ticker, timestamps=True)
         for item in news:
             header = item["header"]

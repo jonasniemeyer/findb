@@ -10,21 +10,14 @@ if dt.date.today().weekday() == 6:
     con = db.connection
     cur = db.cursor
 
-    tickers = cur.execute(
-        """
-        SELECT ticker FROM securities
-        WHERE
-        discontinued IS NULL
-        ORDER BY ticker
-        """
-    ).fetchall()
+    tickers = cur.execute("SELECT ticker FROM securities WHERE discontinued IS NULL AND is_sec_company NOT NULL ORDER BY ticker").fetchall()
     tickers = [item[0] for item in tickers]
     length = len(tickers)
 
     for index, ticker in enumerate(tickers):
         if index % 100 == 0:
             con.commit()
-        print(f"{index} of {length}: {ticker}")
+        print(f"{index+1} of {length}: {ticker}")
 
         security_id = cur.execute("SELECT id FROM securities WHERE ticker = ?", (ticker,)).fetchone()[0]
 
