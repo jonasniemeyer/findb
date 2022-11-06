@@ -565,7 +565,7 @@ cur.execute(
 
 cur.execute(
     """
-    CREATE TABLE IF NOT EXISTS gics_classification (
+    CREATE TABLE IF NOT EXISTS industry_classification_gics (
         code INTEGER UNIQUE,
         name TEXT NOT NULL,
         is_sector INTEGER,
@@ -579,7 +579,7 @@ cur.execute(
 
 cur.execute(
     """
-    CREATE TABLE IF NOT EXISTS sic_classification (
+    CREATE TABLE IF NOT EXISTS industry_classification_sic (
         code INTEGER UNIQUE,
         name TEXT NOT NULL,
         no_businesses INTEGER NOT NULL,

@@ -185,84 +185,29 @@ def parse_sic_industry_page(url) -> tuple:
     description = description.strip()    
     return name, description
 
-def insert_sic_data(data, db_con) -> None:
-    cur = db_con.cursor()
-    for division_id in data.keys():
-        cur.execute(
-            "INSERT INTO sic_divisions VALUES (?, ?, ?, ?)",
-            (
-                division_id,
-                data[division_id]['character'],
-                data[division_id]['name'],
-                data[division_id]['no_businesses']
-            )
-        )
-        db_con.commit()
-        for major_group_id in data[division_id]['major_groups'].keys():
-            cur.execute(
-                """
-                INSERT INTO sic_industries(id, name, no_businesses, division_id)
-                VALUES (?, ?, ?, ?)
-                """,
-                (
-                    major_group_id,
-                    data[division_id]['major_groups'][major_group_id]['name'],
-                    data[division_id]['major_groups'][major_group_id]['no_businesses'],
-                    division_id
-                )
-            )
-            for group_id in data[division_id]['major_groups'][major_group_id]['industry_groups'].keys():
-                cur.execute(
-                    """
-                    INSERT INTO sic_industries(id, name, no_businesses, major_group_id, division_id)
-                    VALUES (?, ?, ?, ?, ?)
-                    """,
-                    (
-                        group_id,
-                        data[division_id]['major_groups'][major_group_id]['industry_groups'][group_id]['name'],
-                        data[division_id]['major_groups'][major_group_id]['industry_groups'][group_id]['no_businesses'],
-                        major_group_id,
-                        division_id
-                    )
-                )
-                for industry_id in data[division_id]['major_groups'][major_group_id]['industry_groups'][group_id]['industries'].keys():
-                    cur.execute(
-                        """
-                        INSERT INTO sic_industries VALUES (?, ?, ?, ?, ?, ?)
-                        """,
-                        (
-                            industry_id,
-                            data[division_id]['major_groups'][major_group_id]['industry_groups'][group_id]['industries'][industry_id]['name'],
-                            data[division_id]['major_groups'][major_group_id]['industry_groups'][group_id]['industries'][industry_id]['no_businesses'],
-                            group_id,
-                            major_group_id,
-                            division_id
-                        )
-                    )
-    db_con.commit()
-
 if __name__ == '__main__':
     db = Database()
     con = db.connection
     cur = db.cursor
 
     # insert gics data
+    print("Inserting GICS Classification")
     gics_sectors = get_gsci_classification()
     for sector in gics_sectors.keys():
         cur.execute(
-            "INSERT INTO gics_classification (code, name, is_sector) VALUES(?, ?, ?)",
+            "INSERT INTO industry_classification_gics (code, name, is_sector) VALUES(?, ?, ?)",
             (gics_sectors[sector]["id"], sector, True)
         )
 
         for industry_group in gics_sectors[sector]["industry_groups"].keys():
             cur.execute(
-                "INSERT INTO gics_classification (code, name, is_industry_group, parent_id) VALUES(?, ?, ?, ?)",
+                "INSERT INTO industry_classification_gics (code, name, is_industry_group, parent_id) VALUES(?, ?, ?, ?)",
                 (gics_sectors[sector]["industry_groups"][industry_group]["id"], industry_group, True, gics_sectors[sector]["id"])
             )
 
             for industry in gics_sectors[sector]["industry_groups"][industry_group]["industries"]:
                 cur.execute(
-                    "INSERT INTO gics_classification (code, name, is_industry, parent_id) VALUES(?, ?, ?, ?)",
+                    "INSERT INTO industry_classification_gics (code, name, is_industry, parent_id) VALUES(?, ?, ?, ?)",
                     (
                         gics_sectors[sector]["industry_groups"][industry_group]["industries"][industry]["id"],
                         industry,
@@ -273,7 +218,7 @@ if __name__ == '__main__':
 
                 for sub_industry in gics_sectors[sector]["industry_groups"][industry_group]["industries"][industry]["sub_industries"]:
                     cur.execute(
-                        "INSERT INTO gics_classification (code, name, is_sub_industry, parent_id) VALUES(?, ?, ?, ?)",
+                        "INSERT INTO industry_classification_gics (code, name, is_sub_industry, parent_id) VALUES(?, ?, ?, ?)",
                         (
                             gics_sectors[sector]["industry_groups"][industry_group]["industries"][industry]["sub_industries"][sub_industry]["id"],
                             sub_industry,
@@ -283,10 +228,11 @@ if __name__ == '__main__':
                     )
     
     # insert sic data
+    print("Inserting SIC Classification")
     sic_divisions = get_sic_classification()
     for division in sic_divisions:
         cur.execute(
-            "INSERT INTO sic_classification (code, name, no_businesses, is_division, description) VALUES (?, ?, ?, ?, ?)",
+            "INSERT INTO industry_classification_sic (code, name, no_businesses, is_division, description) VALUES (?, ?, ?, ?, ?)",
             (
                 sic_divisions[division]["code"],
                 division,
@@ -298,37 +244,40 @@ if __name__ == '__main__':
 
         for major_group in sic_divisions[division]["major_groups"]:
             cur.execute(
-                "INSERT INTO sic_classification (code, name, no_businesses, is_major_group, description) VALUES (?, ?, ?, ?, ?)",
+                "INSERT INTO industry_classification_sic (code, name, no_businesses, is_major_group, description, parent_id) VALUES (?, ?, ?, ?, ?, ?)",
                 (
                     sic_divisions[division]["major_groups"][major_group]["code"],
                     major_group,
                     sic_divisions[division]["major_groups"][major_group]["no_businesses"],
                     True,
-                    sic_divisions[division]["major_groups"][major_group]["description"]
+                    sic_divisions[division]["major_groups"][major_group]["description"],
+                    sic_divisions[division]["code"]
                 )
             )
 
             for industry_group in sic_divisions[division]["major_groups"][major_group]["industry_groups"]:
                 cur.execute(
-                    "INSERT INTO sic_classification (code, name, no_businesses, is_industry_group, description) VALUES (?, ?, ?, ?, ?)",
+                    "INSERT INTO industry_classification_sic (code, name, no_businesses, is_industry_group, description, parent_id) VALUES (?, ?, ?, ?, ?, ?)",
                     (
                         sic_divisions[division]["major_groups"][major_group]["industry_groups"][industry_group]["code"],
                         industry_group,
                         sic_divisions[division]["major_groups"][major_group]["industry_groups"][industry_group]["no_businesses"],
                         True,
-                        sic_divisions[division]["major_groups"][major_group]["industry_groups"][industry_group]["description"]
+                        sic_divisions[division]["major_groups"][major_group]["industry_groups"][industry_group]["description"],
+                        sic_divisions[division]["major_groups"][major_group]["code"]
                     )
                 )
 
                 for industry in sic_divisions[division]["major_groups"][major_group]["industry_groups"][industry_group]["industries"]:
                     cur.execute(
-                        "INSERT INTO sic_classification (code, name, no_businesses, is_industry, description) VALUES (?, ?, ?, ?, ?)",
+                        "INSERT INTO industry_classification_sic (code, name, no_businesses, is_industry, description, parent_id) VALUES (?, ?, ?, ?, ?, ?)",
                         (
                             sic_divisions[division]["major_groups"][major_group]["industry_groups"][industry_group]["industries"][industry]["code"],
                             industry,
                             sic_divisions[division]["major_groups"][major_group]["industry_groups"][industry_group]["industries"][industry]["no_businesses"],
                             True,
-                            sic_divisions[division]["major_groups"][major_group]["industry_groups"][industry_group]["industries"][industry]["description"]
+                            sic_divisions[division]["major_groups"][major_group]["industry_groups"][industry_group]["industries"][industry]["description"],
+                            sic_divisions[division]["major_groups"][major_group]["industry_groups"][industry_group]["code"]
                         )
                     ) 
 
