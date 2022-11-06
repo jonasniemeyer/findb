@@ -13,10 +13,12 @@ def update_companies(db_connection):
     database_companies = cur.execute("SELECT cik, ticker, sec_name FROM securities WHERE is_sec_company = 1").fetchall()    
     for (cik, ticker, name) in database_companies:
         # if the company in the database IS NOT in the new companies dict, it should be set to discontinued if not already done
-        if (cik, ticker) not in new_companies.keys():
-            if cur.execute("SELECT discontinued FROM securities WHERE cik = ? AND ticker = ?", (cik, ticker)).fetchone()[0] is None:
-                cur.execute("UPDATE securities SET discontinued = ? WHERE cik = ? AND ticker = ?", (ts_today, cik, ticker))
-                print(f"Discontinued Company: {cik:>10} {ticker:>6} {name}")
+        if (
+            (cik, ticker) not in new_companies.keys()
+            and cur.execute("SELECT discontinued FROM securities WHERE cik = ? AND ticker = ?", (cik, ticker)).fetchone()[0] is None
+        ):
+            cur.execute("UPDATE securities SET discontinued = ? WHERE cik = ? AND ticker = ?", (ts_today, cik, ticker))
+            print(f"Discontinued Company: {cik:>10} {ticker:>6} {name}")
         
         # if the company in the database IS in the new companies dict but has a different name, the name should be updated
         elif new_companies[(cik, ticker)] != name:
