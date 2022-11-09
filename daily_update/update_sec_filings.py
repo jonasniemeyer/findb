@@ -52,6 +52,8 @@ def scrape_sec_filing_lists():
             if len(row) != 5 or any([item == "" for item in row]):
                 continue
             cik, _, form, date, href = row
+            if cik == "CIK":
+                continue
             cik = int(cik)
             date = f"{date[:4]}-{date[4:6]}-{date[6:]}"
             ts_filed = int(pd.to_datetime(date).timestamp())
