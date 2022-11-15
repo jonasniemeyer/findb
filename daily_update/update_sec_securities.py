@@ -16,7 +16,7 @@ def update_companies(db_connection):
         if (cik, ticker) not in new_companies.keys():
             if cur.execute("SELECT discontinued FROM securities WHERE cik = ? AND ticker = ?", (cik, ticker)).fetchone()[0] is None:
                 cur.execute("UPDATE securities SET discontinued = ? WHERE cik = ? AND ticker = ?", (ts_today, cik, ticker))
-                print(f"Discontinued Company: {cik:>10} {ticker:>6} {name}")
+                print(f"Discontinued Company: {cik:>10} {ticker:>8} {name}")
         
         # if the company in the database IS in the new companies dict but has a different name, the name should be updated
         elif new_companies[(cik, ticker)] != name:
@@ -24,7 +24,7 @@ def update_companies(db_connection):
                 "UPDATE securities SET sec_name = ?, old_name = ? WHERE cik = ? AND ticker = ?", 
                 (new_companies[(cik, ticker)], name, cik, ticker)
             )
-            print(f"Company Name Updated: {cik:>10} {ticker:>6} {name}")
+            print(f"Company Name Updated: {cik:>10} {ticker:>8} {name}")
             print(f"\tNew Name: {new_companies[(cik, ticker)]}")
             print(f"\tOld Name: {name}")
         
@@ -36,7 +36,7 @@ def update_companies(db_connection):
         # if the new company is not in the database, insert it
         if (cik, ticker) not in database_companies:
             cur.execute("INSERT INTO securities (cik, ticker, sec_name, added, is_sec_company) VALUES (?, ?, ?, ?, ?)", (cik, ticker, name, ts_today, True))
-            print(f"New Company: {cik:>10} {ticker:>6} {name}")
+            print(f"New Company: {cik:>10} {ticker:>8} {name}")
         # if the new company is already in the database, set discontinued to NULL in case if was discontinued in the past
         else:
             cur.execute("UPDATE securities SET discontinued = NULL WHERE cik = ? AND ticker = ?", (cik, ticker))
@@ -86,7 +86,7 @@ def update_mutualfunds(db_connection):
             and cur.execute("SELECT discontinued FROM securities WHERE cik = ? AND ticker = ?", (cik, ticker)).fetchone()[0] is None
         ):
             cur.execute("UPDATE securities SET discontinued = ? WHERE cik = ? AND ticker = ?", (ts_today, cik, ticker))
-            print(f"Discontinued Mutual Fund Class: {cik:>10} {ticker:>6}")
+            print(f"Discontinued Mutual Fund Class: {cik:>10} {ticker:>8}")
     con.commit()
 
     # insert new entities
@@ -121,7 +121,7 @@ def update_mutualfunds(db_connection):
             class_id = cur.execute("SELECT id FROM securities WHERE cik = ? AND ticker = ?", (class_cik, ticker)).fetchone()[0]
             series_id = cur.execute("SELECT id FROM sec_mutualfund_series WHERE cik = ?", (series_cik,)).fetchone()[0]
             cur.execute("INSERT INTO sec_mutualfund_classes (security_id, series_id) VALUES (?, ?)", (class_id, series_id))
-            print(f"New Mutual Fund Class: {class_cik:>10} {ticker:>6}")
+            print(f"New Mutual Fund Class: {class_cik:>10} {ticker:>8}")
         else:
             cur.execute("UPDATE securities SET discontinued = NULL WHERE cik = ? AND ticker = ?", (class_cik, ticker))
     con.commit()
