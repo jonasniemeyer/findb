@@ -1,7 +1,9 @@
 from finance_data import YahooReader
+from finance_data.utils import DatasetError
 from finance_database import Database
 import pandas as pd
 from dateutil.relativedelta import relativedelta
+import time
 
 date_today = pd.to_datetime("today").date()
 ts_today = int(pd.to_datetime(date_today).timestamp())
@@ -41,7 +43,13 @@ tickers = cur.execute(
 tickers = [item[0] for item in tickers]
 length = len(tickers)
 
+
+start = time.time()
 for index, ticker in enumerate(tickers):
+    # sleep every minute for a minute because of rate limits
+    if time.time() - start >= 60:
+        time.sleep(60)
+        start = time.time()
     if index % 100 == 0:
         con.commit()
     print(f"{index} of {length}: {ticker}")
@@ -59,7 +67,6 @@ for index, ticker in enumerate(tickers):
     
     security_name = reader.name
     security_type = reader.security_type
-    isin = reader.isin
     cur.execute("INSERT OR IGNORE INTO yahoo_security_types (name) VALUES (?)", (security_type,))
     type_id = cur.execute("SELECT id FROM yahoo_security_types WHERE name = ?", (security_type,)).fetchone()[0]
 
@@ -67,8 +74,8 @@ for index, ticker in enumerate(tickers):
         description = profile["description"]
     except:
         description = None
-
-    cur.execute("UPDATE securities SET yahoo_name = ?, logo = ?, type_id = ?, description = ?, isin = ? WHERE ticker = ?", (security_name, logo, type_id, description, isin, ticker))
+    
+    cur.execute("UPDATE securities SET yahoo_name = ?, logo = ?, type_id = ?, description = ? WHERE ticker = ?", (security_name, logo, type_id, description, ticker))
 
     # check if company and insert company data
     if security_type == "EQUITY" and cur.execute(f"SELECT * FROM sec_filings WHERE cik = ? AND form_type_id IN {form_ids}", (cik,)).fetchone() is not None:
@@ -178,18 +185,21 @@ for index, ticker in enumerate(tickers):
         try:
             statements = reader.financial_statement()
         except:
+            print("financial statement failed")
             pass
         else:
             for statement in statements.keys():
                 statement_name = statement.replace("_", " ")
                 for date_iso in statements[statement].keys():
+                    if date_iso == "TTM":
+                        continue
                     date = pd.to_datetime(date_iso)
                     year = date.year
                     ts_statement = int(date.timestamp())
                     for variable in statements[statement][date_iso]:
                         statement_id = cur.execute("SELECT id FROM financial_statement_types WHERE name = ?", (statement_name, )).fetchone()[0]
                         cur.execute("INSERT OR IGNORE INTO yahoo_fundamental_variables(name, statement_id) VALUES (?, ?)", (variable, statement_id))
-                        variable_id = cur.execute("SELECT id FROM yahoo_fundamental_variablesWHERE name = ? AND statement_id = ?", (variable, statement_id)).fetchone()[0]
+                        variable_id = cur.execute("SELECT id FROM yahoo_fundamental_variables WHERE name = ? AND statement_id = ?", (variable, statement_id)).fetchone()[0]
                         cur.execute(
                             "REPLACE INTO yahoo_fundamental_data VALUES (?, ?, ?, ?, ?, ?)",
                             (security_id, variable_id, 0, year, ts_statement, statements[statement][date_iso][variable])
