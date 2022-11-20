@@ -17,7 +17,9 @@ if dt.date.today().weekday() == 6:
     cur = db.cursor
 
     data = {}
-    for commodity in CMEReader.commodities.keys():
+    length = len(CMEReader.commodities)
+    for index, commodity in enumerate(CMEReader.commodities.keys()):
+        print(f"{index+1} of {length}: {commodity}")
         data[commodity] = CMEReader(commodity, timestamps=True).read()
     
     assert all(len(data[commodity].keys()) > 0 for commodity in data.keys())

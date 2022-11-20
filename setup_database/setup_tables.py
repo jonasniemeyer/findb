@@ -196,7 +196,7 @@ cur.execute(
         name TEXT UNIQUE NOT NULL,
         exchange_id INTEGER NOT NULL,
         sector_id INTEGER NOT NULL,
-        prices_updated INTEGER NOT NULL
+        prices_updated INTEGER
     )
     """
 )
