@@ -21,10 +21,6 @@ if dt.date.today().weekday() == 6:
     for index, commodity in enumerate(CMEReader.commodities.keys()):
         print(f"{index+1} of {length}: {commodity}")
         data[commodity] = CMEReader(commodity, timestamps=True).read()
-    
-    assert all(len(data[commodity].keys()) > 0 for commodity in data.keys())
-    assert all(isinstance(data[commodity][date], pd.DataFrame) for date in data[commodity] for commodity in data.keys())
-    assert all(len(data[commodity][date]) > 0 for date in data[commodity] for commodity in data.keys())
 
     for commodity in data.keys():
         commodity_id = cur.execute("SELECT id FROM cme_commodities WHERE name = ?", (commodity,)).fetchone()[0]
