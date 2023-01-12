@@ -1,5 +1,5 @@
 from finance_database import Database
-from finance_data import RSSReader
+from finance_data import SANews
 import datetime as dt
 
 if dt.date.today().weekday() == 6:
@@ -17,7 +17,7 @@ if dt.date.today().weekday() == 6:
 
     for index, (security_id, ticker) in enumerate(tickers):
         print(f"{index+1} of {length}: {ticker}")
-        news = RSSReader.seekingalpha(ticker, timestamps=True)
+        news = SANews.rss_feed(ticker, timestamps=True)
         for item in news:
             header = item["header"]
             url = item["url"]
