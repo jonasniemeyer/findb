@@ -401,6 +401,33 @@ cur.execute(
 )
 
 # ===========================================================
+# ========================= MSCI ============================
+# ===========================================================
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS msci_indices (
+        id INTEGER PRIMARY KEY,
+        code INTEGER UNIQUE NOT NULL,
+        name TEXT UNIQUE NOT NULL
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS msci_index_prices (
+        index_id INTEGER,
+        ts INTEGER,
+        price REAL,
+        simple_return REAL,
+        log_return REAL,
+        PRIMARY KEY(index_id, ts)
+    )
+    """
+)
+
+# ===========================================================
 # ====================== SEC ================================
 # ===========================================================
 
