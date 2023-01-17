@@ -10,14 +10,14 @@ def get_sec_filing_lists(start_year=1900, start_quarter=0):
         if year["type"] == "dir" and len(year["name"]) == 4:
             if int(year["name"]) < start_year:
                 continue
-            print(year["name"])
+            print(f"Year {year['name']}")
 
             year_url = f"{SEC_BASE_URL}/edgar/daily-index/{year['name']}/index.json"
             quarters = requests.get(url=year_url, headers=HEADERS).json()
             for quarter in quarters["directory"]["item"]:
-                if int(quarter["name"][-1]) < start_quarter:
+                if int(quarter["name"][-1]) < start_quarter and int(year["name"]) == start_year:
                     continue
-                print(quarter['name'])
+                print(f"  {quarter['name']}")
 
                 quarter_url = f"{SEC_BASE_URL}/edgar/daily-index/{year['name']}/{quarter['name']}/index.json"
                 days = requests.get(url=quarter_url, headers=HEADERS).json()
@@ -45,7 +45,7 @@ def scrape_sec_filing_lists():
     total_filings = len(filing_lists)
 
     for index, url in enumerate(filing_lists):
-        print(f"{index+1} of {total_filings}: {url}")
+        print(f"    {index+1} of {total_filings}: {url}")
         file = requests.get(url=url, headers=HEADERS).text.split("\n")
         for row in file:
             row = row.split("|")
