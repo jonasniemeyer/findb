@@ -13,11 +13,12 @@ if dt.date.today().weekday() == 6:
     tickers = cur.execute("SELECT ticker FROM securities WHERE discontinued IS NULL AND is_sec_company NOT NULL ORDER BY ticker").fetchall()
     tickers = [item[0] for item in tickers]
     length = len(tickers)
+    trail = len(str(length))
 
     for index, ticker in enumerate(tickers):
-        if index % 100 == 0:
+        if index % 1000 == 0:
             con.commit()
-        print(f"{index+1} of {length}: {ticker}")
+        print(f"{index+1:>{trail}} of {length}: {ticker}")
 
         security_id = cur.execute("SELECT id FROM securities WHERE ticker = ?", (ticker,)).fetchone()[0]
 

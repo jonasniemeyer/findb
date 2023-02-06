@@ -14,14 +14,15 @@ if dt.date.today().weekday() == 6:
     source_id = cur.execute("SELECT id FROM news_source WHERE name = ?", ("Seeking Alpha",)).fetchone()[0]
 
     length = len(tickers)
+    trail = len(str(length))
 
     for index, (security_id, ticker) in enumerate(tickers):
-        print(f"{index+1} of {length}: {ticker}")
+        print(f"{index+1:>{trail}} of {length}: {ticker}")
         news = SANews.rss_feed(ticker, timestamps=True)
         for item in news:
             header = item["header"]
             url = item["url"]
-            ts = item["date"]
+            ts = item["datetime"]
             news_type = item["type"]
             cur.execute("INSERT OR IGNORE INTO news_type (name) VALUES (?)", (news_type,))
             type_id = cur.execute("SELECT id FROM news_type WHERE name = ?", (news_type,)).fetchone()[0]
