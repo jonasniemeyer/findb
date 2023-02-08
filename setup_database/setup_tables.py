@@ -135,8 +135,9 @@ cur.execute(
         type_id INTEGER NOT NULL,
         ts INTEGER NOT NULL,
         header TEXT NOT NULL,
+        description TEXT,
         url TEXT NOT NULL,
-        UNIQUE(source_id, type_id, url)
+        UNIQUE(ts, url)
     )
     """
 )
@@ -153,6 +154,16 @@ cur.execute(
 
 cur.execute(
     """
+    CREATE TABLE IF NOT EXISTS news_category_match (
+        news_id INTEGER,
+        category_id INTEGER,
+        PRIMARY KEY(news_id, news_id)
+    )
+    """
+)
+
+cur.execute(
+    """
     CREATE TABLE IF NOT EXISTS news_source (
         id INTEGER PRIMARY KEY,
         name TEXT UNIQUE NOT NULL
@@ -163,6 +174,15 @@ cur.execute(
 cur.execute(
     """
     CREATE TABLE IF NOT EXISTS news_type (
+        id INTEGER PRIMARY KEY,
+        name TEXT UNIQUE
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS news_categories (
         id INTEGER PRIMARY KEY,
         name TEXT UNIQUE NOT NULL
     )
@@ -367,6 +387,40 @@ cur.execute(
         ts INTEGER,
         value REAL,
         PRIMARY KEY(series_id, ts)
+    )
+    """
+)
+
+# ===========================================================
+# =================== GICS & SIC ============================
+# ===========================================================
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS industry_classification_gics (
+        code INTEGER UNIQUE,
+        name TEXT NOT NULL,
+        is_sector INTEGER,
+        is_industry_group INTEGER,
+        is_industry INTEGER,
+        is_sub_industry INTEGER,
+        parent_id INTEGER
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS industry_classification_sic (
+        code INTEGER UNIQUE,
+        name TEXT NOT NULL,
+        no_businesses INTEGER NOT NULL,
+        is_division INTEGER,
+        is_major_group INTEGER,
+        is_industry_group INTEGER,
+        is_industry INTEGER,
+        description TEXT,
+        parent_id INTEGER
     )
     """
 )
@@ -582,40 +636,6 @@ cur.execute(
         percentage REAL NOT NULL,
         filing_id INTEGER,
         PRIMARY KEY(filing_id)
-    )
-    """
-)
-
-# ===========================================================
-# =================== GICS & SIC ============================
-# ===========================================================
-
-cur.execute(
-    """
-    CREATE TABLE IF NOT EXISTS industry_classification_gics (
-        code INTEGER UNIQUE,
-        name TEXT NOT NULL,
-        is_sector INTEGER,
-        is_industry_group INTEGER,
-        is_industry INTEGER,
-        is_sub_industry INTEGER,
-        parent_id INTEGER
-    )
-    """
-)
-
-cur.execute(
-    """
-    CREATE TABLE IF NOT EXISTS industry_classification_sic (
-        code INTEGER UNIQUE,
-        name TEXT NOT NULL,
-        no_businesses INTEGER NOT NULL,
-        is_division INTEGER,
-        is_major_group INTEGER,
-        is_industry_group INTEGER,
-        is_industry INTEGER,
-        description TEXT,
-        parent_id INTEGER
     )
     """
 )
