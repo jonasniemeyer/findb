@@ -154,16 +154,6 @@ cur.execute(
 
 cur.execute(
     """
-    CREATE TABLE IF NOT EXISTS news_category_match (
-        news_id INTEGER,
-        category_id INTEGER,
-        PRIMARY KEY(news_id, news_id)
-    )
-    """
-)
-
-cur.execute(
-    """
     CREATE TABLE IF NOT EXISTS news_source (
         id INTEGER PRIMARY KEY,
         name TEXT UNIQUE NOT NULL
@@ -176,6 +166,30 @@ cur.execute(
     CREATE TABLE IF NOT EXISTS news_type (
         id INTEGER PRIMARY KEY,
         name TEXT UNIQUE
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS general_news (
+        id INTEGER PRIMARY KEY,
+        source_id INTEGER NOT NULL,
+        ts INTEGER NOT NULL,
+        header TEXT NOT NULL,
+        description TEXT,
+        url TEXT NOT NULL,
+        UNIQUE(ts, url)
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS news_category_match (
+        news_id INTEGER,
+        category_id INTEGER,
+        PRIMARY KEY(news_id, news_id)
     )
     """
 )
