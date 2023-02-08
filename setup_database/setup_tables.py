@@ -32,7 +32,7 @@ cur.execute(
 
 cur.execute(
     """
-    CREATE TABLE IF NOT EXISTS country_currency_match (
+    CREATE TABLE IF NOT EXISTS country_currency_matches (
         country_id INTEGER,
         currency_id INTEGER,
         PRIMARY KEY(country_id, currency_id)
@@ -144,7 +144,7 @@ cur.execute(
 
 cur.execute(
     """
-    CREATE TABLE IF NOT EXISTS security_news_match (
+    CREATE TABLE IF NOT EXISTS security_news_matches (
         security_id INTEGER,
         news_id INTEGER,
         PRIMARY KEY(security_id, news_id)
@@ -154,7 +154,7 @@ cur.execute(
 
 cur.execute(
     """
-    CREATE TABLE IF NOT EXISTS news_source (
+    CREATE TABLE IF NOT EXISTS news_sources (
         id INTEGER PRIMARY KEY,
         name TEXT UNIQUE NOT NULL
     )
@@ -163,7 +163,7 @@ cur.execute(
 
 cur.execute(
     """
-    CREATE TABLE IF NOT EXISTS news_type (
+    CREATE TABLE IF NOT EXISTS news_types (
         id INTEGER PRIMARY KEY,
         name TEXT UNIQUE
     )
@@ -186,7 +186,7 @@ cur.execute(
 
 cur.execute(
     """
-    CREATE TABLE IF NOT EXISTS news_category_match (
+    CREATE TABLE IF NOT EXISTS news_category_matches (
         news_id INTEGER,
         category_id INTEGER,
         PRIMARY KEY(news_id, news_id)
@@ -327,7 +327,7 @@ cur.execute(
 
 cur.execute(
     """
-    CREATE TABLE IF NOT EXISTS fred_categories(
+    CREATE TABLE IF NOT EXISTS fred_categories (
         id INTEGER PRIMARY KEY,
         name TEXT NOT NULL,
         super_category_id INTEGER
@@ -411,7 +411,7 @@ cur.execute(
 
 cur.execute(
     """
-    CREATE TABLE IF NOT EXISTS industry_classification_gics (
+    CREATE TABLE IF NOT EXISTS industry_classifications_gics (
         code INTEGER UNIQUE,
         name TEXT NOT NULL,
         is_sector INTEGER,
@@ -425,7 +425,7 @@ cur.execute(
 
 cur.execute(
     """
-    CREATE TABLE IF NOT EXISTS industry_classification_sic (
+    CREATE TABLE IF NOT EXISTS industry_classifications_sic (
         code INTEGER UNIQUE,
         name TEXT NOT NULL,
         no_businesses INTEGER NOT NULL,
@@ -661,7 +661,7 @@ cur.execute(
 
 cur.execute(
     """
-    CREATE TABLE IF NOT EXISTS tipranks_recommendation_trend (
+    CREATE TABLE IF NOT EXISTS tipranks_recommendation_trends (
         security_id INTEGER,
         week INTEGER,
         number INTEGER,
@@ -677,7 +677,7 @@ cur.execute(
 
 cur.execute(
     """
-    CREATE TABLE IF NOT EXISTS tipranks_news_sentiment (
+    CREATE TABLE IF NOT EXISTS tipranks_news_sentiments (
         security_id INTEGER,
         week INTEGER,
         number INTEGER,
@@ -766,7 +766,7 @@ cur.execute(
 
 cur.execute(
     """
-    CREATE TABLE IF NOT EXISTS tipranks_analyst_stock_summary (
+    CREATE TABLE IF NOT EXISTS tipranks_analyst_stock_summaries (
         analyst_id INTEGER,
         security_id INTEGER,
         successful_recommendations INTEGER,
@@ -855,7 +855,7 @@ cur.execute(
 
 cur.execute(
     """
-    CREATE TABLE IF NOT EXISTS yahoo_company_executive_match (
+    CREATE TABLE IF NOT EXISTS yahoo_company_executive_matches (
         security_id INTEGER,
         executive_id INTEGER,
         position_id INTEGER,
@@ -930,7 +930,7 @@ cur.execute(
 
 cur.execute(
     """
-    CREATE TABLE IF NOT EXISTS yahoo_recommendation_trend (
+    CREATE TABLE IF NOT EXISTS yahoo_recommendation_trends (
         security_id INTEGER,
         month INTEGER,
         number INTEGER,
