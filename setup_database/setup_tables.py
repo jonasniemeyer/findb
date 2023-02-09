@@ -541,6 +541,16 @@ cur.execute(
     """
 )
 
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS marketscreener_industries (
+        id INTEGER PRIMARY KEY,
+        name TEXT UNIQUE NOT NULL,
+        super_id INTEGER,
+    )
+    """
+)
+
 # ===========================================================
 # ========================= MSCI ============================
 # ===========================================================
