@@ -510,7 +510,7 @@ cur.execute(
     """
     CREATE TABLE IF NOT EXISTS marketscreener_segment_data (
         security_id INTEGER NOT NULL,
-        segment_id INTEGER NOT NULL
+        segment_id INTEGER NOT NULL,
         year INTEGER NOT NULL,
         value REAL,
         percentage REAL,
@@ -532,7 +532,7 @@ cur.execute(
     """
     CREATE TABLE IF NOT EXISTS marketscreener_region_data (
         security_id INTEGER NOT NULL,
-        region_id INTEGER NOT NULL
+        region_id INTEGER NOT NULL,
         year INTEGER NOT NULL,
         value REAL,
         percentage REAL,
@@ -546,10 +546,52 @@ cur.execute(
     CREATE TABLE IF NOT EXISTS marketscreener_industries (
         id INTEGER PRIMARY KEY,
         name TEXT UNIQUE NOT NULL,
-        super_id INTEGER,
+        super_id INTEGER
     )
     """
 )
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS marketscreener_executives (
+        id INTEGER PRIMARY KEY,
+        name TEXT UNIQUE NOT NULL,
+        age INTEGER
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS marketscreener_company_executive_matches (
+        security_id INTEGER NOT NULL,
+        executive_id INTEGER NOT NULL,
+        type_id INTEGER NOT NULL,
+        joined INTEGER,
+        added INTEGER NOT NULL,
+        discontinued INTEGER,
+        PRIMARY KEY(security_id, executive_id, type_id)
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS marketscreener_executive_types (
+        id INTEGER PRIMARY KEY,
+        name TEXT UNIQUE NOT NULL
+    )
+    """
+)
+
+cur.executescript(
+    """
+    INSERT OR IGNORE INTO marketscreener_executive_types (name) VALUES ("manager");
+    INSERT OR IGNORE INTO marketscreener_executive_types (name) VALUES ("board member");
+    """
+)
+
+
 
 # ===========================================================
 # ========================= MSCI ============================
@@ -939,9 +981,9 @@ cur.execute(
 cur.execute(
     """
     CREATE TABLE IF NOT EXISTS yahoo_company_executive_matches (
-        security_id INTEGER,
-        executive_id INTEGER,
-        position_id INTEGER,
+        security_id INTEGER NOT NULL,
+        executive_id INTEGER NOT NULL,
+        position_id INTEGER NOT NULL,
         salary REAL,
         added INTEGER NOT NULL,
         discontinued INTEGER,
