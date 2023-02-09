@@ -406,7 +406,7 @@ cur.execute(
 )
 
 # ===========================================================
-# =================== GICS & SIC ============================
+# ======= Industry Classification (GICS & SIC) ==============
 # ===========================================================
 
 cur.execute(
@@ -457,6 +457,35 @@ cur.execute(
 cur.execute(
     """
     CREATE TABLE IF NOT EXISTS macrotrends_fundamental_data (
+        security_id INTEGER,
+        variable_id INTEGER,
+        quarter INTEGER,
+        year INTEGER,
+        ts INTEGER NOT NULL,
+        value INTEGER,
+        PRIMARY KEY(security_id, variable_id, quarter, year)
+    )
+    """
+)
+
+# ===========================================================
+# =================== Marketscreener ========================
+# ===========================================================
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS marketscreener_fundamental_variables (
+        id INTEGER PRIMARY KEY,
+        name TEXT NOT NULL,
+        statement_id INTEGER NOT NULL,
+        UNIQUE(name, statement_id)
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS marketscreener_fundamental_data (
         security_id INTEGER,
         variable_id INTEGER,
         quarter INTEGER,
