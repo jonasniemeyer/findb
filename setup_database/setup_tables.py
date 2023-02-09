@@ -519,6 +519,28 @@ cur.execute(
     """
 )
 
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS marketscreener_regions (
+        id INTEGER PRIMARY KEY,
+        name TEXT UNIQUE NOT NULL
+    )
+    """
+)
+
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS marketscreener_region_data (
+        security_id INTEGER NOT NULL,
+        region_id INTEGER NOT NULL
+        year INTEGER NOT NULL,
+        value REAL,
+        percentage REAL,
+        PRIMARY KEY(security_id, region_id, year)
+    )
+    """
+)
+
 # ===========================================================
 # ========================= MSCI ============================
 # ===========================================================
