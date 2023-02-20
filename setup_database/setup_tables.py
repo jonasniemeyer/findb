@@ -651,9 +651,10 @@ cur.execute(
         cik INTEGER NOT NULL,
         form_type_id INTEGER NOT NULL,
         ts_filed INTEGER NOT NULL,
-        url TEXT NOT NULL,
+        filing_url TEXT NOT NULL,
+        document_url TEXT NOT NULL,
         parsed INTEGER NOT NULL,
-        UNIQUE(cik, form_type_id, ts_filed, url)
+        UNIQUE(cik, form_type_id, ts_filed, document_url)
     )
     """
 )
