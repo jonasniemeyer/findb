@@ -21,17 +21,12 @@ class Database:
         ticker,
         start="1900-01-01",
         end=pd.to_datetime("today").isoformat()
-    ) -> Union[dict, list]:
-        query = """
-        SELECT ts, adj_close FROM yahoo_security_prices 
-        WHERE security_id = (SELECT id FROM securities WHERE ticker = ?)
-        AND ts BETWEEN STRFTIME("%s", ?) AND STRFTIME("%s", ?)
-        """
-
-        if isinstance(ticker, str):
-            return self.cur.execute(query, (ticker, start, end)).fetchall()
-        else:
-            data = {}
-            for symbol in ticker:
-                data[symbol] = self.cur.execute(query, (symbol, start, end)).fetchall()
-            return data
+    ) -> list:
+        data = self.cur.execute(
+            """
+            SELECT ts, adj_close FROM yahoo_security_prices
+            WHERE security_id = (SELECT id FROM securities WHERE ticker = ?)
+            AND ts BETWEEN STRFTIME("%s", ?) AND STRFTIME("%s", ?)
+            """,
+            (ticker, start, end)).fetchall()
+        return data
