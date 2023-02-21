@@ -94,3 +94,29 @@ class Database:
                 """,
                 (ticker, ticker+"%")).fetchall()
         return data
+    
+    def company_profile(self, ticker) -> dict:
+        data = self.cur.execute(
+            """
+            SELECT
+            securities.ticker AS ticker,
+            securities.yahoo_name AS name,
+            securities.isin AS isin,
+            securities.cik AS cik,
+            securities.description AS description,
+            companies.website AS website,
+            (SELECT name FROM industry_classification_gics WHERE id = companies.gics_industry_id) AS gics,
+            (SELECT name FROM industry_classification_sic WHERE id = companies.sic_industry_id) AS sic,
+            (SELECT name FROM countries WHERE id = companies.country_id) AS country,
+            companies.zip AS zip,
+            (SELECT name FROM yahoo_cities WHERE id = companies.city_id) AS city,
+            companies.address1 AS address1,
+            companies.address2 AS address2,
+            companies.employees AS employees
+            FROM
+            securities INNER JOIN companies
+            ON securities.id = companies.security_id
+            WHERE securities.ticker = ?
+            """,
+            (ticker,)).fetchall()
+        return data
