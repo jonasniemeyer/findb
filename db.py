@@ -14,9 +14,29 @@ class Database:
         return self
     
     def __exit__(self, *args):
-        self.co
-        self.connection.close()
-    
+        self.con.commit()
+        self.con.close()
+
+    def companies(self) -> list:
+        data = self.cur.execute(
+            """
+            SELECT
+                security.ticker      AS ticker,
+                security.yahoo_name  AS name
+            FROM
+                security INNER JOIN company
+            USING(security_id)
+            """
+        )
+        data = [
+            {
+                "ticker": item[0],
+                "name": item[1]
+            }
+            for item in data
+        ]
+        return data
+
     def security_prices(
         self,
         ticker,
