@@ -7,7 +7,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS countries (
+        CREATE TABLE IF NOT EXISTS country (
             country_id INTEGER PRIMARY KEY,
             name TEXT UNIQUE NOT NULL,
             flag_small BLOB,
@@ -19,7 +19,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS currencies (
+        CREATE TABLE IF NOT EXISTS currency (
             currency_id INTEGER PRIMARY KEY,
             name TEXT UNIQUE NOT NULL,
             abbr TEXT UNIQUE
@@ -29,7 +29,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS country_currency_matches (
+        CREATE TABLE IF NOT EXISTS country_currency_match (
             country_id INTEGER,
             currency_id INTEGER,
             PRIMARY KEY(country_id, currency_id)
@@ -39,7 +39,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS indices (
+        CREATE TABLE IF NOT EXISTS index (
             index_id INTEGER PRIMARY KEY,
             name TEXT UNIQUE NOT NULL,
             ticker TEXT NOT NULL,
@@ -50,7 +50,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS index_constituents (
+        CREATE TABLE IF NOT EXISTS index_constituent (
             index_id INTEGER,
             security_id INTEGER,
             PRIMARY KEY(index_id, security_id)
@@ -60,7 +60,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS financial_statement_types (
+        CREATE TABLE IF NOT EXISTS financial_statement_type (
             statement_id INTEGER PRIMARY KEY,
             name TEXT UNIQUE NOT NULL
         )
@@ -69,16 +69,16 @@ with Database() as db:
 
     db.cur.executescript(
         """
-        INSERT OR IGNORE INTO financial_statement_types (name) VALUES ("income_statement");
-        INSERT OR IGNORE INTO financial_statement_types (name) VALUES ("balance_sheet");
-        INSERT OR IGNORE INTO financial_statement_types (name) VALUES ("cashflow_statement");
-        INSERT OR IGNORE INTO financial_statement_types (name) VALUES ("statement_of_changes_in_equity");
+        INSERT OR IGNORE INTO financial_statement_type (name) VALUES ("income_statement");
+        INSERT OR IGNORE INTO financial_statement_type (name) VALUES ("balance_sheet");
+        INSERT OR IGNORE INTO financial_statement_type (name) VALUES ("cashflow_statement");
+        INSERT OR IGNORE INTO financial_statement_type (name) VALUES ("statement_of_changes_in_equity");
         """
     )
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS securities (
+        CREATE TABLE IF NOT EXISTS security (
             security_id INTEGER PRIMARY KEY,
             cik TEXT NOT NULL,
             ticker TEXT NOT NULL,
@@ -105,7 +105,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS companies (
+        CREATE TABLE IF NOT EXISTS company (
             security_id INTEGER PRIMARY KEY,
             sic_industry_id INTEGER,
             gics_industry_id INTEGER,
@@ -117,9 +117,11 @@ with Database() as db:
             zip TEXT,
             employees INTEGER,
             fiscal_year_end INTEGER,
-            yahoo_fundamentals_updated INTEGER,
-            macrotrends_fundamentals_updated INTEGER,
-            tipranks_data_updated INTEGER
+            yahoo_data_updated INTEGER,
+            macrotrends_data_updated INTEGER,
+            tipranks_data_updated INTEGER,
+            stratosphere_data_updated INTEGER,
+            marketscreener_data_updated INTEGER
         )
         """
     )
@@ -141,7 +143,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS security_news_matches (
+        CREATE TABLE IF NOT EXISTS security_news_match (
             security_id INTEGER,
             news_id INTEGER,
             PRIMARY KEY(security_id, news_id)
@@ -151,7 +153,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS news_sources (
+        CREATE TABLE IF NOT EXISTS news_source (
             source_id INTEGER PRIMARY KEY,
             name TEXT UNIQUE NOT NULL
         )
@@ -160,7 +162,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS news_types (
+        CREATE TABLE IF NOT EXISTS news_type (
             type_id INTEGER PRIMARY KEY,
             name TEXT UNIQUE
         )
@@ -183,7 +185,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS news_category_matches (
+        CREATE TABLE IF NOT EXISTS news_category_match (
             news_id INTEGER,
             category_id INTEGER,
             PRIMARY KEY(news_id, news_id)
@@ -193,7 +195,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS news_categories (
+        CREATE TABLE IF NOT EXISTS news_category (
             category_id INTEGER PRIMARY KEY,
             name TEXT UNIQUE NOT NULL
         )
@@ -206,7 +208,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS cboe_vix_prices (
+        CREATE TABLE IF NOT EXISTS cboe_vix_data (
             maturity_date INTEGER,
             ts INTEGER,
             price REAL NOT NULL,
@@ -222,7 +224,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS cme_commodities (
+        CREATE TABLE IF NOT EXISTS cme_commodity (
             commodity_id INTEGER PRIMARY KEY,
             name TEXT UNIQUE NOT NULL,
             exchange_id INTEGER NOT NULL,
@@ -234,7 +236,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS cme_commodity_sectors (
+        CREATE TABLE IF NOT EXISTS cme_commodity_sector (
             sector_id INTEGER PRIMARY KEY,
             name TEXT UNIQUE NOT NULL
         )
@@ -243,17 +245,17 @@ with Database() as db:
 
     db.cur.executescript(
         """
-        INSERT OR IGNORE INTO cme_commodity_sectors (name) VALUES("Agriculture");
-        INSERT OR IGNORE INTO cme_commodity_sectors (name) VALUES("Energy");
-        INSERT OR IGNORE INTO cme_commodity_sectors (name) VALUES("Industrial Metals");
-        INSERT OR IGNORE INTO cme_commodity_sectors (name) VALUES("Livestock");
-        INSERT OR IGNORE INTO cme_commodity_sectors (name) VALUES("Precious Metals");
+        INSERT OR IGNORE INTO cme_commodity_sector (name) VALUES("Agriculture");
+        INSERT OR IGNORE INTO cme_commodity_sector (name) VALUES("Energy");
+        INSERT OR IGNORE INTO cme_commodity_sector (name) VALUES("Industrial Metals");
+        INSERT OR IGNORE INTO cme_commodity_sector (name) VALUES("Livestock");
+        INSERT OR IGNORE INTO cme_commodity_sector (name) VALUES("Precious Metals");
         """
     )
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS cme_commodity_prices (
+        CREATE TABLE IF NOT EXISTS cme_commodity_data (
             commodity_id INTEGER,
             maturity_date INTEGER,
             ts INTEGER,
@@ -286,7 +288,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS finviz_analyst_companies (
+        CREATE TABLE IF NOT EXISTS finviz_analyst_company (
             analyst_company_id INTEGER PRIMARY KEY,
             name TEXT UNIQUE NOT NULL
         )
@@ -295,7 +297,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS finviz_ratings (
+        CREATE TABLE IF NOT EXISTS finviz_rating (
             rating_id INTEGER PRIMARY KEY,
             name TEXT UNIQUE NOT NULL
         )
@@ -304,7 +306,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS finviz_analyst_recommendations (
+        CREATE TABLE IF NOT EXISTS finviz_analyst_recommendation (
             analyst_company_id INTEGER,
             security_id INTEGER,
             ts INTEGER,
@@ -324,7 +326,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS fred_categories (
+        CREATE TABLE IF NOT EXISTS fred_category (
             category_id INTEGER PRIMARY KEY,
             name TEXT NOT NULL,
             super_category_id INTEGER
@@ -362,7 +364,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS french_datasets (
+        CREATE TABLE IF NOT EXISTS french_dataset (
             dataset_id INTEGER PRIMARY KEY,
             name TEXT UNIQUE NOT NULL,
             updated INTEGER NOT NULL
@@ -372,7 +374,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS french_categories (
+        CREATE TABLE IF NOT EXISTS french_category (
             category_id INTEGER PRIMARY KEY,
             name TEXT UNIQUE NOT NULL
         )
@@ -408,7 +410,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS industry_classifications_gics (
+        CREATE TABLE IF NOT EXISTS industry_classification_gics (
             industry_id INTEGER PRIMARY KEY,
             code INTEGER UNIQUE,
             name TEXT NOT NULL,
@@ -423,7 +425,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS industry_classifications_sic (
+        CREATE TABLE IF NOT EXISTS industry_classification_sic (
             industry_id INTEGER PRIMARY KEY,
             code INTEGER UNIQUE,
             name TEXT NOT NULL,
@@ -444,7 +446,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS macrotrends_fundamental_variables (
+        CREATE TABLE IF NOT EXISTS macrotrends_fundamental_variable (
             variable_id INTEGER PRIMARY KEY,
             name TEXT NOT NULL,
             statement_id INTEGER NOT NULL,
@@ -473,7 +475,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS marketscreener_fundamental_variables (
+        CREATE TABLE IF NOT EXISTS marketscreener_fundamental_variable (
             variable_id INTEGER PRIMARY KEY,
             name TEXT NOT NULL,
             statement_id INTEGER NOT NULL,
@@ -498,7 +500,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS marketscreener_segments (
+        CREATE TABLE IF NOT EXISTS marketscreener_segment (
             segment_id INTEGER PRIMARY KEY,
             name TEXT UNIQUE NOT NULL
         )
@@ -520,7 +522,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS marketscreener_regions (
+        CREATE TABLE IF NOT EXISTS marketscreener_region (
             region_id INTEGER PRIMARY KEY,
             name TEXT UNIQUE NOT NULL
         )
@@ -542,7 +544,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS marketscreener_industries (
+        CREATE TABLE IF NOT EXISTS marketscreener_industry (
             industry_id INTEGER PRIMARY KEY,
             name TEXT UNIQUE NOT NULL,
             super_id INTEGER
@@ -552,7 +554,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS marketscreener_executives (
+        CREATE TABLE IF NOT EXISTS marketscreener_executive (
             executive_id INTEGER PRIMARY KEY,
             name TEXT UNIQUE NOT NULL,
             age INTEGER
@@ -562,7 +564,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS marketscreener_company_executive_matches (
+        CREATE TABLE IF NOT EXISTS marketscreener_company_executive_match (
             security_id INTEGER NOT NULL,
             executive_id INTEGER NOT NULL,
             type_id INTEGER NOT NULL,
@@ -576,7 +578,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS marketscreener_executive_types (
+        CREATE TABLE IF NOT EXISTS marketscreener_executive_type (
             type_id INTEGER PRIMARY KEY,
             name TEXT UNIQUE NOT NULL
         )
@@ -585,8 +587,8 @@ with Database() as db:
 
     db.cur.executescript(
         """
-        INSERT OR IGNORE INTO marketscreener_executive_types (name) VALUES ("manager");
-        INSERT OR IGNORE INTO marketscreener_executive_types (name) VALUES ("board member");
+        INSERT OR IGNORE INTO marketscreener_executive_type (name) VALUES ("manager");
+        INSERT OR IGNORE INTO marketscreener_executive_type (name) VALUES ("board member");
         """
     )
 
@@ -598,7 +600,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS msci_indices (
+        CREATE TABLE IF NOT EXISTS msci_index (
             index_id INTEGER PRIMARY KEY,
             code INTEGER UNIQUE NOT NULL,
             name TEXT UNIQUE NOT NULL
@@ -608,7 +610,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS msci_index_prices (
+        CREATE TABLE IF NOT EXISTS msci_index_data (
             index_id INTEGER,
             ts INTEGER,
             price REAL,
@@ -625,7 +627,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS sec_daily_filings_lists (
+        CREATE TABLE IF NOT EXISTS sec_daily_list (
             list_id INTEGER PRIMARY KEY,
             ts INTEGER UNIQUE NOT NULL,
             url TEXT UNIQUE NOT NULL,
@@ -636,7 +638,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS sec_form_types (
+        CREATE TABLE IF NOT EXISTS sec_form_type (
             type_id INTEGER PRIMARY KEY,
             name TEXT UNIQUE NOT NULL
         )
@@ -645,7 +647,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS sec_filings (
+        CREATE TABLE IF NOT EXISTS sec_filing (
             filing_id INTEGER PRIMARY KEY,
             cik INTEGER NOT NULL,
             type_id INTEGER NOT NULL,
@@ -661,7 +663,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS sec_fundamental_variables (
+        CREATE TABLE IF NOT EXISTS sec_fundamental_variable (
             variable_id INTEGER PRIMARY KEY,
             name TEXT NOT NULL,
             statement_id INTEGER NOT NULL,
@@ -687,7 +689,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS sec_mutualfund_entities (
+        CREATE TABLE IF NOT EXISTS sec_mutualfund_entity (
             entity_id INTEGER PRIMARY KEY,
             cik INTEGER UNIQUE,
             name TEXT UNIQUE,
@@ -712,7 +714,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS sec_mutualfund_classes (
+        CREATE TABLE IF NOT EXISTS sec_mutualfund_class (
             security_id INTEGER PRIMARY KEY,
             series_id INTEGER
         )
@@ -721,7 +723,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS sec_investment_managers (
+        CREATE TABLE IF NOT EXISTS sec_investment_manager (
             manager_id INTEGER PRIMARY KEY,
             cik INTEGER UNIQUE NOT NULL,
             name TEXT NOT NULL
@@ -731,7 +733,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS sec_investment_manager_holdings (
+        CREATE TABLE IF NOT EXISTS sec_investment_manager_holding (
             manager_id INTEGER,
             quarter INTEGER,
             year INTEGER,
@@ -749,7 +751,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS sec_options (
+        CREATE TABLE IF NOT EXISTS sec_option (
             option_id INTEGER PRIMARY KEY,
             name TEXT UNIQUE NOT NULL
         )
@@ -758,7 +760,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS sec_cusips (
+        CREATE TABLE IF NOT EXISTS sec_cusip (
             cusip_id INTEGER PRIMARY KEY,
             cusip TEXT UNIQUE NOT NULL
         )
@@ -767,7 +769,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS sec_acquisitions (
+        CREATE TABLE IF NOT EXISTS sec_acquisition (
             cik_filer INTEGER NOT NULL,
             cik_subject INTEGER NOT NULL,
             cusip_id INTEGER NOT NULL,
@@ -787,7 +789,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS tipranks_recommendation_trends (
+        CREATE TABLE IF NOT EXISTS tipranks_recommendation_trend (
             security_id INTEGER,
             week INTEGER,
             number INTEGER,
@@ -803,7 +805,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS tipranks_news_sentiments (
+        CREATE TABLE IF NOT EXISTS tipranks_news_sentiment (
             security_id INTEGER,
             week INTEGER,
             number INTEGER,
@@ -818,7 +820,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS tipranks_analysts (
+        CREATE TABLE IF NOT EXISTS tipranks_analyst (
             analyst_id INTEGER PRIMARY KEY,
             name TEXT UNIQUE,
             image BLOB,
@@ -840,7 +842,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS tipranks_analyst_companies (
+        CREATE TABLE IF NOT EXISTS tipranks_analyst_company (
             company_id INTEGER PRIMARY KEY,
             name TEXT UNIQUE
         )
@@ -849,7 +851,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS tipranks_sectors (
+        CREATE TABLE IF NOT EXISTS tipranks_sector (
             sector_id INTEGER PRIMARY KEY,
             name TEXT UNIQUE
         )
@@ -858,7 +860,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS tipranks_countries (
+        CREATE TABLE IF NOT EXISTS tipranks_country (
             country_id INTEGER PRIMARY KEY,
             name TEXT UNIQUE
         )
@@ -867,7 +869,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS tipranks_ratings (
+        CREATE TABLE IF NOT EXISTS tipranks_rating (
             rating_id INTEGER PRIMARY KEY,
             name TEXT UNIQUE
         )
@@ -876,7 +878,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS tipranks_analyst_recommendations (
+        CREATE TABLE IF NOT EXISTS tipranks_analyst_recommendation (
             analyst_id INTEGER,
             security_id INTEGER,
             ts INTEGER,
@@ -892,7 +894,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS tipranks_analyst_stock_summaries (
+        CREATE TABLE IF NOT EXISTS tipranks_analyst_stock_summary (
             analyst_id INTEGER,
             security_id INTEGER,
             successful_recommendations INTEGER,
@@ -906,7 +908,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT exists tipranks_institutionals (
+        CREATE TABLE IF NOT exists tipranks_institutional (
             institutional_id INTEGER PRIMARY KEY,
             name TEXT UNIQUE,
             manager TEXT,
@@ -919,7 +921,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS tipranks_institutional_holdings (
+        CREATE TABLE IF NOT EXISTS tipranks_institutional_holding (
             institutional_id INTEGER,
             security_id INTEGER,
             ts INTEGER,
@@ -937,7 +939,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS yahoo_cities (
+        CREATE TABLE IF NOT EXISTS yahoo_city (
             city_id INTEGER PRIMARY KEY,
             name TEXT NOT NULL,
             country_id INTEGER NOT NULL,
@@ -948,7 +950,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS yahoo_exchanges (
+        CREATE TABLE IF NOT EXISTS yahoo_exchange (
             exchange_id INTEGER PRIMARY KEY,
             name TEXT NOT NULL,
             yahoo_suffix TEXT NOT NULL,
@@ -960,7 +962,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS yahoo_executives (
+        CREATE TABLE IF NOT EXISTS yahoo_executive (
             executive_d INTEGER PRIMARY KEY,
             name TEXT NOT NULL,
             age INTEGER,
@@ -972,7 +974,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS yahoo_executive_positions (
+        CREATE TABLE IF NOT EXISTS yahoo_executive_position (
             position_id INTEGER PRIMARY KEY,
             name TEXT UNIQUE NOT NULL
         )
@@ -981,7 +983,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS yahoo_company_executive_matches (
+        CREATE TABLE IF NOT EXISTS yahoo_company_executive_match (
             security_id INTEGER NOT NULL,
             executive_id INTEGER NOT NULL,
             position_id INTEGER NOT NULL,
@@ -995,7 +997,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS yahoo_security_prices (
+        CREATE TABLE IF NOT EXISTS yahoo_security_price (
             security_id INTEGER,
             ts INTEGER,
             open REAL,
@@ -1015,7 +1017,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS yahoo_security_types (
+        CREATE TABLE IF NOT EXISTS yahoo_security_type (
             type_id INTEGER PRIMARY KEY,
             name TEXT UNIQUE NOT NULL
         )
@@ -1024,7 +1026,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS yahoo_analyst_companies (
+        CREATE TABLE IF NOT EXISTS yahoo_analyst_company (
             company_id INTEGER PRIMARY KEY,
             name TEXT UNIQUE NOT NULL
         )
@@ -1033,7 +1035,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS yahoo_ratings (
+        CREATE TABLE IF NOT EXISTS yahoo_rating (
             rating_id INTEGER PRIMARY KEY,
             name TEXT UNIQUE NOT NULL
         )
@@ -1042,7 +1044,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS yahoo_analyst_recommendations (
+        CREATE TABLE IF NOT EXISTS yahoo_analyst_recommendation (
             company_id INTEGER,
             security_id INTEGER,
             ts INTEGER,
@@ -1056,7 +1058,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS yahoo_recommendation_trends (
+        CREATE TABLE IF NOT EXISTS yahoo_recommendation_trend (
             security_id INTEGER,
             month INTEGER,
             number INTEGER,
@@ -1073,7 +1075,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS yahoo_fundamental_variables (
+        CREATE TABLE IF NOT EXISTS yahoo_fundamental_variable (
             variable_id INTEGER PRIMARY KEY,
             name TEXT NOT NULL,
             statement_id INTEGER NOT NULL,
@@ -1098,7 +1100,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS yahoo_gics_sectors (
+        CREATE TABLE IF NOT EXISTS yahoo_gics_sector (
             sector_id INTEGER PRIMARY KEY,
             name TEXT UNIQUE NOT NULL
         )
@@ -1107,7 +1109,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS yahoo_gics_industries (
+        CREATE TABLE IF NOT EXISTS yahoo_gics_industry (
             industry_id INTEGER PRIMARY KEY,
             name TEXT UNIQUE NOT NULL,
             sector_id INTEGER NOT NULL
