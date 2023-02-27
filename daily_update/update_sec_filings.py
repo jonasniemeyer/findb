@@ -36,11 +36,11 @@ def get_sec_filing_lists(start_year=1900, start_quarter=0):
                         date = f"19{date[:2]}-{date[2:4]}-{date[4:]}"
                     day_url = f"{SEC_BASE_URL}/edgar/daily-index/{year['name']}/{quarter['name']}/{day['href']}".rstrip(".gz")
                     ts = int(pd.to_datetime(date).timestamp())
-                    cur.execute("INSERT OR IGNORE INTO sec_daily_filings_lists (ts, url, parsed) VALUES (?, ?, ?)", (ts, day_url, False))
+                    cur.execute("INSERT OR IGNORE INTO sec_daily_list (ts, url, parsed) VALUES (?, ?, ?)", (ts, day_url, False))
                 con.commit()
 
 def scrape_sec_filing_lists():
-    filing_lists = cur.execute("SELECT url FROM sec_daily_filings_lists WHERE parsed = ?", (False,)).fetchall()
+    filing_lists = cur.execute("SELECT url FROM sec_daily_list WHERE parsed = ?", (False,)).fetchall()
     filing_lists = [item[0] for item in filing_lists]
     total_filings = len(filing_lists)
 
@@ -59,16 +59,16 @@ def scrape_sec_filing_lists():
             ts_filed = int(pd.to_datetime(date).timestamp())
             href_split = href.strip().split("/")
             href = f"{SEC_BASE_URL}/edgar/data/{href_split[-2]}/{href_split[-1]}"
-            cur.execute("INSERT OR IGNORE INTO sec_form_types (name) VALUES (?)", (form,))
-            form_id = cur.execute("SELECT id FROM sec_form_types WHERE name = ?", (form,)).fetchone()[0]
+            cur.execute("INSERT OR IGNORE INTO sec_form_type (name) VALUES (?)", (form,))
+            form_id = cur.execute("SELECT type_id FROM sec_form_type WHERE name = ?", (form,)).fetchone()[0]
             cur.execute(
                 """
-                INSERT OR IGNORE INTO sec_filings (cik, form_type_id, ts_filed, url, parsed)
+                INSERT INTO sec_filing (cik, form_type_id, ts_filed, url, parsed)
                 VALUES (?, ?, ?, ?, ?)
                 """,
                 (cik, form_id, ts_filed, href, False)
             )
-        cur.execute("UPDATE sec_daily_filings_lists SET parsed = ? WHERE url = ?", (True, url))
+        cur.execute("UPDATE sec_daily_list SET parsed = ? WHERE url = ?", (True, url))
         con.commit()
 
 if __name__ == "__main__":
@@ -76,7 +76,7 @@ if __name__ == "__main__":
     con = db.connection
     cur = db.cursor
 
-    filing_lists = cur.execute("SELECT ts, url FROM sec_daily_filings_lists ORDER BY ts DESC LIMIT 1").fetchall()
+    filing_lists = cur.execute("SELECT ts, url FROM sec_daily_list ORDER BY ts DESC LIMIT 1").fetchall()
 
     # if there are no filing lists in the database, scrape all lists. Else, scrape only those that are dated later
     if len(filing_lists) == 0:
