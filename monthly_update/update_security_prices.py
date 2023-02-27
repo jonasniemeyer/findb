@@ -10,7 +10,7 @@ cur = db.cursor
 
 securities = cur.execute(
     """
-    SELECT id, ticker FROM securities
+    SELECT security_id, ticker FROM security
     WHERE
     discontinued IS NULL
     ORDER BY ticker
@@ -28,13 +28,13 @@ for index, (security_id, ticker) in enumerate(securities):
         df = reader["data"]
     except:
         print("\tfailed")
-        cur.execute("UPDATE securities SET prices_updated = ? WHERE id = ?", (ts_today, security_id))
+        cur.execute("UPDATE security SET prices_updated = ? WHERE security_id = ?", (ts_today, security_id))
         continue
 
     currency = reader["information"]["currency"]
     offset = reader["information"]["utc_offset"]
     try:
-        currency_id = cur.execute("SELECT id FROM currencies WHERE abbr = ?", (currency, )).fetchone()[0]
+        currency_id = cur.execute("SELECT currency_id FROM currency WHERE abbr = ?", (currency, )).fetchone()[0]
     except:
         print("\t no currency", currency)
         continue
@@ -42,8 +42,8 @@ for index, (security_id, ticker) in enumerate(securities):
     df["ts"] = df.index
     data = df.reindex(columns = ["security id", "ts", "open", "high", "low", "close", "adj_close", "volume", "dividends", "splits", "simple_returns", "log_returns"]).values
 
-    cur.executemany("REPLACE INTO yahoo_security_prices VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", data)
-    cur.execute("UPDATE securities SET prices_updated = ?, currency_id = ?, utc_offset = ? WHERE id = ?", (ts_today, currency_id, offset, security_id))
+    cur.executemany("REPLACE INTO yahoo_security_price VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", data)
+    cur.execute("UPDATE security SET prices_updated = ?, currency_id = ?, utc_offset = ? WHERE security_id = ?", (ts_today, currency_id, offset, security_id))
     if index % 100 == 0:
         con.commit()
 
