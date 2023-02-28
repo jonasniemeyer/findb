@@ -1,6 +1,8 @@
 from finance_database import Database
+from finance_database.utils import Conversion, MACROTRENDS_CONVERSION
+from finance_data import CMEReader
 
-with Database() as db:
+def setup_tables(db) -> None:
     # ===========================================================
     # ===================== General =============================
     # ===========================================================
@@ -39,7 +41,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS index (
+        CREATE TABLE IF NOT EXISTS security_index (
             index_id INTEGER PRIMARY KEY,
             name TEXT UNIQUE NOT NULL,
             ticker TEXT NOT NULL,
@@ -62,17 +64,28 @@ with Database() as db:
         """
         CREATE TABLE IF NOT EXISTS financial_statement_type (
             statement_id INTEGER PRIMARY KEY,
-            name TEXT UNIQUE NOT NULL
+            internal_name TEXT UNIQUE NOT NULL,
+            label TEXT UNIQUE NOT NULL
         )
         """
     )
 
     db.cur.executescript(
         """
-        INSERT OR IGNORE INTO financial_statement_type (name) VALUES ("income_statement");
-        INSERT OR IGNORE INTO financial_statement_type (name) VALUES ("balance_sheet");
-        INSERT OR IGNORE INTO financial_statement_type (name) VALUES ("cashflow_statement");
-        INSERT OR IGNORE INTO financial_statement_type (name) VALUES ("statement_of_changes_in_equity");
+        INSERT OR IGNORE INTO financial_statement_type (internal_name, label) VALUES ("INCOME_STATEMENT", "Income Statement");
+        INSERT OR IGNORE INTO financial_statement_type (internal_name, label) VALUES ("BALANCE_SHEET", "Balance Sheet Statement");
+        INSERT OR IGNORE INTO financial_statement_type (internal_name, label) VALUES ("CASHFLOW_STATEMENT", "Cashflow Statement");
+        INSERT OR IGNORE INTO financial_statement_type (internal_name, label) VALUES ("STATEMENT_CHANGE_EQUITY", "Statement Of Changes in Equity");
+        """
+    )
+
+    db.cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS fundamental_variable (
+            variable_id INTEGER PRIMARY KEY,
+            internal_name TEXT UNIQUE NOT NULL,
+            label TEXT UNIQUE NOT NULL
+        )
         """
     )
 
@@ -289,7 +302,7 @@ with Database() as db:
     db.cur.execute(
         """
         CREATE TABLE IF NOT EXISTS finviz_analyst_company (
-            analyst_company_id INTEGER PRIMARY KEY,
+            company_id INTEGER PRIMARY KEY,
             name TEXT UNIQUE NOT NULL
         )
         """
@@ -307,7 +320,7 @@ with Database() as db:
     db.cur.execute(
         """
         CREATE TABLE IF NOT EXISTS finviz_analyst_recommendation (
-            analyst_company_id INTEGER,
+            company_id INTEGER,
             security_id INTEGER,
             ts INTEGER,
             old_rating INTEGER,
@@ -315,7 +328,7 @@ with Database() as db:
             change INTEGER NOT NULL,
             old_price REAL,
             new_price REAL,
-            PRIMARY KEY(analyst_company_id, security_id, ts)
+            PRIMARY KEY(company_id, security_id, ts)
         )
         """
     )
@@ -450,6 +463,7 @@ with Database() as db:
             variable_id INTEGER PRIMARY KEY,
             name TEXT NOT NULL,
             statement_id INTEGER NOT NULL,
+            standard_id INTEGER UNIQUE NOT NULL,
             UNIQUE(name, statement_id)
         )
         """
@@ -1116,3 +1130,49 @@ with Database() as db:
         )
         """
     )
+
+def insert_cme_commodities(db) -> None:
+    for name, properties in CMEReader.commodities.items():
+        sector_id = db.cur.execute(f"SELECT sector_id FROM cme_commodity_sector WHERE name = ?", (properties["sector_name"],)).fetchone()[0]
+        exchange_id = db.cur.execute(f"SELECT exchange_id FROM yahoo_exchange WHERE yahoo_suffix = '.CME'").fetchone()[0]
+        db.cur.execute(
+            f"INSERT OR IGNORE INTO cme_commodity (name, exchange_id, sector_id) VALUES (?, ?, ?)",
+            (name, exchange_id, sector_id)
+        )
+
+def insert_standardized_variables(db) -> None:
+    for var in Conversion:
+        db.cur.execute("INSERT OR IGNORE INTO fundamental_variable (internal_name, label) VALUES(?, ?)", (var.name, var.value))
+
+
+def insert_macrotrends_variables(db) -> None:
+    for statement in MACROTRENDS_CONVERSION.keys():
+        statement_id = db.cur.execute("SELECT statement_id FROM financial_statement_type WHERE internal_name = ?", (statement,)).fetchone()[0]
+        for variable, enum in MACROTRENDS_CONVERSION[statement].items():
+            enum_id = db.cur.execute("SELECT variable_id FROM fundamental_variable WHERE internal_name = ?", (enum.name,)).fetchone()[0]
+            db.cur.execute("INSERT OR IGNORE INTO macrotrends_fundamental_variable (name, statement_id, standard_id) VALUES (?, ?, ?)", (variable, statement_id, enum_id))
+
+if __name__ == "__main__":
+    from finance_database.setup_db.countries_currencies_exchanges import insert_countries_currencies_exchanges
+    from finance_database.setup_db.industry_classifications import insert_gics_classifcation, insert_sic_classification
+    with Database() as db:
+        print("Setup Tables")
+        setup_tables(db)
+
+        print("Inserting Countries")
+        insert_countries_currencies_exchanges(db)
+
+        print("Inserting CME Commodities")
+        insert_cme_commodities(db)
+
+        print("Inserting Standardized Fundamental Variables")
+        insert_standardized_variables(db)
+
+        print("Inserting Macrotrends Fundamental Variables")
+        insert_macrotrends_variables(db)
+
+        print("Inserting GICS Classification")
+        insert_gics_classifcation(db)
+
+        print("Inserting SIC Classification")
+        insert_sic_classification(db)

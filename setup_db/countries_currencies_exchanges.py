@@ -4,7 +4,7 @@ from finance_database import Database
 import re
 from finance_database.utils import HEADERS
 
-with Database() as db:
+def insert_countries_currencies_exchanges(db) -> None:
     countries = {}
     country_url = "https://en.wikipedia.org/wiki/List_of_circulating_currencies"
     html = requests.get(url=country_url, headers=HEADERS).text
@@ -36,27 +36,27 @@ with Database() as db:
 
         db.cur.execute(
             """
-            INSERT OR IGNORE INTO currencies (name, abbr)
+            INSERT OR IGNORE INTO currency (name, abbr)
             VALUES (?, ?)
             """,
             (currency_name, currency_abbr)
         )
 
-        currency_id = db.cur.execute("SELECT currency_id FROM currencies WHERE name = ?", (currency_name,)).fetchone()[0]
+        currency_id = db.cur.execute("SELECT currency_id FROM currency WHERE name = ?", (currency_name,)).fetchone()[0]
 
         db.cur.execute(
             """
-            INSERT OR IGNORE INTO countries (name, flag_small, flag_medium, flag_large)
+            INSERT OR IGNORE INTO country (name, flag_small, flag_medium, flag_large)
             VALUES (?, ?, ?, ?)
             """,
             (country_name, flag_bytes_50, flag_bytes_100, flag_bytes_200)
         )
         print(f"{index+1:>3} of {length}: {country_name}")
-        country_id = db.cur.execute("SELECT country_id FROM countries WHERE name = ?", (country_name,)).fetchone()[0]
+        country_id = db.cur.execute("SELECT country_id FROM country WHERE name = ?", (country_name,)).fetchone()[0]
 
         db.cur.execute(
             """
-            INSERT OR IGNORE INTO country_currency_matches (country_id, currency_id)
+            INSERT OR IGNORE INTO country_currency_match (country_id, currency_id)
             VALUES (?, ?)
             """,
             (country_id, currency_id)
@@ -64,19 +64,19 @@ with Database() as db:
 
     db.cur.execute(
         """
-        INSERT OR IGNORE INTO countries (name)
+        INSERT OR IGNORE INTO country (name)
         VALUES (?)
         """,
         ("Europe",)
     )
 
-    europe_id = db.cur.execute("SELECT country_id FROM countries WHERE name = ?", ("Europe",)).fetchone()[0]
-    eur_id = db.cur.execute("SELECT currency_id FROM currencies WHERE name = ?", ("Euro",)).fetchone()[0]
-    db.cur.execute("INSERT OR IGNORE INTO country_currency_matches VALUES (?, ?)", (europe_id, eur_id))
+    europe_id = db.cur.execute("SELECT country_id FROM country WHERE name = ?", ("Europe",)).fetchone()[0]
+    eur_id = db.cur.execute("SELECT currency_id FROM currency WHERE name = ?", ("Euro",)).fetchone()[0]
+    db.cur.execute("INSERT OR IGNORE INTO country_currency_match VALUES (?, ?)", (europe_id, eur_id))
 
     db.cur.execute(
         """
-        INSERT OR IGNORE INTO countries (name)
+        INSERT OR IGNORE INTO country (name)
         VALUES (?)
         """,
         (None,)
@@ -84,7 +84,7 @@ with Database() as db:
 
     db.cur.execute(
         """
-        INSERT OR IGNORE INTO countries (name)
+        INSERT OR IGNORE INTO country (name)
         VALUES (?)
         """,
         ("Global",)
@@ -104,10 +104,10 @@ with Database() as db:
         suffix = cells[2].text.strip()
         suffix = "" if suffix == "N/A" else suffix
 
-        country_id = db.cur.execute("SELECT country_id FROM countries WHERE name = ?", (country_name,)).fetchone()[0]
+        country_id = db.cur.execute("SELECT country_id FROM country WHERE name = ?", (country_name,)).fetchone()[0]
         db.cur.execute(
             """
-            INSERT OR IGNORE INTO yahoo_exchanges (name, country_id, yahoo_suffix)
+            INSERT OR IGNORE INTO yahoo_exchange (name, country_id, yahoo_suffix)
             VALUES (?, ?, ?)
             """,
             (exchange_name, country_id, suffix)
