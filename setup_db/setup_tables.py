@@ -109,8 +109,8 @@ def setup_tables(db) -> None:
             old_name TEXT,
             profile_updated INTEGER,
             prices_updated INTEGER,
-            is_sec_company INTEGER,
-            is_sec_mutualfund INTEGER,
+            sec_company INTEGER,
+            sec_mutualfund INTEGER,
             UNIQUE(cik, ticker)
         )
         """
