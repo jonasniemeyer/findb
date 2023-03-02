@@ -5,7 +5,6 @@ import re
 from finance_database.utils import HEADERS
 
 def insert_countries_currencies_exchanges(db) -> None:
-    countries = {}
     country_url = "https://en.wikipedia.org/wiki/List_of_circulating_currencies"
     html = requests.get(url=country_url, headers=HEADERS).text
     soup = BeautifulSoup(html, "lxml")
