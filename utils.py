@@ -18,6 +18,7 @@ HEADERS = {
 class Conversion(Enum):
     # Income Statement
     REVENUE = "Total Revenue"
+    REVENUE_ANALYSTS = "Total Revenue Analyst Count"
     COGS = "Cost Of Revenue"
     GROSS_PROFIT = "Gross Profit"
     RD = "Research & Development Expenses"
@@ -25,20 +26,27 @@ class Conversion(Enum):
     OTHER_OPERATING_INCOME = "Other Operating Income/Expenses"
     TOTAL_OPERATING_EXPENSES = "Total Operating Expenses"
     OPERATING_INCOME = "Total Operating Income"
+    OPERATING_INCOME_ANALYSTS = "Total Operating Income Analyst Count"
     NONOPERATING_INCOME = "Non-Operating Income/Loss"
     PRETAX_INCOME = "Income Before Income Taxes"
+    PRETAX_INCOME_ANALYSTS = "Income Before Income Taxes Analyst Count"
     INCOME_TAXES = "Income Taxes"
     INCOME_AFTER_TAXES = "Income After Taxes"
     OTHER_INCOME = "Other Income/Expenses"
     EBITDA = "EBITDA"
+    EBITDA_ANALYSTS = "EBITDA Analyst Count"
     EBIT = "EBIT"
     NET_INCOME = "Net Income"
+    NET_INCOME_ANALYSTS = "Net Income Analyst Count"
     NET_INCOME_CONTINUED = "Net Income From Continued Operations"
     NET_INCOME_DISCONTINUED = "Net Income From Discontinued Operations"
     SHARES_BASIC = "Basic Shares Outstanding"
     SHARES_DILUTED = "Diluted Shares Outstanding"
     EPS_BASIC = "Basic EPS"
     EPS_DILUTED = "Diluted EPS"
+    EPS_DILUTED_ANALYSTS = "Diluted EPS Analyst Count"
+    DIVIDENDS_PER_SHARE = "Dividends Per Share"
+    DIVIDENDS_PER_SHARE_ANALYSTS = "Dividends Per Share Analyst Count"
 
     # Balance Sheet
     CASH = "Cash And Cash Equivalents"
@@ -58,6 +66,7 @@ class Conversion(Enum):
     TOTAL_NONCURRENT_ASSETS = "Total Non-Current Assets"
 
     TOTAL_ASSETS = "Total Assets"
+    TOTAL_ASSETS_ANALYSTS = "Total Assets Analyst Count"
 
     ST_DEBT = "Short-Term Debt"
     CURRENT_LIABILITIES = "Current Liabilities"
@@ -71,6 +80,9 @@ class Conversion(Enum):
     COMPREHENSIVE_INCOME = "Comprehensive Income"
     OTHER_SHAREHOLDERS_EQUITY = "Other Shareholders' Equity"
     TOTAL_SHAREHOLDERS_EQUITY = "Total Shareholders' Equity"
+    TOTAL_SHAREHOLDERS_EQUITY_ANALYSTS = "Total Shareholders' Equity Analyst Count"
+    BOOK_VALUE_PER_SHARE = "Book Value Per Share"
+    BOOK_VALUE_PER_SHARE_ANALYSTS = "Book Value Per Share Analyst Count"
 
     TOTAL_LIABILITIES_AND_SHAREHOLDERS_EQUITY = "Total Liabilities And Shareholders' Equity"
 
@@ -86,8 +98,11 @@ class Conversion(Enum):
     CHANGE_OTHER_ASSETS_LIABILITIES = "Change In Other Assets and Liabilities"
     CHANGE_TOTAL_ASSETS_LIABILITIES = "Change In Total Assets and Liabilities"
     OPERATING_CASHFLOW = "Operating Cashflow"
+    CASHFLOW_PER_SHARE = "Cashflow Per Share"
+    CASHFLOW_PER_SHARE_ANALYSTS = "Cashflow Per Share Analyst Count"
 
     CAPEX = "Capital Expenditures"
+    CAPEX_ANALYSTS = "Capital Expenditures Analyst Count"
     CHANGE_ST_SECURITIES = "Change In Short-Term Securities"
     CHANGE_LT_SECURITIES = "Change In Long-Term Securities"
     CHANGE_SECURITIES = "Change In Securities"
@@ -108,9 +123,20 @@ class Conversion(Enum):
     FINANCING_CASHFLOW = "Financing Cashflow"
 
     FREE_CASHFLOW = "Free Cashflow"
+    FREE_CASHFLOW_ANALYSTS = "Free Cashflow Analyst Count"
     CASH_START_PERIOD = "Cash and Cash Equivalents Start of Period"
     CHANGE_CASH = "Change In Cash and Cash Equivalents"
     CASH_END_PRIOD = "Cash and Cash Equivalents End of Period"
+
+    # Financial Ratios
+    OPERATING_MARGIN = "Operating Margin"
+    OPERATING_MARGIN_ANALYSTS = "Operating Margin Analyst Count"
+    NET_MARGIN = "Net Margin"
+    NET_MARGIN_ANALYSTS = "Net Margin Analyst Count"
+    FCF_MARGIN = "FCF Margin"
+    FCF_MARGIN_ANALYSTS = "FCF Margin Analyst Count"
+    FCF_CONVERSION = "FCF Conversion"
+    FCF_CONVERSION_ANALYSTS = "FCF Conversion Analyst Count"
 
 MACROTRENDS_CONVERSION = {
     # Income Statement
@@ -193,5 +219,50 @@ MACROTRENDS_CONVERSION = {
         "Net Cash Flow": Conversion.CHANGE_CASH,
         "Stock-Based Compensation": Conversion.SBC,
         "Common Stock Dividends Paid": Conversion.DIVIDENDS_PAID
+    }
+}
+
+MARKETSCREENER_CONVERSION = {
+    "INCOME_STATEMENT": {
+        "Net Sales": Conversion.REVENUE,
+        "Net Sales Analysts": Conversion.REVENUE_ANALYSTS,
+        "EBITDA": Conversion.EBITDA,
+        "EBITDA Analysts": Conversion.EBITDA_ANALYSTS,
+        "Operating Profit": Conversion.OPERATING_INCOME,
+        "Operating Profit Analysts": Conversion.OPERATING_INCOME_ANALYSTS,
+        "Pre-Tax Profit": Conversion.PRETAX_INCOME,
+        "Pre-Tax Profit Analysts": Conversion.PRETAX_INCOME_ANALYSTS,
+        "Net Income": Conversion.NET_INCOME,
+        "Net Income Analysts": Conversion.NET_INCOME_ANALYSTS,
+        "EPS": Conversion.EPS_DILUTED,
+        "EPS Analysts": Conversion.EPS_DILUTED_ANALYSTS,
+        "Dividend Per Share": Conversion.DIVIDENDS_PER_SHARE,
+        "Dividend Per Share Analysts": Conversion.DIVIDENDS_PER_SHARE_ANALYSTS
+    },
+    "BALANCE_SHEET": {
+        "Assets": Conversion.TOTAL_ASSETS,
+        "Assets Analysts": Conversion.TOTAL_ASSETS_ANALYSTS,
+        "Shareholders' Equity": Conversion.TOTAL_SHAREHOLDERS_EQUITY,
+        "Shareholders' Equity Analysts": Conversion.TOTAL_SHAREHOLDERS_EQUITY_ANALYSTS,
+        "Book Value Per Share": Conversion.BOOK_VALUE_PER_SHARE,
+        "Book Value Per Share Analysts": Conversion.BOOK_VALUE_PER_SHARE_ANALYSTS
+    },
+    "CASHFLOW_STATEMENT": {
+        "Free Cash Flow": Conversion.FREE_CASHFLOW,
+        "Free Cash Flow Analysts": Conversion.FREE_CASHFLOW_ANALYSTS,
+        "Cash Flow Per Share": Conversion.CASHFLOW_PER_SHARE,
+        "Cash Flow Per Share Analysts": Conversion.CASHFLOW_PER_SHARE_ANALYSTS,
+        "Capex": Conversion.CAPEX,
+        "Capex Analysts": Conversion.CAPEX_ANALYSTS
+    },
+    "FINANCIAL_RATIOS": {
+        "Operating Margin": Conversion.OPERATING_MARGIN,
+        "Operating Margin Analysts": Conversion.OPERATING_MARGIN_ANALYSTS,
+        "Net Margin": Conversion.NET_MARGIN,
+        "Net Margin Analysts": Conversion.NET_MARGIN_ANALYSTS,
+        "FCF Margin": Conversion.FCF_MARGIN,
+        "FCF Margin Analysts": Conversion.FCF_MARGIN_ANALYSTS,
+        "FCF Conversion": Conversion.FCF_CONVERSION,
+        "FCF Conversion Analysts": Conversion.FCF_CONVERSION_ANALYSTS
     }
 }
