@@ -10,7 +10,7 @@ def update_companies(db_connection):
     new_companies = {(str(company["cik"]), company["ticker"]): company["name"] for company in new_companies}
     ts_today = int(pd.to_datetime("today").timestamp())
 
-    database_companies = cur.execute("SELECT cik, ticker, sec_name FROM security WHERE is_sec_company = 1").fetchall()    
+    database_companies = cur.execute("SELECT cik, ticker, sec_name FROM security WHERE sec_company = 1").fetchall()
     for (cik, ticker, name) in database_companies:
         # if the company in the database IS NOT in the new companies dict, it should be set to discontinued if not already done
         if (cik, ticker) not in new_companies.keys():
@@ -31,11 +31,11 @@ def update_companies(db_connection):
         con.commit()
     
     # fetch again without names
-    database_companies = cur.execute("SELECT cik, ticker FROM security WHERE is_sec_company = 1").fetchall()
+    database_companies = cur.execute("SELECT cik, ticker FROM security WHERE sec_company = 1").fetchall()
     for (cik, ticker), name in new_companies.items():
         # if the new company is not in the database, insert it
         if (cik, ticker) not in database_companies:
-            cur.execute("INSERT INTO security (cik, ticker, sec_name, added, is_sec_company) VALUES (?, ?, ?, ?, ?)", (cik, ticker, name, ts_today, True))
+            cur.execute("INSERT INTO security (cik, ticker, sec_name, added, sec_company) VALUES (?, ?, ?, ?, ?)", (cik, ticker, name, ts_today, True))
             print(f"New Company: {cik:>10} {ticker:>8} {name}")
         # if the new company is already in the database, set discontinued to NULL in case if was discontinued in the past
         else:
@@ -57,7 +57,7 @@ def update_mutualfunds(db_connection):
     database_series = [item[0] for item in database_series]
 
     new_class_ciks = set([class_["class_cik"] for class_ in new_classes])
-    database_classes = cur.execute("SELECT cik, ticker FROM security WHERE is_sec_mutualfund = 1").fetchall()
+    database_classes = cur.execute("SELECT cik, ticker FROM security WHERE sec_mutualfund = 1").fetchall()
 
     # set entities to discontinued that are IN the database but are NOT IN the new classes dict if not already done
     for cik in database_entities:
@@ -83,9 +83,9 @@ def update_mutualfunds(db_connection):
     for cik, ticker in database_classes:
         if (
             cik not in new_class_ciks
-            and cur.execute("SELECT discontinued FROM securities WHERE cik = ? AND ticker = ?", (cik, ticker)).fetchone()[0] is None
+            and cur.execute("SELECT discontinued FROM security WHERE cik = ? AND ticker = ?", (cik, ticker)).fetchone()[0] is None
         ):
-            cur.execute("UPDATE securities SET discontinued = ? WHERE cik = ? AND ticker = ?", (ts_today, cik, ticker))
+            cur.execute("UPDATE security SET discontinued = ? WHERE cik = ? AND ticker = ?", (ts_today, cik, ticker))
             print(f"Discontinued Mutual Fund Class: {cik:>10} {ticker:>8}")
     con.commit()
 
@@ -112,12 +112,14 @@ def update_mutualfunds(db_connection):
     # insert new classes
     for class_ in new_classes:
         ticker = class_["ticker"]
+        if ticker is None:
+            continue
         class_cik = class_["class_cik"]
         series_cik = class_["series_cik"]
         entity_cik = class_["entity_cik"]
 
         if (class_cik, ticker) not in database_classes:
-            cur.execute("INSERT INTO security (cik, ticker, added, is_sec_mutualfund) VALUES (?, ?, ?, ?)", (class_cik, ticker, ts_today, True))
+            cur.execute("INSERT INTO security (cik, ticker, added, sec_mutualfund) VALUES (?, ?, ?, ?)", (class_cik, ticker, ts_today, True))
             class_id = cur.execute("SELECT security_id FROM security WHERE cik = ? AND ticker = ?", (class_cik, ticker)).fetchone()[0]
             series_id = cur.execute("SELECT series_id FROM sec_mutualfund_series WHERE cik = ?", (series_cik,)).fetchone()[0]
             cur.execute("INSERT INTO sec_mutualfund_class (security_id, series_id) VALUES (?, ?)", (class_id, series_id))
