@@ -29,7 +29,7 @@ def insert_countries_currencies_exchanges(db) -> None:
         currency_name = cells[i].find("a")
         if currency_name is None:
             continue
-        currency_name = currency_name.get("title")
+        currency_name = currency_name.get("title").title()
         currency_abbr = cells[i+2].text.split("[")[0].strip()
         currency_abbr = None if currency_abbr == "(none)" else currency_abbr
 
