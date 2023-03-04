@@ -178,7 +178,7 @@ class Conversion(Enum):
     TANGIBLE_BOOK_VALUE_PER_SHARE = "Tangible Book Value Per Share"
     BOOK_VALUE_PER_SHARE = "Book Value Per Share"
     BOOK_VALUE_PER_SHARE_ANALYSTS = "Book Value Per Share Analyst Count"
-    EQUITY_PER_SHARE = "Equity Per Share",
+    EQUITY_PER_SHARE = "Equity Per Share"
     DEBT_PER_SHARE = "Debt Per Share"
     MARKET_CAP = "Market Capitalization"
     ENTERPRISE_VALUE = "Enterprise Value"
