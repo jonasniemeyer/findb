@@ -44,11 +44,12 @@ tickers = cur.execute(
 ).fetchall()
 tickers = [item[0] for item in tickers]
 length = len(tickers)
+trail = len(str(length))
 
 for index, ticker in enumerate(tickers):
     if index % 100 == 0:
         con.commit()
-    print(f"{index} of {length}: {ticker}")
+    print(f"{index: >{trail}} of {length}: {ticker}")
 
     reader = TipranksStockReader(ticker)
 
