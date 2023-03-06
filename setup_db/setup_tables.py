@@ -387,8 +387,8 @@ def setup_tables(db) -> None:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS french_category (
-            category_id INTEGER PRIMARY KEY,
+        CREATE TABLE IF NOT EXISTS french_table (
+            table_id INTEGER PRIMARY KEY,
             name TEXT UNIQUE NOT NULL
         )
         """
@@ -399,9 +399,9 @@ def setup_tables(db) -> None:
         CREATE TABLE IF NOT EXISTS french_series (
             series_id INTEGER PRIMARY KEY,
             dataset_id INTEGER NOT NULL,
-            category_id INTEGER NOT NULL,
+            table_id INTEGER NOT NULL,
             name TEXT NOT NULL,
-            UNIQUE(dataset_id, category_id, name)
+            UNIQUE(dataset_id, table_id, name)
         )
         """
     )
