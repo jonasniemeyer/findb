@@ -20,7 +20,7 @@ length = len(securities)
 trail = len(str(length))
 
 for index, (security_id, ticker) in enumerate(securities):
-    print(f"{index: >{trail}} of {length}: {ticker}")
+    print(f"{index+1: >{trail}} of {length}: {ticker}")
     try:
         reader = YahooReader(ticker=ticker).historical_data(
             frequency="1d",

@@ -49,7 +49,7 @@ trail = len(str(length))
 for index, ticker in enumerate(tickers):
     if index % 100 == 0:
         con.commit()
-    print(f"{index: >{trail}} of {length}: {ticker}")
+    print(f"{index+1: >{trail}} of {length}: {ticker}")
 
     reader = TipranksStockReader(ticker)
 
