@@ -130,11 +130,11 @@ for index, ticker in enumerate(tickers):
         if "executives" in profile.keys():
             executives = {}
             for item in profile["executives"]:
-                name = item["name"] if item["name"] is not None else ""
-                position = item["position"] if item["position"] is not None else ""
-                salary = item["salary"] if item["salary"] is not None else ""
-                age = item["age"] if item["age"] is not None else ""
-                born = item["born"] if item["born"] is not None else ""
+                name = item["name"] if item["name"]
+                position = item["position"] if item["position"]
+                salary = item["salary"] if item["salary"]
+                age = item["age"] if item["age"]
+                born = item["born"] if item["born"]
 
                 cur.execute("REPLACE INTO yahoo_executives (name, age, born) VALUES (?, ?, ?)", (name, age, born))
                 executive_id = cur.execute("SELECT id FROM yahoo_executives WHERE name = ?", (name,)).fetchone()[0]
