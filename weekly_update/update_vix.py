@@ -1,10 +1,11 @@
+import datetime as dt
+import json
+import numpy as np
+import pandas as pd
 import requests
 from bs4 import BeautifulSoup
-import pandas as pd
-import numpy as np
-from io import StringIO
-import datetime as dt
 from finance_database import Database
+from io import StringIO
 from sqlite3 import register_adapter
 
 register_adapter(np.int64, lambda val: int(val))
@@ -17,19 +18,20 @@ cur = db.cursor
 base_url = "https://markets.cboe.com/us/futures/market_statistics/historical_data/"
 
 html = requests.get(base_url).text
-soup = BeautifulSoup(html, "lxml")
-tags = soup.find_all("a", {"class": "link"})
+url_dict = html.split("TX.defaultProductList = ")[1].split("CTX.productTypes = ")[0]
+url_dict = json.loads(url_dict)
 
-urls = [base_url + tag.get("href") for tag in tags if "products/csv/VX" in tag.get("href")]
+urls = [f"https://cdn.cboe.com/{item['path']}" for year in url_dict for item in url_dict[year]]
 length = len(urls)
+trail = len(str(length))
 
-for i, url in enumerate(urls):
+for index, url in enumerate(urls):
     items = []
-    print(f"{i} of {length}: {url}")
+    print(f"{index+1: >{trail}} of {length}: {url}")
     data = requests.get(url).text
     df = pd.read_csv(StringIO(data), index_col=0)
     df.index = pd.to_datetime(df.index)
-    maturity_date = dt.date.fromisoformat(url.split("/")[-2])
+    maturity_date = dt.date.fromisoformat(url.split("/")[-1].split("VX_")[1].split(".csv")[0])
     maturity_ts = int((maturity_date - dt.date(1970,1,1)).total_seconds())
     for index in df.index:
         ts = int((index.date() - dt.date(1970,1,1)).total_seconds())
@@ -41,7 +43,7 @@ for i, url in enumerate(urls):
         items.append((maturity_ts, ts, price, volume))
     cur.executemany(
         """
-        REPLACE INTO cboe_vix_prices VALUES(?, ?, ?, ?)
+        REPLACE INTO cboe_vix_data VALUES(?, ?, ?, ?)
         """,
         items
     )
