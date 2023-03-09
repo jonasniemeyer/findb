@@ -42,7 +42,7 @@ tickers = cur.execute(
 ).fetchall()
 tickers = [item[0] for item in tickers]
 length = len(tickers)
-
+trail = len(str(length))
 
 start = time.time()
 for index, ticker in enumerate(tickers):
@@ -52,7 +52,7 @@ for index, ticker in enumerate(tickers):
         start = time.time()
     if index % 100 == 0:
         con.commit()
-    print(f"{index} of {length}: {ticker}")
+    print(f"{index+1: >{trail}} of {length}: {ticker}")
     try:
         reader = YahooReader(ticker)
         profile = reader.profile()
@@ -78,7 +78,7 @@ for index, ticker in enumerate(tickers):
     cur.execute("UPDATE securities SET yahoo_name = ?, logo = ?, type_id = ?, description = ? WHERE ticker = ?", (security_name, logo, type_id, description, ticker))
 
     # check if company and insert company data
-    if security_type == "EQUITY" and cur.execute(f"SELECT * FROM sec_filings WHERE cik = ? AND form_type_id IN {form_ids}", (cik,)).fetchone() is not None:
+    if security_type == "EQUITY":
         
         cur.execute("INSERT OR IGNORE INTO companies (security_id) VALUES (?)", (security_id,))
         
@@ -98,9 +98,6 @@ for index, ticker in enumerate(tickers):
                 data[var] = profile[var]
             except:
                 data[var] = None
-            
-            if data[var] is None:
-                data[var] = ""
 
         #industry
         cur.execute("INSERT OR IGNORE INTO yahoo_gics_sectors (name) VALUES (?)", (data["sector"],))
