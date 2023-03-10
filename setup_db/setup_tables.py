@@ -977,7 +977,7 @@ def setup_tables(db) -> None:
     db.cur.execute(
         """
         CREATE TABLE IF NOT EXISTS yahoo_executive (
-            executive_d INTEGER PRIMARY KEY,
+            executive_id INTEGER PRIMARY KEY,
             name TEXT NOT NULL,
             age INTEGER,
             born INTEGER,
