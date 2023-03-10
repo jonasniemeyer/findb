@@ -62,7 +62,7 @@ def setup_tables(db) -> None:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS financial_statement_type (
+        CREATE TABLE IF NOT EXISTS financial_statement (
             statement_id INTEGER PRIMARY KEY,
             internal_name TEXT UNIQUE NOT NULL,
             label TEXT UNIQUE NOT NULL
@@ -72,10 +72,10 @@ def setup_tables(db) -> None:
 
     db.cur.executescript(
         """
-        INSERT OR IGNORE INTO financial_statement_type (internal_name, label) VALUES ("INCOME_STATEMENT", "Income Statement");
-        INSERT OR IGNORE INTO financial_statement_type (internal_name, label) VALUES ("BALANCE_SHEET", "Balance Sheet Statement");
-        INSERT OR IGNORE INTO financial_statement_type (internal_name, label) VALUES ("CASHFLOW_STATEMENT", "Cashflow Statement");
-        INSERT OR IGNORE INTO financial_statement_type (internal_name, label) VALUES ("STATEMENT_CHANGE_EQUITY", "Statement Of Changes in Equity");
+        INSERT OR IGNORE INTO financial_statement (internal_name, label) VALUES ("INCOME_STATEMENT", "Income Statement");
+        INSERT OR IGNORE INTO financial_statement (internal_name, label) VALUES ("BALANCE_SHEET", "Balance Sheet Statement");
+        INSERT OR IGNORE INTO financial_statement (internal_name, label) VALUES ("CASHFLOW_STATEMENT", "Cashflow Statement");
+        INSERT OR IGNORE INTO financial_statement (internal_name, label) VALUES ("STATEMENT_CHANGE_EQUITY", "Statement Of Changes in Equity");
         """
     )
 
@@ -1147,7 +1147,7 @@ def insert_standardized_variables(db) -> None:
 
 def insert_macrotrends_variables(db) -> None:
     for statement in MACROTRENDS_CONVERSION.keys():
-        statement_id = db.cur.execute("SELECT statement_id FROM financial_statement_type WHERE internal_name = ?", (statement,)).fetchone()[0]
+        statement_id = db.cur.execute("SELECT statement_id FROM financial_statement WHERE internal_name = ?", (statement,)).fetchone()[0]
         for variable, enum in MACROTRENDS_CONVERSION[statement].items():
             enum_id = db.cur.execute("SELECT variable_id FROM fundamental_variable WHERE internal_name = ?", (enum.name,)).fetchone()[0]
             db.cur.execute("INSERT OR IGNORE INTO macrotrends_fundamental_variable (name, statement_id, standard_id) VALUES (?, ?, ?)", (variable, statement_id, enum_id))
