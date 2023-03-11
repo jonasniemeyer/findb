@@ -24,8 +24,7 @@ class Database:
                 security.ticker      AS ticker,
                 security.yahoo_name  AS name
             FROM
-                security INNER JOIN company
-            USING(security_id)
+                security INNER JOIN company USING(security_id)
             """
         )
         data = [
@@ -49,9 +48,9 @@ class Database:
                 ts          AS ts,
                 adj_close   AS close
             FROM
-                yahoo_security_prices
+                yahoo_security_price
             WHERE
-                security_id = (SELECT id FROM securities WHERE ticker = ?)
+                security_id = (SELECT security_id FROM security WHERE ticker = ?)
                 AND ts BETWEEN STRFTIME("%s", ?) AND STRFTIME("%s", ?)
             """,
             (ticker, start, end)).fetchall()
@@ -73,13 +72,10 @@ class Database:
                 security_news.url           AS url
             FROM
                 security_news
-                INNER JOIN  security_news_match
-                INNER JOIN  news_source
-            ON
-                security_news.id = security_news_match.news_id
-                AND security_news.source_id = news_source.id
+                INNER JOIN security_news_match  USING (news_id)
+                INNER JOIN news_source          USING(source_id)
             WHERE
-                security_news_match.security_id = (SELECT id FROM securities WHERE ticker = ?)
+                security_news_match.security_id = (SELECT id FROM security WHERE ticker = ?)
                 AND security_news.ts BETWEEN STRFTIME("%s", ?) AND STRFTIME("%s", ?)
             """,
             (ticker, start, end)).fetchall()
@@ -108,12 +104,12 @@ class Database:
                     ticker      AS ticker,
                     yahoo_name  AS name,
                 FROM
-                    securities
+                    security
                 WHERE
                     id IN (
-                        SELECT security_id FROM companies WHERE gics_industry_id = (
-                            SELECT gics_industry_id FROM companies WHERE security_id = (
-                                SELECT id FROM securities WHERE ticker = ?
+                        SELECT security_id FROM company WHERE gics_industry_id = (
+                            SELECT gics_industry_id FROM company WHERE security_id = (
+                                SELECT security_id FROM security WHERE ticker = ?
                             )
                         )
                     )
@@ -129,12 +125,12 @@ class Database:
                     ticker      AS ticker,
                     yahoo_name  AS name,
                 FROM
-                    securities
+                    security
                 WHERE
                     id IN (
-                        SELECT security_id FROM companies WHERE sic_industry_id = (
-                            SELECT sic_industry_id FROM companies WHERE security_id = (
-                                SELECT id FROM securities WHERE ticker = ?
+                        SELECT security_id FROM company WHERE sic_industry_id = (
+                            SELECT sic_industry_id FROM company WHERE security_id = (
+                                SELECT security_id FROM security WHERE ticker = ?
                             )
                         )
                     )
@@ -157,35 +153,30 @@ class Database:
         data = self.cur.execute(
             """
             SELECT
-                securities.ticker                   AS ticker,
-                securities.yahoo_name               AS name,
-                securities.isin                     AS isin,
-                securities.cik                      AS cik,
-                securities.description              AS description,
-                companies.website                   AS website,
+                security.ticker                     AS ticker,
+                security.yahoo_name                 AS name,
+                security.isin                       AS isin,
+                security.cik                        AS cik,
+                security.description                AS description,
+                company.website                     AS website,
                 industry_classification_gics.name   AS gics,
                 industry_classification_sic.name    AS sic,
                 countries.name                      AS country,
-                companies.zip                       AS zip,
+                company.zip                         AS zip,
                 yahoo_cities.name                   AS city,
-                companies.address1                  AS address1,
-                companies.address2                  AS address2,
-                companies.employees                 AS employees
+                company.address1                    AS address1,
+                company.address2                    AS address2,
+                company.address3                    AS address3,
+                company.employees                   AS employees
             FROM
-                securities
-                INNER JOIN  companies
-                LEFT JOIN   industry_classification_gics
-                LEFT JOIN   industry_classification_sic
-                LEFT JOIN   countries
-                LEFT JOIN   yahoo_cities
-            ON
-                companies.security_id = securities.id
-                AND companies.gics_industry_id = industry_classification_gics.code
-                AND companies.sic_industry_id = industry_classification_sic.code
-                AND companies.country_id = countries.id
-                AND companies.city_id = yahoo_cities.id
+                security
+                INNER JOIN  company                         USING(security_id)
+                LEFT JOIN   industry_classification_gics    ON company.gics_industry_id = industry_classification_gics.industry_id
+                LEFT JOIN   industry_classification_sic     ON company.sic_industry_id = industry_classification_sic.industry_id
+                LEFT JOIN   countries                       USING(country_id)
+                LEFT JOIN   yahoo_cities                    USING (city_id)
             WHERE
-                securities.ticker = ?
+                security.ticker = ?
             """,
             (ticker,)).fetchone()
 
