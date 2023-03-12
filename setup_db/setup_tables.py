@@ -127,6 +127,7 @@ def setup_tables(db) -> None:
             city_id INTEGER,
             address1 TEXT,
             address2 TEXT,
+            address3 TEXT,
             zip TEXT,
             employees INTEGER,
             fiscal_year_end INTEGER,
