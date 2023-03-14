@@ -119,8 +119,11 @@ def update_mutualfunds(db_connection):
         entity_cik = class_["entity_cik"]
 
         if (class_cik, ticker) not in database_classes:
-            cur.execute("INSERT INTO security (cik, ticker, added, sec_mutualfund) VALUES (?, ?, ?, ?)", (class_cik, ticker, ts_today, True))
-            class_id = cur.execute("SELECT security_id FROM security WHERE cik = ? AND ticker = ?", (class_cik, ticker)).fetchone()[0]
+            cur.execute("INSERT OR IGNORE INTO security (cik, ticker, added, sec_mutualfund) VALUES (?, ?, ?, ?)", (class_cik, ticker, ts_today, True))
+            class_id = cur.execute("SELECT security_id FROM security WHERE cik = ? AND ticker = ?", (class_cik, ticker)).fetchone()
+            if class_id is None:
+                continue
+            class_id = class_id[0]
             series_id = cur.execute("SELECT series_id FROM sec_mutualfund_series WHERE cik = ?", (series_cik,)).fetchone()[0]
             cur.execute("INSERT INTO sec_mutualfund_class (security_id, series_id) VALUES (?, ?)", (class_id, series_id))
             print(f"New Mutual Fund Class: {class_cik:>10} {ticker:>8}")
