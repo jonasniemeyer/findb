@@ -93,9 +93,9 @@ def setup_tables(db) -> None:
         """
         CREATE TABLE IF NOT EXISTS security (
             security_id INTEGER PRIMARY KEY,
-            cik TEXT NOT NULL,
-            ticker TEXT NOT NULL,
-            isin TEXT,
+            cik TEXT,
+            ticker TEXT UNIQUE NOT NULL,
+            isin TEXT UNIQUE,
             yahoo_name TEXT,
             sec_name TEXT,
             description TEXT,
@@ -110,8 +110,7 @@ def setup_tables(db) -> None:
             profile_updated INTEGER,
             prices_updated INTEGER,
             sec_company INTEGER,
-            sec_mutualfund INTEGER,
-            UNIQUE(cik, ticker)
+            sec_mutualfund INTEGER
         )
         """
     )
