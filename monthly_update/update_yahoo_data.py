@@ -88,7 +88,7 @@ def update_yahoo_profile(reader: YahooReader, db: Database) -> None:
     else:
         db.cur.execute("INSERT OR IGNORE INTO yahoo_city (name, country_id) VALUES (?, ?)", (data["city"], country_id))
         city_id = db.cur.execute("SELECT city_id FROM yahoo_city WHERE name = ? AND country_id = ?", (data["city"], country_id)).fetchone()[0]
-    
+
     db.cur.execute(
         """
         UPDATE
@@ -342,11 +342,10 @@ if __name__ == "__main__":
             print(f"{index+1: >{trail}} of {length}: {ticker}")
 
             # sleep every minute for a minute because of rate limits
-            #if time.time() - start >= 60:
-            #    time.sleep(60)
-            #    start = time.time()
-            #if index % 100 == 0:
-            #    db.con.commit()
+            if time.time() - start >= 60:
+                db.con.commit()
+                time.sleep(60)
+                start = time.time()
 
             try:
                 reader = YahooReader(ticker)
