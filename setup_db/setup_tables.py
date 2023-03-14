@@ -91,11 +91,23 @@ def setup_tables(db) -> None:
 
     db.cur.execute(
         """
+        CREATE TABLE IF NOT EXISTS entity (
+            entity_id INTEGER PRIMARY KEY,
+            name TEXT,
+            lei TEXT UNIQUE,
+            cik TEXT UNIQUE
+        )
+        """
+    )
+
+    db.cur.execute(
+        """
         CREATE TABLE IF NOT EXISTS security (
             security_id INTEGER PRIMARY KEY,
-            cik TEXT,
+            entity_id INTEGER,
             ticker TEXT UNIQUE NOT NULL,
             isin TEXT UNIQUE,
+            cusip TEXT,
             yahoo_name TEXT,
             sec_name TEXT,
             description TEXT,
@@ -703,18 +715,6 @@ def setup_tables(db) -> None:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS sec_mutualfund_entity (
-            entity_id INTEGER PRIMARY KEY,
-            cik INTEGER UNIQUE,
-            name TEXT UNIQUE,
-            added INTEGER,
-            discontinued INTEGER
-        )
-        """
-    )
-
-    db.cur.execute(
-        """
         CREATE TABLE IF NOT EXISTS sec_mutualfund_series (
             series_id INTEGER PRIMARY KEY,
             cik TEXT UNIQUE,
@@ -737,28 +737,18 @@ def setup_tables(db) -> None:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS sec_investment_manager (
-            manager_id INTEGER PRIMARY KEY,
-            cik INTEGER UNIQUE NOT NULL,
-            name TEXT NOT NULL
-        )
-        """
-    )
-
-    db.cur.execute(
-        """
-        CREATE TABLE IF NOT EXISTS sec_investment_manager_holding (
-            manager_id INTEGER,
+        CREATE TABLE IF NOT EXISTS sec_hedgefund_holding (
+            entity_id INTEGER,
+            security_id INTEGER,
+            ts INTEGER NOT NULL,
             quarter INTEGER,
             year INTEGER,
-            ts INTEGER NOT NULL,
-            cusip_id INTEGER,
             percentage REAL,
             no_shares INTEGER,
             market_value REAL,
             option_id INTEGER,
             filing_id INTEGER,
-            PRIMARY KEY(manager_id, cusip_id, quarter, year, option_id)
+            PRIMARY KEY(entity_id, security_id, quarter, year, option_id)
         )
         """
     )
@@ -774,24 +764,14 @@ def setup_tables(db) -> None:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS sec_cusip (
-            cusip_id INTEGER PRIMARY KEY,
-            cusip TEXT UNIQUE NOT NULL
-        )
-        """
-    )
-
-    db.cur.execute(
-        """
         CREATE TABLE IF NOT EXISTS sec_acquisition (
-            cik_filer INTEGER NOT NULL,
-            cik_subject INTEGER NOT NULL,
-            cusip_id INTEGER NOT NULL,
+            filer_entity_id INTEGER NOT NULL,
+            subject_entity_id INTEGER NOT NULL,
+            security_id INTEGER NOT NULL,
             ts INTEGER NOT NULL,
             shares INTEGER NOT NULL,
             percentage REAL NOT NULL,
-            filing_id INTEGER,
-            PRIMARY KEY(filing_id)
+            filing_id INTEGER PRIMARY KEY
         )
         """
     )
