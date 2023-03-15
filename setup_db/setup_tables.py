@@ -95,7 +95,8 @@ def setup_tables(db) -> None:
             entity_id INTEGER PRIMARY KEY,
             name TEXT,
             lei TEXT UNIQUE,
-            cik TEXT UNIQUE
+            cik TEXT UNIQUE,
+            added INTEGER NOT NULL
         )
         """
     )
@@ -117,12 +118,10 @@ def setup_tables(db) -> None:
             utc_offset INTEGER,
             exchange_id INTEGER,
             added INTEGER NOT NULL,
-            discontinued INTEGER,
             old_name TEXT,
             profile_updated INTEGER,
             prices_updated INTEGER,
-            sec_company INTEGER,
-            sec_mutualfund INTEGER
+            price_update_failed INTEGER DEFAULT 0
         )
         """
     )
@@ -720,7 +719,7 @@ def setup_tables(db) -> None:
             cik TEXT UNIQUE,
             name TEXT UNIQUE,
             entity_id INTEGER,
-            added INTEGER,
+            added INTEGER NOT NULL,
             discontinued INTEGER
         )
         """
@@ -730,7 +729,8 @@ def setup_tables(db) -> None:
         """
         CREATE TABLE IF NOT EXISTS sec_mutualfund_class (
             security_id INTEGER PRIMARY KEY,
-            series_id INTEGER
+            series_id INTEGER NOT NULL,
+            cik TEXT UNIQUE NOT NULL
         )
         """
     )
