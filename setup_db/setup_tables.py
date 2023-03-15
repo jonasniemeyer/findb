@@ -764,7 +764,7 @@ def setup_tables(db) -> None:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS sec_acquisition (
+        CREATE TABLE IF NOT EXISTS sec_shareholder_trade (
             filer_entity_id INTEGER NOT NULL,
             subject_entity_id INTEGER NOT NULL,
             security_id INTEGER NOT NULL,
@@ -772,6 +772,17 @@ def setup_tables(db) -> None:
             shares INTEGER NOT NULL,
             percentage REAL NOT NULL,
             filing_id INTEGER PRIMARY KEY
+        )
+        """
+    )
+
+    db.cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS sec_cik_cusip_match (
+            cik INTEGER NOT NULL,
+            cusip TEXT NOT NULL,
+            ts INTEGER NOT NULL,
+            PRIMARY KEY(cik, cusip, ts)
         )
         """
     )
