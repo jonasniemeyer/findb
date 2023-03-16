@@ -3,7 +3,7 @@ import pandas as pd
 from finance_database import Database
 from finance_database.utils import SEC_BASE_URL, HEADERS
 
-def get_sec_filing_lists(start_year=1900, start_quarter=0):
+def get_sec_filing_lists(db: Database, start_year=1900, start_quarter=0) -> None:
     url = f"{SEC_BASE_URL}/edgar/daily-index/index.json"
     years = requests.get(url=url, headers=HEADERS).json()
     for year in years["directory"]["item"]:
@@ -36,11 +36,11 @@ def get_sec_filing_lists(start_year=1900, start_quarter=0):
                         date = f"19{date[:2]}-{date[2:4]}-{date[4:]}"
                     day_url = f"{SEC_BASE_URL}/edgar/daily-index/{year['name']}/{quarter['name']}/{day['href']}".rstrip(".gz")
                     ts = int(pd.to_datetime(date).timestamp())
-                    cur.execute("INSERT OR IGNORE INTO sec_daily_list (ts, url, parsed) VALUES (?, ?, ?)", (ts, day_url, False))
-                con.commit()
+                    db.cur.execute("INSERT OR IGNORE INTO sec_daily_list (ts, url, parsed) VALUES (?, ?, ?)", (ts, day_url, False))
 
-def scrape_sec_filing_lists():
-    filing_lists = cur.execute("SELECT list_id, url FROM sec_daily_list WHERE parsed = ?", (False,)).fetchall()
+def scrape_sec_filing_lists(db: Database) -> None:
+    ts_today = int(pd.to_datetime(pd.to_datetime("today").date()).timestamp())
+    filing_lists = db.cur.execute("SELECT list_id, url FROM sec_daily_list WHERE parsed = ?", (False,)).fetchall()
     total_filings = len(filing_lists)
     trail = len(str(total_filings))
 
@@ -61,35 +61,36 @@ def scrape_sec_filing_lists():
             document_url = f"{SEC_BASE_URL}/edgar/data/{href_split[-2]}/{href_split[-1]}"
             accession = href_split[-1].split(".")[0].replace("-", "")
             filing_url = f"{SEC_BASE_URL}/edgar/data/{href_split[-2]}/{accession}/{href_split[-1].replace('.txt', '-index.html')}"
-            cur.execute("INSERT OR IGNORE INTO sec_form_type (name) VALUES (?)", (form,))
-            form_id = cur.execute("SELECT type_id FROM sec_form_type WHERE name = ?", (form,)).fetchone()[0]
-            cur.execute(
+
+            db.cur.execute("INSERT OR IGNORE INTO sec_form_type (name) VALUES (?)", (form,))
+            form_id = db.cur.execute("SELECT type_id FROM sec_form_type WHERE name = ?", (form,)).fetchone()[0]
+
+            db.cur.execute("INSERT OR IGNORE INTO entity (cik, added) VALUES (?, ?)", (cik, ts_today))
+            entity_id = db.cur.execute("SELECT entity_id FROM entity WHERE cik = ?", (cik,)).fetchone()[0]
+
+            db.cur.execute(
                 """
-                INSERT OR IGNORE INTO sec_filing (cik, type_id, ts_filed, filing_url, document_url, parsed, list_id)
+                INSERT OR IGNORE INTO sec_filing (entity_id, type_id, ts_filed, filing_url, document_url, parsed, list_id)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
                 """,
-                (cik, form_id, ts_filed, filing_url, document_url, False, list_id)
+                (entity_id, form_id, ts_filed, filing_url, document_url, False, list_id)
             )
-        cur.execute("UPDATE sec_daily_list SET parsed = ? WHERE url = ?", (True, url))
-        con.commit()
+        db.cur.execute("UPDATE sec_daily_list SET parsed = ? WHERE url = ?", (True, url))
 
 if __name__ == "__main__":
-    db = Database()
-    con = db.connection
-    cur = db.cursor
+    with Database() as db:
 
-    filing_lists = cur.execute("SELECT ts, url FROM sec_daily_list ORDER BY ts DESC LIMIT 1").fetchall()
+        filing_lists = db.cur.execute("SELECT ts, url FROM sec_daily_list ORDER BY ts DESC LIMIT 1").fetchall()
 
-    # if there are no filing lists in the database, scrape all lists. Else, scrape only those that are dated later
-    print("Scraping SEC Daily Filing Lists")
-    if len(filing_lists) == 0:
-        get_sec_filing_lists()
-    else:
-        last_date_parsed = pd.to_datetime(filing_lists[0][0], unit="s")
-        year = last_date_parsed.year
-        quarter = (last_date_parsed.month - 1) // 3 + 1
-        get_sec_filing_lists(start_year=year, start_quarter=quarter)
-    
-    print("Scraping SEC Filings")
-    scrape_sec_filing_lists()
-    con.close()
+        # if there are no filing lists in the database, scrape all lists. Else, scrape only those that are dated later
+        print("Scrape SEC Daily Filing Lists")
+        if len(filing_lists) == 0:
+            get_sec_filing_lists(db)
+        else:
+            last_date_parsed = pd.to_datetime(filing_lists[0][0], unit="s")
+            year = last_date_parsed.year
+            quarter = (last_date_parsed.month - 1) // 3 + 1
+            get_sec_filing_lists(db, start_year=year, start_quarter=quarter)
+
+        print("Scrape SEC Filings")
+        scrape_sec_filing_lists(db)
