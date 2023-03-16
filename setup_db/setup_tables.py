@@ -674,14 +674,14 @@ def setup_tables(db) -> None:
         """
         CREATE TABLE IF NOT EXISTS sec_filing (
             filing_id INTEGER PRIMARY KEY,
-            cik INTEGER NOT NULL,
+            entity_id INTEGER NOT NULL,
             type_id INTEGER NOT NULL,
             ts_filed INTEGER NOT NULL,
             filing_url TEXT NOT NULL,
             document_url TEXT NOT NULL,
             parsed INTEGER NOT NULL,
             list_id INTEGER NOT NULL,
-            UNIQUE(cik, type_id, ts_filed, document_url)
+            UNIQUE(entity_id, type_id, ts_filed, document_url)
         )
         """
     )
