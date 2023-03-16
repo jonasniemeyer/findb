@@ -10,31 +10,30 @@ def update_companies(db: Database) -> None:
 
     # insert new entities
     for dct in new_companies.values():
+        # if the entity is not in the database, insert it
         if db.cur.execute("SELECT cik FROM entity WHERE cik = ?", (dct["cik"],)).fetchone() is None:
-            db.cur.execute("INSERT INTO entity (cik, added) VALUES (?, ?)", (dct["cik"], ts_today))
+            db.cur.execute("INSERT INTO entity (cik, name, added) VALUES (?, ?, ?)", (dct["cik"], dct["name"], ts_today))
             print(f"New entity added: {dct['cik']}")
-    
+        # else if the new name is not None and different than in the database, update it
+        elif dct["name"] is not None:
+            old_name = db.cur.execute("SELECT name FROM entity WHERE cik = ?", (dct["cik"],)).fetchone()[0]
+            if dct["name"] != old_name:
+                db.cur.execute("UPDATE entity SET name = ?, old_name = ? WHERE cik = ?", (dct["name"], old_name, dct["cik"]))
+                print(f"Entity Name Updated: {dct['cik']:>8}, New Name: {dct['name']}, Old Name: {old_name}")
+
     # insert new securities
     for ticker, dct in new_companies.items():
         # if the company is not in the database, insert it
         if db.cur.execute("SELECT ticker FROM security WHERE ticker = ?", (ticker,)).fetchone() is None:
             entity_id = db.cur.execute("SELECT entity_id FROM entity WHERE cik = ?", (dct["cik"],)).fetchone()[0]
-            db.cur.execute("INSERT INTO security (entity_id, ticker, sec_name, added) VALUES (?, ?, ?, ?)", (entity_id, ticker, dct["name"], ts_today))
-            print(f"New Company: {ticker:>8} {dct['name']}")
-        # else if the name is different than in the database, update the name
-        else:
-            name = db.cur.execute("SELECT sec_name FROM security WHERE ticker = ?", (ticker,)).fetchone()[0]
-            if name != dct["name"]:
-                db.cur.execute("UPDATE security SET sec_name = ?, old_name = ? WHERE ticker = ?", (new_companies[ticker]["name"], name, ticker))
-                print(f"Company Name Updated: {ticker:>8}, New Name: {new_companies[ticker]['name']}, Old Name: {name}")
+            db.cur.execute("INSERT INTO security (entity_id, ticker, added) VALUES (?, ?, ?)", (entity_id, ticker, ts_today))
+            print(f"New Company: {ticker:>8} {dct['cik']}")
 
 def update_mutualfunds(db: Database) -> None:
     new_classes = sec_mutualfunds()
     ts_today = int(pd.to_datetime("today").timestamp())
 
     new_entity_ciks = set([class_["entity_cik"] for class_ in new_classes])
-    new_series_ciks = set([class_["series_cik"] for class_ in new_classes])
-    new_class_ciks = set([class_["class_cik"] for class_ in new_classes])
 
     # insert new entities
     for cik in new_entity_ciks:
@@ -71,5 +70,6 @@ if __name__ == "__main__":
     with Database() as db:
         print("Updating SEC Companies")
         update_companies(db)
+
         print("Updating SEC Mutual Funds")
         update_mutualfunds(db)
