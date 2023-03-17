@@ -95,9 +95,53 @@ def setup_tables(db) -> None:
             entity_id INTEGER PRIMARY KEY,
             lei TEXT UNIQUE,
             cik TEXT UNIQUE,
-            name TEXT,
+            sec_name TEXT,
             old_name TEXT,
+            yahoo_name TEXT,
+            description TEXT,
+            logo BLOB,
+            sec_type_id INTEGER,
+            gics_industry_id INTEGER,
+            sic_industry_id INTEGER,
+            website TEXT,
+            country_id INTEGER,
+            city_id INTEGER,
+            address1 TEXT,
+            address2 TEXT,
+            address3 TEXT,
+            zip TEXT,
+            employees INTEGER,
+            fiscal_year_end INTEGER,
+            irs_number INTEGER,
             added INTEGER NOT NULL
+        )
+        """
+    )
+
+    db.cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS sec_entity_business_address (
+            entity_id INTEGER PRIMARY KEY,
+            street1 TEXT,
+            street2 TEXT,
+            city TEXT,
+            state TEXT,
+            zip INTEGER,
+            phone TEXT
+        )
+        """
+    )
+
+    db.cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS sec_entity_mail_address (
+            entity_id INTEGER PRIMARY KEY,
+            street1 TEXT,
+            street2 TEXT,
+            city TEXT,
+            state TEXT,
+            zip INTEGER,
+            phone TEXT
         )
         """
     )
@@ -110,11 +154,9 @@ def setup_tables(db) -> None:
             ticker TEXT UNIQUE NOT NULL,
             isin TEXT UNIQUE,
             cusip TEXT,
-            yahoo_name TEXT,
-            old_name TEXT,
-            description TEXT,
-            logo BLOB,
-            type_id INTEGER,
+            sec_name TEXT,
+            sec_type_id INTEGER,
+            yahoo_type_id INTEGER,
             currency_id INTEGER,
             utc_offset INTEGER,
             exchange_id INTEGER,
@@ -130,22 +172,12 @@ def setup_tables(db) -> None:
         """
         CREATE TABLE IF NOT EXISTS company (
             security_id INTEGER PRIMARY KEY,
-            sic_industry_id INTEGER,
-            gics_industry_id INTEGER,
-            website TEXT,
-            country_id INTEGER,
-            city_id INTEGER,
-            address1 TEXT,
-            address2 TEXT,
-            address3 TEXT,
-            zip TEXT,
-            employees INTEGER,
-            fiscal_year_end INTEGER,
             yahoo_data_updated INTEGER,
-            macrotrends_data_updated INTEGER,
-            tipranks_data_updated INTEGER,
+            marketscreener_data_updated INTEGER,
             stratosphere_data_updated INTEGER,
-            marketscreener_data_updated INTEGER
+            tipranks_data_updated INTEGER,
+            finviz_data_updated INTEGER,
+            macrotrends_data_updated INTEGER
         )
         """
     )
@@ -717,6 +749,7 @@ def setup_tables(db) -> None:
         CREATE TABLE IF NOT EXISTS sec_mutualfund_series (
             series_id INTEGER PRIMARY KEY,
             cik TEXT UNIQUE,
+            lei TEXT UNIQUE,
             name TEXT UNIQUE,
             entity_id INTEGER,
             added INTEGER NOT NULL,
