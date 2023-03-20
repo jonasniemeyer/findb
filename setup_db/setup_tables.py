@@ -94,7 +94,7 @@ def setup_tables(db) -> None:
         CREATE TABLE IF NOT EXISTS entity (
             entity_id INTEGER PRIMARY KEY,
             lei TEXT UNIQUE,
-            cik TEXT UNIQUE,
+            cik INTEGER UNIQUE,
             sec_name TEXT,
             old_name TEXT,
             yahoo_name TEXT,
@@ -153,7 +153,7 @@ def setup_tables(db) -> None:
             entity_id INTEGER,
             ticker TEXT UNIQUE NOT NULL,
             isin TEXT UNIQUE,
-            cusip TEXT,
+            cusip TEXT UNIQUE,
             sec_name TEXT,
             sec_type_id INTEGER,
             yahoo_type_id INTEGER,
