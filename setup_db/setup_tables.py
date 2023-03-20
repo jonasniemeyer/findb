@@ -770,6 +770,104 @@ def setup_tables(db) -> None:
 
     db.cur.execute(
         """
+        CREATE TABLE IF NOT EXISTS sec_mutualfund_class_return (
+            class_id INTEGER PRIMARY KEY,
+            ts INTEGER,
+            return REAL
+        )
+        """
+    )
+
+    db.cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS sec_mutualfund_flow (
+            series_id INTEGER,
+            ts INTEGER,
+            sales REAL,
+            reinvestments REAL,
+            redemptions REAL,
+            PRIMARY KEY (series_id, ts)
+        )
+        """
+    )
+
+    db.cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS sec_mutualfund_derivative_gain (
+            series_id INTEGER,
+            contract_type_id INTEGER,
+            derivative_type_id INTEGER,
+            ts INTEGER,
+            value REAL,
+            PRIMARY KEY (series_id, contract_type_id, derivative_type_id, ts)
+        )
+        """
+    )
+
+    db.cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS sec_mutualfund_nonderivative_gain (
+            series_id INTEGER,
+            ts INTEGER,
+            realized_gain REAL,
+            unrealized_gain REAL,
+            PRIMARY KEY (series_id, ts)
+        )
+        """
+    )
+
+    db.cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS sec_mutualfund_security_lending (
+            series_id INTEGER,
+            entity_id INTEGER,
+            ts INTEGER,
+            value REAL,
+            PRIMARY KEY (series_id, entity_id, ts)
+        )
+        """
+    )
+
+    db.cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS sec_mutualfund_explanatory_notes (
+            series_id INTEGER,
+            ts INTEGER,
+            section TEXT,
+            note TEXT,
+            PRIMARY KEY (series_id, ts)
+        )
+        """
+    )
+
+    db.cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS sec_mutualfund_holding (
+            series_id INTEGER,
+            security_id INTEGER,
+            ts INTEGER,
+            quarter INTEGER,
+            year INTEGER,
+            percentage REAL,
+            market_value REAL,
+            quantity INTEGER,
+            quantity_type_id INTEGER,
+            currency_id INTEGER,
+            exchange_rate INTEGER,
+            payoff_direction TEXT,
+            asset_type_id INTEGER,
+            restricted_security INTEGER,
+            fair_value_level INTEGER,
+            cash_collateral REAL,
+            non_cash_collateral REAL,
+            loaned REAL,
+            PRIMARY KEY (series_id, security_id, ts, asset_type_id)
+        )
+        """
+    )
+
+    db.cur.execute(
+        """
         CREATE TABLE IF NOT EXISTS sec_hedgefund_holding (
             entity_id INTEGER,
             security_id INTEGER,
