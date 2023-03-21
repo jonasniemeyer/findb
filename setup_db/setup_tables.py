@@ -120,12 +120,12 @@ def setup_tables(db) -> None:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS sec_entity_business_address (
+        CREATE TABLE IF NOT EXISTS sec_business_address (
             entity_id INTEGER PRIMARY KEY,
             street1 TEXT,
             street2 TEXT,
-            city TEXT,
-            state TEXT,
+            city_id INTEGER,
+            state_id INTEGER,
             zip INTEGER,
             phone TEXT
         )
@@ -134,12 +134,12 @@ def setup_tables(db) -> None:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS sec_entity_mail_address (
+        CREATE TABLE IF NOT EXISTS sec_mail_address (
             entity_id INTEGER PRIMARY KEY,
             street1 TEXT,
             street2 TEXT,
-            city TEXT,
-            state TEXT,
+            city_id INTEGER,
+            state_id INTEGER,
             zip INTEGER,
             phone TEXT
         )
@@ -720,6 +720,26 @@ def setup_tables(db) -> None:
 
     db.cur.execute(
         """
+        CREATE TABLE IF NOT EXISTS sec_state (
+            state_id INTEGER PRIMARY KEY,
+            name TEXT UNIQUE,
+            abbr TEXT UNIQUE
+        )
+        """
+    )
+
+    db.cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS sec_city (
+            city_id INTEGER PRIMARY KEY,
+            name TEXT UNIQUE NOT NULL,
+            state_id INTEGER NOT NULL
+        )
+        """
+    )
+
+    db.cur.execute(
+        """
         CREATE TABLE IF NOT EXISTS sec_fundamental_variable (
             variable_id INTEGER PRIMARY KEY,
             name TEXT NOT NULL,
@@ -740,6 +760,33 @@ def setup_tables(db) -> None:
             value INTEGER,
             filing_id INTEGER NOT NULL,
             PRIMARY KEY(security_id, variable_id, quarter, year)
+        )
+        """
+    )
+
+    db.cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS sec_contract_type (
+            type_id INTEGER PRIMARY KEY,
+            name TEXT UNIQUE
+        )
+        """
+    )
+
+    db.cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS sec_derivative_type (
+            type_id INTEGER PRIMARY KEY,
+            name TEXT UNIQUE
+        )
+        """
+    )
+
+    db.cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS sec_contract_type (
+            type_id INTEGER PRIMARY KEY,
+            name TEXT UNIQUE
         )
         """
     )
@@ -771,9 +818,10 @@ def setup_tables(db) -> None:
     db.cur.execute(
         """
         CREATE TABLE IF NOT EXISTS sec_mutualfund_class_return (
-            class_id INTEGER PRIMARY KEY,
+            class_id INTEGER,
             ts INTEGER,
-            return REAL
+            return REAL,
+            PRIMARY KEY(class_id, ts)
         )
         """
     )
@@ -798,7 +846,8 @@ def setup_tables(db) -> None:
             contract_type_id INTEGER,
             derivative_type_id INTEGER,
             ts INTEGER,
-            value REAL,
+            realized_gain REAL,
+            unrealized_appreciation REAL,
             PRIMARY KEY (series_id, contract_type_id, derivative_type_id, ts)
         )
         """
