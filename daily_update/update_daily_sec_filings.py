@@ -17,7 +17,7 @@ def get_sec_filing_lists(db: Database, start_year=1900, start_quarter=0) -> None
             for quarter in quarters["directory"]["item"]:
                 if int(quarter["name"][-1]) < start_quarter and int(year["name"]) == start_year:
                     continue
-                print(f"{quarter['name']}")
+                print(f" {quarter['name']}")
 
                 quarter_url = f"{SEC_BASE_URL}/edgar/daily-index/{year['name']}/{quarter['name']}/index.json"
                 days = requests.get(url=quarter_url, headers=HEADERS).json()
@@ -45,7 +45,7 @@ def scrape_sec_filing_lists(db: Database) -> None:
     trail = len(str(total_filings))
 
     for index, (list_id, url) in enumerate(filing_lists):
-        print(f"File {index+1:>{trail}} of {total_filings}: {url}")
+        print(f"Daily Filing List {index+1:>{trail}} of {total_filings}: {url}")
         file = requests.get(url=url, headers=HEADERS).text.split("\n")
         for row in file:
             row = row.split("|")
@@ -83,7 +83,7 @@ if __name__ == "__main__":
         filing_lists = db.cur.execute("SELECT ts, url FROM sec_daily_list ORDER BY ts DESC LIMIT 1").fetchall()
 
         # if there are no filing lists in the database, scrape all lists. Else, scrape only those that are dated later
-        print("Inserting SEC Daily Filing List Urls")
+        print("Inserting SEC Daily Filing List URLs")
         if len(filing_lists) == 0:
             get_sec_filing_lists(db)
         else:
@@ -92,5 +92,5 @@ if __name__ == "__main__":
             quarter = (last_date_parsed.month - 1) // 3 + 1
             get_sec_filing_lists(db, start_year=year, start_quarter=quarter)
 
-        print("Inserting SEC Filing Urls")
+        print("Inserting SEC Filing URLs")
         scrape_sec_filing_lists(db)
