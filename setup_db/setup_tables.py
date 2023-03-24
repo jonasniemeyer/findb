@@ -73,9 +73,10 @@ def setup_tables(db) -> None:
     db.cur.executescript(
         """
         INSERT OR IGNORE INTO financial_statement (internal_name, label) VALUES ("INCOME_STATEMENT", "Income Statement");
-        INSERT OR IGNORE INTO financial_statement (internal_name, label) VALUES ("BALANCE_SHEET", "Balance Sheet Statement");
+        INSERT OR IGNORE INTO financial_statement (internal_name, label) VALUES ("BALANCE_SHEET", "Balance Sheet");
         INSERT OR IGNORE INTO financial_statement (internal_name, label) VALUES ("CASHFLOW_STATEMENT", "Cashflow Statement");
-        INSERT OR IGNORE INTO financial_statement (internal_name, label) VALUES ("STATEMENT_CHANGE_EQUITY", "Statement Of Changes in Equity");
+        INSERT OR IGNORE INTO financial_statement (internal_name, label) VALUES ("STATEMENT_CHANGE_EQUITY", "Statement of Changes in Equity");
+        INSERT OR IGNORE INTO financial_statement (internal_name, label) VALUES ("FINANCIAL_RATIOS", "Financial Ratios");
         """
     )
 
