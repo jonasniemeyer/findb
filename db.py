@@ -22,9 +22,14 @@ class Database:
             """
             SELECT
                 security.ticker      AS ticker,
-                security.yahoo_name  AS name
+                entity.yahoo_name   AS name
             FROM
-                security INNER JOIN company USING(security_id)
+                security
+                LEFT JOIN entity USING(entity_id)
+            WHERE
+                yahoo_type_id = (
+                    SELECT type_id FROM yahoo_security_type WHERE name = "EQUITY"
+                )
             """
         )
         data = [
@@ -75,7 +80,7 @@ class Database:
                 INNER JOIN security_news_match  USING (news_id)
                 INNER JOIN news_source          USING(source_id)
             WHERE
-                security_news_match.security_id = (SELECT id FROM security WHERE ticker = ?)
+                security_news_match.security_id = (SELECT security_id FROM security WHERE ticker = ?)
                 AND security_news.ts BETWEEN STRFTIME("%s", ?) AND STRFTIME("%s", ?)
             """,
             (ticker, start, end)).fetchall()
@@ -101,15 +106,17 @@ class Database:
             data = self.cur.execute(
                 """
                 SELECT
-                    ticker      AS ticker,
-                    yahoo_name  AS name,
+                    security.ticker     AS ticker,
+                    entity.yahoo_name   AS name,
+                    entity.lei          AS lei
                 FROM
-                    security
+                    entity
+                    LEFT JOIN security USING(entity_id)
                 WHERE
-                    id IN (
-                        SELECT security_id FROM company WHERE gics_industry_id = (
-                            SELECT gics_industry_id FROM company WHERE security_id = (
-                                SELECT security_id FROM security WHERE ticker = ?
+                    entity_id IN (
+                        SELECT entity_id FROM entity WHERE gics_industry_id = (
+                            SELECT gics_industry_id FROM entity WHERE entity_id = (
+                                SELECT entity_id FROM security WHERE ticker = ?
                             )
                         )
                     )
@@ -122,20 +129,21 @@ class Database:
             data = self.cur.execute(
                 """
                 SELECT
-                    ticker      AS ticker,
-                    yahoo_name  AS name,
+                    security.ticker     AS ticker,
+                    entity.yahoo_name   AS name,
+                    entity.lei          AS lei
                 FROM
-                    security
+                    entity
+                    LEFT JOIN security USING(entity_id)
                 WHERE
-                    id IN (
-                        SELECT security_id FROM company WHERE sic_industry_id = (
-                            SELECT sic_industry_id FROM company WHERE security_id = (
-                                SELECT security_id FROM security WHERE ticker = ?
+                    entity_id IN (
+                        SELECT entity_id FROM entity WHERE sic_industry_id = (
+                            SELECT sic_industry_id FROM entity WHERE entity_id = (
+                                SELECT entity_id FROM security WHERE ticker = ?
                             )
                         )
                     )
-                AND
-                    ticker NOT LIKE ?
+                    AND ticker NOT LIKE ?
                 ORDER BY
                     ticker
                 """,
@@ -154,27 +162,28 @@ class Database:
             """
             SELECT
                 security.ticker                     AS ticker,
-                security.yahoo_name                 AS name,
+                entity.yahoo_name                   AS name,
                 security.isin                       AS isin,
-                security.cik                        AS cik,
-                security.description                AS description,
-                company.website                     AS website,
+                entity.lei                          AS lei,
+                entity.cik                          AS cik,
+                entity.description                  AS description,
+                entity.website                      AS website,
                 industry_classification_gics.name   AS gics,
                 industry_classification_sic.name    AS sic,
-                countries.name                      AS country,
-                company.zip                         AS zip,
-                yahoo_cities.name                   AS city,
-                company.address1                    AS address1,
-                company.address2                    AS address2,
-                company.address3                    AS address3,
-                company.employees                   AS employees
+                country.name                        AS country,
+                entity.zip                          AS zip,
+                yahoo_city.name                     AS city,
+                entity.address1                     AS address1,
+                entity.address2                     AS address2,
+                entity.address3                     AS address3,
+                entity.employees                    AS employees
             FROM
                 security
-                INNER JOIN  company                         USING(security_id)
-                LEFT JOIN   industry_classification_gics    ON company.gics_industry_id = industry_classification_gics.industry_id
-                LEFT JOIN   industry_classification_sic     ON company.sic_industry_id = industry_classification_sic.industry_id
-                LEFT JOIN   countries                       USING(country_id)
-                LEFT JOIN   yahoo_cities                    USING (city_id)
+                INNER JOIN  entity                          USING(entity_id)
+                LEFT JOIN   industry_classification_gics    ON entity.gics_industry_id = industry_classification_gics.industry_id
+                LEFT JOIN   industry_classification_sic     ON entity.sic_industry_id = industry_classification_sic.industry_id
+                LEFT JOIN   country                         USING(country_id)
+                LEFT JOIN   yahoo_city                      USING (city_id)
             WHERE
                 security.ticker = ?
             """,
