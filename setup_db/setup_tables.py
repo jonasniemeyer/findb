@@ -969,6 +969,131 @@ def setup_tables(db) -> None:
     )
 
     # ===========================================================
+    # ===================== Stratosphere ========================
+    # ===========================================================
+
+    db.cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS stratosphere_fundamental_variable (
+            variable_id INTEGER PRIMARY KEY,
+            name TEXT NOT NULL,
+            statement_id INTEGER NOT NULL,
+            UNIQUE(name, statement_id)
+        )
+        """
+    )
+
+    db.cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS stratosphere_fundamental_data (
+            security_id INTEGER NOT NULL,
+            variable_id INTEGER NOT NULL,
+            ts INTEGER NOT NULL,
+            quarterly INTEGER NOT NULL,
+            value REAL,
+            PRIMARY KEY(security_id, variable_id, ts, quarterly)
+        )
+        """
+    )
+
+    db.cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS stratosphere_segment_variable (
+            variable_id INTEGER PRIMARY KEY,
+            name TEXT UNIQUE NOT NULL
+        )
+        """
+    )
+
+    db.cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS stratosphere_segment_data (
+            security_id INTEGER NOT NULL,
+            variable_id INTEGER NOT NULL,
+            ts INTEGER NOT NULL,
+            quarterly INTEGER NOT NULL,
+            value REAL,
+            PRIMARY KEY(security_id, variable_id, ts, quarterly)
+        )
+        """
+    )
+
+    db.cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS stratosphere_kpi_variable (
+            variable_id INTEGER PRIMARY KEY,
+            name TEXT UNIQUE NOT NULL
+        )
+        """
+    )
+
+    db.cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS stratosphere_kpi_data (
+            security_id INTEGER NOT NULL,
+            variable_id INTEGER NOT NULL,
+            ts INTEGER NOT NULL,
+            quarterly INTEGER NOT NULL,
+            value REAL,
+            PRIMARY KEY(security_id, variable_id, ts, quarterly)
+        )
+        """
+    )
+
+    db.cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS stratosphere_analyst (
+            analyst_id INTEGER PRIMARY KEY,
+            name TEXT UNIQUE,
+            company_id INTEGER NOT NULL,
+            UNIQUE(name, company_id)
+        )
+        """
+    )
+
+    db.cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS stratosphere_analyst_company (
+            company_id INTEGER PRIMARY KEY,
+            name TEXT UNIQUE
+        )
+        """
+    )
+
+    db.cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS stratosphere_analyst_recommendation (
+            security_id INTEGER NOT NULL,
+            analyst_id INTEGER NOT NULL,
+            price_target REAL,
+            price_when_rated REAL,
+            ts INTEGER,
+            title TEXT,
+            url TEXT,
+            source_id INTEGER NOT NULL,
+            PRIMARY KEY (security_id, analyst_id, ts)
+        )
+        """
+    )
+
+    db.cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS stratosphere_analyst_estimate (
+            security_id INTEGER NOT NULL,
+            variable_id INTEGER NOT NULL,
+            ts INTEGER NOT NULL,
+            quarterly INTEGER NOT NULL,
+            high REAL,
+            average REAL,
+            low REAL,
+            number_analysts INTEGER,
+            PRIMARY KEY (security_id, variable_id, ts, quarterly)
+        )
+        """
+    )
+
+
+    # ===========================================================
     # ===================== Tipranks ============================
     # ===========================================================
 
