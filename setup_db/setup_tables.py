@@ -1044,7 +1044,7 @@ def setup_tables(db) -> None:
         """
         CREATE TABLE IF NOT EXISTS stratosphere_analyst (
             analyst_id INTEGER PRIMARY KEY,
-            name TEXT UNIQUE,
+            name TEXT,
             company_id INTEGER NOT NULL,
             UNIQUE(name, company_id)
         )
@@ -1062,7 +1062,7 @@ def setup_tables(db) -> None:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS stratosphere_analyst_recommendation (
+        CREATE TABLE IF NOT EXISTS stratosphere_analyst_price_target (
             security_id INTEGER NOT NULL,
             analyst_id INTEGER NOT NULL,
             price_target REAL,
