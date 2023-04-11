@@ -18,6 +18,9 @@ HEADERS = {
 class Conversion(Enum):
     # Income Statement
     REVENUE = "Total Revenue"
+    REVENUE_ESTIMATE_HIGH = "Revenue Estimate High"
+    REVENUE_ESTIMATE_LOW = "Revenue Estimate Low"
+    REVENUE_ESTIMATE_AVG = "Revenue Estimate Average"
     REVENUE_ANALYSTS = "Total Revenue Analyst Count"
     COGS = "Cost of Revenue"
     GROSS_PROFIT = "Gross Profit"
@@ -25,6 +28,9 @@ class Conversion(Enum):
     GA = "General & Administrative Expenses"
     SM = "Selling & Marketing Expenses"
     SGA = "Selling, General & Administrative Expenses"
+    SGA_ESTIMATE_HIGH = "SG&A Estimate High"
+    SGA_ESTIMATE_LOW = "SG&A Estimate Low"
+    SGA_ESTIMATE_AVG = "SG&A Estimate Average"
     OTHER_OPERATING_INCOME = "Other Operating Income/Expenses"
     TOTAL_OPERATING_EXPENSES = "Total Operating Expenses"
     TOTAL_EXPENSES = "Total Expenses"
@@ -39,9 +45,18 @@ class Conversion(Enum):
     INCOME_AFTER_TAXES = "Income After Taxes"
     OTHER_INCOME = "Other Income/Expenses"
     EBITDA = "EBITDA"
+    EBITDA_ESTIMATE_HIGH = "EBITDA Estimate High"
+    EBITDA_ESTIMATE_LOW = "EBITDA Estimate Low"
+    EBITDA_ESTIMATE_AVG = "EBITDA Estimate Average"
     EBITDA_ANALYSTS = "EBITDA Analyst Count"
     EBIT = "EBIT"
+    EBIT_ESTIMATE_HIGH = "EBIT Estimate High"
+    EBIT_ESTIMATE_LOW = "EBIT Estimate Low"
+    EBIT_ESTIMATE_AVG = "EBIT Estimate Average"
     NET_INCOME = "Net Income"
+    NET_INCOME_ESTIMATE_HIGH = "Net Income Estimate High"
+    NET_INCOME_ESTIMATE_LOW = "Net Income Estimate Low"
+    NET_INCOME_ESTIMATE_AVG = "Net Income Estimate Average"
     NET_INCOME_ANALYSTS = "Net Income Analyst Count"
     NET_INCOME_CONTINUED = "Net Income From Continued Operations"
     NET_INCOME_DISCONTINUED = "Net Income From Discontinued Operations"
@@ -49,6 +64,9 @@ class Conversion(Enum):
     SHARES_DILUTED = "Diluted Shares Outstanding"
     EPS_BASIC = "Basic EPS"
     EPS_DILUTED = "Diluted EPS"
+    EPS_DILUTED_ESTIMATE_HIGH = "EPS Diluted Estimate High"
+    EPS_DILUTED_ESTIMATE_LOW = "EPS Diluted Estimate Low"
+    EPS_DILUTED_ESTIMATE_AVG = "EPS Diluted Estimate Average"
     EPS_DILUTED_ANALYSTS = "Diluted EPS Analyst Count"
     DIVIDENDS_PER_SHARE = "Dividends Per Share"
     DIVIDENDS_PER_SHARE_ANALYSTS = "Dividends Per Share Analyst Count"
@@ -366,6 +384,7 @@ STRATOSPHERE_CONVERSION = {
         "revenue": Conversion.REVENUE,
         "costOfRevenue": Conversion.COGS,
         "grossProfit": Conversion.GROSS_PROFIT,
+        "grossProfitRatio": Conversion.GROSS_MARGIN,
         "researchAndDevelopmentExpenses": Conversion.RD,
         "generalAndAdministrativeExpenses": Conversion.GA,
         "sellingAndMarketingExpenses": Conversion.SM,
@@ -377,11 +396,15 @@ STRATOSPHERE_CONVERSION = {
         "interestExpense": Conversion.INTEREST_EXPENSE,
         "depreciationAndAmortization": Conversion.DA,
         "ebitda": Conversion.EBITDA,
+        "ebitdaratio": Conversion.EBITDA_MARGIN,
         "operatingIncome": Conversion.OPERATING_INCOME,
+        "operatingIncomeRatio": Conversion.OPERATING_MARGIN,
         "totalOtherIncomeExpensesNet": Conversion.OTHER_INCOME,
         "incomeBeforeTax": Conversion.PRETAX_INCOME,
+        "incomeBeforeTaxRatio": Conversion.PRETAX_MARGIN,
         "incomeTaxExpense": Conversion.INCOME_TAXES,
         "netIncome": Conversion.NET_INCOME,
+        "netIncomeRatio": Conversion.NET_MARGIN,
         "eps": Conversion.EPS_BASIC,
         "epsdiluted": Conversion.EPS_DILUTED,
         "weightedAverageShsOut": Conversion.SHARES_BASIC,
@@ -466,11 +489,6 @@ STRATOSPHERE_CONVERSION = {
         "freeCashFlow": Conversion.FREE_CASHFLOW
     },
     "FINANCIAL_RATIOS": {
-        "grossProfitRatio": Conversion.GROSS_MARGIN,
-        "ebitdaRatio": Conversion.EBITDA_MARGIN,
-        "operatingIncomeRatio": Conversion.OPERATING_MARGIN,
-        "incomeBeforeTaxRatio": Conversion.PRETAX_MARGIN,
-        "netIncomeRatio": Conversion.NET_MARGIN,
         "revenuePerShare": Conversion.REVENUE_PER_SHARE,
         "netIncomePerShare": Conversion.NET_INCOME_PER_SHARE,
         "operatingCashFlowPerShare": Conversion.OPERATING_CASHFLOW_PER_SHARE,
@@ -527,6 +545,28 @@ STRATOSPHERE_CONVERSION = {
         "payablesTurnover": Conversion.PAYABLES_TURNOVER,
         "inventoryTurnover": Conversion.INVENTORY_TURNOVER,
         "roe": Conversion.ROE,
-        "capexPerShare": Conversion.CAPEX_PER_SHARE
+        "capexPerShare": Conversion.CAPEX_PER_SHARE,
+    },
+    "ESTIMATES": {
+        "estimatedRevenueLow": Conversion.REVENUE_ESTIMATE_LOW,
+        "estimatedRevenueHigh": Conversion.REVENUE_ESTIMATE_HIGH,
+        "estimatedRevenueAvg": Conversion.REVENUE_ESTIMATE_AVG,
+        "estimatedEbitdaLow": Conversion.EBITDA_ESTIMATE_LOW,
+        "estimatedEbitdaHigh": Conversion.EBITDA_ESTIMATE_HIGH,
+        "estimatedEbitdaAvg": Conversion.EBITDA_ESTIMATE_AVG,
+        "estimatedEbitLow": Conversion.EBIT_ESTIMATE_LOW,
+        "estimatedEbitHigh": Conversion.EBIT_ESTIMATE_HIGH,
+        "estimatedEbitAvg": Conversion.EBIT_ESTIMATE_AVG,
+        "estimatedNetIncomeLow": Conversion.NET_INCOME_ESTIMATE_LOW,
+        "estimatedNetIncomeHigh": Conversion.NET_INCOME_ESTIMATE_HIGH,
+        "estimatedNetIncomeAvg": Conversion.NET_INCOME_ESTIMATE_AVG,
+        "estimatedSgaExpenseLow": Conversion.SGA_ESTIMATE_LOW,
+        "estimatedSgaExpenseHigh": Conversion.SGA_ESTIMATE_HIGH,
+        "estimatedSgaExpenseAvg": Conversion.SGA_ESTIMATE_AVG,
+        "estimatedEpsLow": Conversion.EPS_DILUTED_ESTIMATE_LOW,
+        "estimatedEpsHigh": Conversion.EPS_DILUTED_ESTIMATE_HIGH,
+        "estimatedEpsAvg": Conversion.EPS_DILUTED_ESTIMATE_AVG,
+        "numberAnalystEstimatedRevenue": Conversion.REVENUE_ANALYSTS,
+        "numberAnalystsEstimatedEps": Conversion.EPS_DILUTED_ANALYSTS
     }
 }
