@@ -45,7 +45,7 @@ def scrape_sec_filing_lists(db: Database) -> None:
     trail = len(str(total_filings))
 
     for index, (list_id, url) in enumerate(filing_lists):
-        print(f"Daily Filing List {index+1:>{trail}} of {total_filings}: {url}")
+        print(f"Daily Filing List {index+1:{trail}} of {total_filings}: {url}")
         file = requests.get(url=url, headers=HEADERS).text.split("\n")
         for row in file:
             row = row.split("|")

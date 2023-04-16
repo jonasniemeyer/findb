@@ -339,7 +339,7 @@ if __name__ == "__main__":
 
         start = time.time()
         for index, ticker in enumerate(tickers):
-            print(f"{index+1: >{trail}} of {length}: {ticker}")
+            print(f"{index+1:{trail}} of {length}: {ticker}")
 
             # sleep every minute for a minute because of rate limits
             if time.time() - start >= 60:

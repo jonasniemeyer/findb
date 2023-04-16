@@ -50,7 +50,6 @@ def insert_countries_currencies_exchanges(db) -> None:
             """,
             (country_name, flag_bytes_50, flag_bytes_100, flag_bytes_200)
         )
-        print(f"{index+1:>3} of {length}: {country_name}")
         country_id = db.cur.execute("SELECT country_id FROM country WHERE name = ?", (country_name,)).fetchone()[0]
 
         db.cur.execute(

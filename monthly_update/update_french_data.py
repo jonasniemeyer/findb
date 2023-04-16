@@ -13,7 +13,7 @@ length = len(datasets)
 trail = len(str(length))
 
 for index, dataset in enumerate(datasets):
-    print(f"{index+1: >{trail}} of {length}: {dataset}")
+    print(f"{index+1:{trail}} of {length}: {dataset}")
     cur.execute("INSERT OR IGNORE INTO french_dataset (name, updated) VALUES (?, ?)", (dataset, ts))
     dataset_id = cur.execute("SELECT dataset_id FROM french_dataset WHERE name = ?", (dataset,)).fetchone()[0]
     try:
