@@ -1328,6 +1328,24 @@ def setup_tables(db) -> None:
 
     db.cur.execute(
         """
+        CREATE TABLE IF NOT EXISTS yahoo_currency_price (
+            numerator_id INTEGER,
+            denominator_id INTEGER
+            ts INTEGER,
+            open REAL,
+            high REAL,
+            low REAL,
+            close REAL,
+            adj_close REAL,
+            simple_return REAL,
+            log_return REAL,
+            PRIMARY KEY(numerator_id, denominator_id, ts)
+        )
+        """
+    )
+
+    db.cur.execute(
+        """
         CREATE TABLE IF NOT EXISTS yahoo_security_type (
             type_id INTEGER PRIMARY KEY,
             name TEXT UNIQUE NOT NULL
@@ -1424,6 +1442,20 @@ def setup_tables(db) -> None:
             industry_id INTEGER PRIMARY KEY,
             name TEXT UNIQUE NOT NULL,
             sector_id INTEGER NOT NULL
+        )
+        """
+    )
+
+    db.cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS yahoo_earnings_history (
+            security_id INTEGER,
+            ts INTEGER NOT NULL,
+            estimate REAL,
+            actual REAL,
+            abs_diff REAL,
+            rel_diff REAL,
+            PRIMARY KEY(security_id, ts)
         )
         """
     )
