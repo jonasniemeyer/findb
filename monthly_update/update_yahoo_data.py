@@ -1,12 +1,11 @@
 from finance_data import YahooReader
-from finance_data.utils import TickerError, DatasetError
+from finance_data.utils import TickerError
 from finance_database import Database
 import pandas as pd
 from dateutil.relativedelta import relativedelta
-import time
 
 def update_yahoo_data(reader: YahooReader, db: Database) -> None:
-    security_id = db.cur.execute("SELECT security_id FROM security WHERE ticker = ?", (reader.ticker,)).fetchone()[0]
+    security_id, entity_id = db.cur.execute("SELECT security_id, entity_id FROM security WHERE ticker = ?", (reader.ticker,)).fetchone()
     ts_today = int(pd.to_datetime(pd.to_datetime("today").date()).timestamp())
 
     db.cur.execute("INSERT OR IGNORE INTO yahoo_security_type (name) VALUES (?)", (reader.security_type,))
@@ -19,30 +18,30 @@ def update_yahoo_data(reader: YahooReader, db: Database) -> None:
         description = None
 
     db.cur.execute(
-        "UPDATE security SET yahoo_name = ?, logo = ?, type_id = ?, description = ? WHERE security_id = ?",
-        (reader.name, logo, type_id, description, security_id)
+        "UPDATE security SET yahoo_name = ?, yahoo_type_id = ?, description = ? WHERE security_id = ?",
+        (reader.name, type_id, description, security_id)
     )
+
+    db.cur.execute("UPDATE entity SET logo = ? WHERE entity_id = ?", (logo, entity_id))
 
     if reader.security_type == "EQUITY":
         db.cur.execute("INSERT OR IGNORE INTO company (security_id) VALUES (?)", (security_id,))
         update_yahoo_profile(reader, db)
         update_yahoo_executives(reader, db)
-        update_yahoo_fundamentals(reader, db)
+        #update_yahoo_fundamentals(reader, db)
+        update_earnings_history(reader, db)
         update_yahoo_analyst_recommendations(reader, db)
         update_yahoo_recommendation_trend(reader, db)
         db.cur.execute("UPDATE company SET yahoo_data_updated = ? WHERE security_id = ?", (ts_today, security_id))
 
     db.cur.execute("UPDATE security SET profile_updated = ? WHERE security_id = ?", (ts_today, security_id))
 
-    try:
-        update_yahoo_prices(reader, db)
-    except DatasetError:
-        print(f'Could not fetch prices for security with ticker "{reader.ticker}"')
+    update_yahoo_prices(reader, db)
 
 def update_yahoo_profile(reader: YahooReader, db: Database) -> None:
     profile = reader.profile()
 
-    security_id = db.cur.execute("SELECT security_id FROM security WHERE ticker = ?", (reader.ticker,)).fetchone()[0]
+    security_id, entity_id = db.cur.execute("SELECT security_id, entity_id FROM security WHERE ticker = ?", (reader.ticker,)).fetchone()
 
     data = {}
     for var in (
@@ -92,7 +91,7 @@ def update_yahoo_profile(reader: YahooReader, db: Database) -> None:
     db.cur.execute(
         """
         UPDATE
-            company
+            entity
         SET
             gics_industry_id = ?,
             website = ?,
@@ -104,14 +103,14 @@ def update_yahoo_profile(reader: YahooReader, db: Database) -> None:
             zip = ?,
             employees = ?
         WHERE
-            security_id = ?
+            entity_id = ?
         """,
-        (industry_id, data["website"], country_id, city_id, data["address1"], data["address2"], data["address3"], data["zip"], data["employees"], security_id)
+        (industry_id, data["website"], country_id, city_id, data["address1"], data["address2"], data["address3"], data["zip"], data["employees"], entity_id)
     )
 
 def update_yahoo_executives(reader: YahooReader, db: Database) -> None:
     profile = reader.profile()
-    if "executives" not in profile:
+    if profile is None or "executives" not in profile:
         return
 
     security_id = db.cur.execute("SELECT security_id FROM security WHERE ticker = ?", (reader.ticker,)).fetchone()[0]
@@ -169,11 +168,10 @@ def update_yahoo_executives(reader: YahooReader, db: Database) -> None:
             )
 
 def update_yahoo_fundamentals(reader: YahooReader, db: Database) -> None:
-    security_id = db.cur.execute("SELECT security_id FROM security WHERE ticker = ?", (reader.ticker,)).fetchone()[0]
+    security_id, entity_id = db.cur.execute("SELECT security_id, entity_id FROM security WHERE ticker = ?", (reader.ticker,)).fetchone()
 
-    try:
-        statements = reader.financial_statement()
-    except:
+    statements = reader.financial_statement()
+    if all(statements[key] is None for key in statements.keys()):
         return
     
     if all(list(statements[type_].keys()) in (["TTM"], []) for type_ in statements.keys()):
@@ -195,11 +193,10 @@ def update_yahoo_fundamentals(reader: YahooReader, db: Database) -> None:
                     (security_id, variable_id, 0, year, ts_statement, statements[statement][date_iso][variable])
                 )
     fiscal_year_end_quarter = date.quarter
-    db.cur.execute("UPDATE company SET fiscal_year_end = ? WHERE security_id = ?", (date.month ,security_id))
+    db.cur.execute("UPDATE entity SET fiscal_year_end = ? WHERE entity_id = ?", (date.month, entity_id))
 
-    try:
-        statements = reader.financial_statement(quarterly=True)
-    except:
+    statements = reader.financial_statement(quarterly=True)
+    if all(statements[key] is None for key in statements.keys()):
         return
 
     for statement in statements.keys():
@@ -218,10 +215,29 @@ def update_yahoo_fundamentals(reader: YahooReader, db: Database) -> None:
                     (security_id, variable_id, quarter, year, ts_statement, statements[statement][date_iso][variable])
                 )
 
+def update_earnings_history(reader: YahooReader, db: Database) -> None:
+    history = reader.earnings_history(timestamps=True)
+    if history is None:
+        return
+
+    security_id = db.cur.execute("SELECT security_id FROM security WHERE ticker = ?", (reader.ticker,)).fetchone()[0]
+    db.cur.execute("DELETE FROM yahoo_earnings_history WHERE security_id = ?", (security_id,))
+
+    for item in history:
+        if item["estimate"] is None and item["actual"] is None:
+            continue
+        db.cur.execute(
+            """
+            INSERT INTO yahoo_earnings_history
+            VALUES
+            (?, ?, ?, ?, ?, ?)
+            """,
+            (security_id, item["date"], item["estimate"], item["actual"], item["absolute_difference"], item["relative_difference"])
+        )
+
 def update_yahoo_analyst_recommendations(reader: YahooReader, db: Database) -> None:
-    try:
-        recommendations = reader.analyst_recommendations()
-    except:
+    recommendations = reader.analyst_recommendations()
+    if recommendations is None:
         return
 
     security_id = db.cur.execute("SELECT security_id FROM security WHERE ticker = ?", (reader.ticker,)).fetchone()[0]
@@ -232,9 +248,15 @@ def update_yahoo_analyst_recommendations(reader: YahooReader, db: Database) -> N
         old = dct["old"]
         new = dct["new"]
         change = dct["change"]
+
+        if new is None:
+            continue
         
         db.cur.execute("INSERT OR IGNORE INTO yahoo_analyst_company (name) VALUES (?)", (name,))
-        analyst_id = db.cur.execute("SELECT company_id FROM yahoo_analyst_company WHERE name = ?", (name,)).fetchone()[0]
+        if name is None:
+            analyst_id = None
+        else:
+            analyst_id = db.cur.execute("SELECT company_id FROM yahoo_analyst_company WHERE name = ?", (name,)).fetchone()[0]
         
         if old is None:
             old_id = None
@@ -260,9 +282,8 @@ def update_yahoo_analyst_recommendations(reader: YahooReader, db: Database) -> N
         )
 
 def update_yahoo_recommendation_trend(reader: YahooReader, db: Database) -> None:
-    try:
-        trend = reader.recommendation_trend()
-    except:
+    trend = reader.recommendation_trend()
+    if trend is None:
         return
 
     security_id = db.cur.execute("SELECT security_id FROM security WHERE ticker = ?", (reader.ticker,)).fetchone()[0]
@@ -300,21 +321,24 @@ def update_yahoo_prices(reader: YahooReader, db: Database) -> None:
     ts_today = int(pd.to_datetime(pd.to_datetime("today").date()).timestamp())
     security_id = db.cur.execute("SELECT security_id FROM security WHERE ticker = ?", (reader.ticker,)).fetchone()[0]
 
-    try:
-        data = reader.historical_data(frequency="1d", timestamps=True)
-    except TickerError:
-        db.cur.execute("UPDATE security SET prices_updated = ? WHERE security_id = ?", (ts_today, security_id))
+    data = reader.historical_data(frequency="1d", timestamps=True)
+    if data is None:
+        db.cur.execute("UPDATE security SET price_update_failed = price_update_failed + 1 WHERE security_id = ?", (security_id,))
         return
 
     df = data["data"]
     offset = data["information"]["utc_offset"]
 
     currency = data["information"]["currency"]
-    currency_id = db.cur.execute("SELECT currency_id FROM currency WHERE abbr = ?", (currency,)).fetchone()[0]
+    if currency is None:
+        currency_id = None
+    else:
+        currency_id = db.cur.execute("SELECT currency_id FROM currency WHERE abbr = ?", (currency,)).fetchone()[0]
 
     df["security id"] = security_id
-    data = df.reindex(columns = ["security id", "ts", "open", "high", "low", "close", "adj_close", "volume", "dividends", "splits", "simple_returns", "log_returns"]).values
+    df["ts"] = df.index
 
+    data = df.reindex(columns = ["security id", "ts", "open", "high", "low", "close", "adj_close", "volume", "dividends", "splits", "simple_returns", "log_returns"]).values
     db.cur.executemany("REPLACE INTO yahoo_security_price VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", data)
     db.cur.execute("UPDATE security SET prices_updated = ?, currency_id = ?, utc_offset = ? WHERE security_id = ?", (ts_today, currency_id, offset, security_id))
 
@@ -327,9 +351,11 @@ if __name__ == "__main__":
             FROM
                 security
             WHERE
-                discontinued IS NULL
+                price_update_failed < 3
+            AND
+                yahoo_type_id = 1
             ORDER BY
-                ticker
+                ticker ASC
             """
         ).fetchall()
 
@@ -337,18 +363,15 @@ if __name__ == "__main__":
         length = len(tickers)
         trail = len(str(length))
 
-        start = time.time()
         for index, ticker in enumerate(tickers):
             print(f"{index+1:{trail}} of {length}: {ticker}")
 
-            # sleep every minute for a minute because of rate limits
-            if time.time() - start >= 60:
+            if index % 100 == 0:
                 db.con.commit()
-                time.sleep(60)
-                start = time.time()
 
+            reader = YahooReader(ticker)
             try:
-                reader = YahooReader(ticker)
+                reader.security_type
             except TickerError:
                 print(f"\t{ticker} failed")
                 continue
