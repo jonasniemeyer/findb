@@ -12,6 +12,8 @@ if dt.date.today().weekday() == 6:
         trail = len(str(length))
 
         for index, commodity in enumerate(CMEReader.commodities.keys()):
+            if commodity == "Uranium U308":
+                continue
             print(f"{index+1:{trail}} of {length}: {commodity}")
             data[commodity] = CMEReader(commodity, timestamps=True).read()
 
