@@ -8,9 +8,8 @@ def insert_countries_currencies_exchanges(db) -> None:
     country_url = "https://en.wikipedia.org/wiki/List_of_circulating_currencies"
     html = requests.get(url=country_url, headers=HEADERS).text
     soup = BeautifulSoup(html, "lxml")
-    table = soup.find("table")
-    length = len(table.find_all("tr")[1:])
-    for index, row in enumerate(table.find_all("tr")[1:]):
+    table = soup.find("table", {"class": "wikitable"})
+    for row in table.find_all("tr")[1:]:
         cells = row.find_all("td")
         if len(cells) == 6:
             country_name = cells[0].find("a").get("title")
