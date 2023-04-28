@@ -21,15 +21,15 @@ class Database:
         data = self.cur.execute(
             """
             SELECT
-                security.ticker      AS ticker,
-                entity.yahoo_name   AS name
+                security.ticker         AS ticker,
+                security.yahoo_name     AS name
             FROM
                 security
-                LEFT JOIN entity USING(entity_id)
             WHERE
                 yahoo_type_id = (
                     SELECT type_id FROM yahoo_security_type WHERE name = "EQUITY"
                 )
+            ORDER BY ticker ASC
             """
         )
         data = [
@@ -44,14 +44,16 @@ class Database:
     def security_prices(
         self,
         ticker,
+        adjusted=False,
         start="1900-01-01",
         end=pd.to_datetime("today").isoformat()
     ) -> dict:
+        adjusted = "adj_" if adjusted is True else ""
         data = self.cur.execute(
-            """
+            f"""
             SELECT
-                ts          AS ts,
-                adj_close   AS close
+                ts                  AS ts,
+                {adjusted}close     AS close
             FROM
                 yahoo_security_price
             WHERE
@@ -106,44 +108,46 @@ class Database:
             data = self.cur.execute(
                 """
                 SELECT
-                    security.ticker     AS ticker,
-                    entity.yahoo_name   AS name,
-                    entity.lei          AS lei
+                    MIN(security.ticker)        AS ticker,
+                    security.yahoo_name         AS name
                 FROM
                     entity
                     LEFT JOIN security USING(entity_id)
                 WHERE
-                    entity_id IN (
-                        SELECT entity_id FROM entity WHERE gics_industry_id = (
-                            SELECT gics_industry_id FROM entity WHERE entity_id = (
-                                SELECT entity_id FROM security WHERE ticker = ?
-                            )
+                    gics_industry_id = (
+                        SELECT gics_industry_id FROM entity WHERE entity_id = (
+                            SELECT entity_id FROM security WHERE ticker = ?
                         )
                     )
-                    AND ticker NOT LIKE ?
+                    AND yahoo_type_id = (SELECT type_id FROM yahoo_security_type WHERE name = "EQUITY")
+                GROUP BY
+                    name
+                HAVING
+                    ticker != ?
                 ORDER BY
                     ticker
                 """,
-                (ticker, ticker+"%")).fetchall()
+                (ticker, ticker)).fetchall()
         else:
             data = self.cur.execute(
                 """
                 SELECT
-                    security.ticker     AS ticker,
-                    entity.yahoo_name   AS name,
-                    entity.lei          AS lei
+                    security.ticker         AS ticker,
+                    security.yahoo_name     AS name
                 FROM
                     entity
                     LEFT JOIN security USING(entity_id)
                 WHERE
-                    entity_id IN (
-                        SELECT entity_id FROM entity WHERE sic_industry_id = (
-                            SELECT sic_industry_id FROM entity WHERE entity_id = (
-                                SELECT entity_id FROM security WHERE ticker = ?
-                            )
+                    sic_industry_id = (
+                        SELECT sic_industry_id FROM entity WHERE entity_id = (
+                            SELECT entity_id FROM security WHERE ticker = ?
                         )
                     )
-                    AND ticker NOT LIKE ?
+                    AND yahoo_type_id = (SELECT type_id FROM yahoo_security_type WHERE name = "EQUITY")
+                GROUP BY
+                    name
+                HAVING
+                    ticker != ?
                 ORDER BY
                     ticker
                 """,
@@ -162,13 +166,13 @@ class Database:
             """
             SELECT
                 security.ticker                     AS ticker,
-                entity.yahoo_name                   AS name,
+                security.yahoo_name                 AS name,
                 security.isin                       AS isin,
                 entity.lei                          AS lei,
                 entity.cik                          AS cik,
-                entity.description                  AS description,
+                security.description                AS description,
                 entity.website                      AS website,
-                industry_classification_gics.name   AS gics,
+                yahoo_gics_industry.name            AS gics,
                 industry_classification_sic.name    AS sic,
                 country.name                        AS country,
                 entity.zip                          AS zip,
@@ -180,7 +184,7 @@ class Database:
             FROM
                 security
                 INNER JOIN  entity                          USING(entity_id)
-                LEFT JOIN   industry_classification_gics    ON entity.gics_industry_id = industry_classification_gics.industry_id
+                LEFT JOIN   yahoo_gics_industry             ON entity.gics_industry_id = yahoo_gics_industry.industry_id
                 LEFT JOIN   industry_classification_sic     ON entity.sic_industry_id = industry_classification_sic.industry_id
                 LEFT JOIN   country                         USING(country_id)
                 LEFT JOIN   yahoo_city                      USING (city_id)
