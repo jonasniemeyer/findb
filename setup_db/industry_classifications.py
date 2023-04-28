@@ -1,7 +1,6 @@
 import requests
 import re
 from bs4 import BeautifulSoup, element
-from finance_database import Database
 from finance_database.utils import HEADERS
 
 def get_gsci_classification() -> dict:
@@ -102,7 +101,6 @@ def get_sic_classification() -> dict:
                 
                 url = cells[0].find("a").get("href")
                 major_group_name, description, industry_groups = parse_sic_major_group_page(url)
-                
                 divisions[division_name]["major_groups"][major_group_name] = {
                     "code": code,
                     "no_businesses": no_businesses,
@@ -119,8 +117,8 @@ def parse_sic_major_group_page(url) -> tuple:
 
     anchor_table = content.find("table")
     header = anchor_table.find_previous("h4")
-    
-    name = re.findall('Major Group: [0-9]+—(.+)', header.text)[0]
+
+    major_group_name = re.findall('Major Group: [0-9]+—(.+)', header.text)[0]
     
     description = ""
     for tag in header.next_siblings:
@@ -164,7 +162,7 @@ def parse_sic_major_group_page(url) -> tuple:
         industry_groups[group_name]["no_businesses"] = no_businesses
         industry_groups[group_name]["industries"] = industries
             
-    return name, description, industry_groups
+    return major_group_name, description, industry_groups
     
 def parse_sic_industry_page(url) -> tuple:
     html = requests.get(url).text
