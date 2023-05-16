@@ -33,16 +33,7 @@ form_ids = cur.execute(
 ).fetchall()
 form_ids = tuple([item[0] for item in form_ids])
 
-tickers = cur.execute(
-    """
-    SELECT ticker FROM security
-    WHERE
-    discontinued IS NULL
-    AND is_sec_company NOT NULL
-    ORDER BY ticker
-    """
-).fetchall()
-tickers = [item[0] for item in tickers]
+tickers = [item["ticker"] for item in db.companies()]
 length = len(tickers)
 trail = len(str(length))
 
@@ -72,11 +63,14 @@ for index, ticker in enumerate(tickers):
         for dct in analysts:
             rank_data = dct["analyst_ranking"]
             
-            cur.execute("INSERT OR IGNORE INTO tipranks_analyst (name) VALUES (?)", (dct["name"], ))
-            analyst_id = cur.execute("SELECT analyst_id FROM tipranks_analyst WHERE name = ?", (dct["name"], )).fetchone()[0]
+            if dct["name"] is None:
+                analyst_id = None
+            else:
+                cur.execute("INSERT OR IGNORE INTO tipranks_analyst (name) VALUES (?)", (dct["name"],))
+                analyst_id = cur.execute("SELECT analyst_id FROM tipranks_analyst WHERE name = ?", (dct["name"],)).fetchone()[0]
             
-            cur.execute("INSERT OR IGNORE INTO tipranks_analyst_company (name) VALUES (?)", (dct["company"], ))
-            company_id = cur.execute("SELECT company_id FROM tipranks_analyst_company WHERE name = ?", (dct["company"], )).fetchone()[0]
+            cur.execute("INSERT OR IGNORE INTO tipranks_analyst_company (name) VALUES (?)", (dct["company"],))
+            company_id = cur.execute("SELECT company_id FROM tipranks_analyst_company WHERE name = ?", (dct["company"],)).fetchone()[0]
 
             if dct["image_url"] is None:
                 image = b"\n"
