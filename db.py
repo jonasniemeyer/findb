@@ -26,9 +26,7 @@ class Database:
             FROM
                 security
             WHERE
-                yahoo_type_id = (
-                    SELECT type_id FROM yahoo_security_type WHERE name = "EQUITY"
-                )
+                yahoo_type_id = (SELECT type_id FROM yahoo_security_type WHERE name = "EQUITY")
             ORDER BY ticker ASC
             """
         )
