@@ -228,7 +228,7 @@ def update_earnings_history(reader: YahooReader, db: Database) -> None:
             continue
         db.cur.execute(
             """
-            INSERT OR IGNORE INTO yahoo_earnings_history
+            INSERT INTO yahoo_earnings_history
             VALUES
             (?, ?, ?, ?, ?, ?)
             """,
