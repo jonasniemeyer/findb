@@ -96,8 +96,8 @@ if __name__ == "__main__":
 
         for index, ticker in enumerate(tickers):
             security_id = db.cur.execute("SELECT security_id FROM security WHERE ticker = ?", (ticker,)).fetchone()[0]
-            if db.cur.execute("SELECT stratosphere_data_updated FROM company WHERE security_id = ?", (security_id,)).fetchone()[0] is not None:
-                continue
+            #if db.cur.execute("SELECT stratosphere_data_updated FROM company WHERE security_id = ?", (security_id,)).fetchone()[0] is not None:
+            #    continue
             print(f"{index+1: >{trail}} of {length}: {ticker}")
             db.cur.execute("INSERT OR IGNORE INTO security (ticker, added) VALUES (?, ?)", (ticker, ts_today))
             reader = StratosphereReader(ticker)
