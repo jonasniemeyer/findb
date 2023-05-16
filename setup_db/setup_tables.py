@@ -880,7 +880,7 @@ def setup_tables(db) -> None:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS sec_mutualfund_explanatory_notes (
+        CREATE TABLE IF NOT EXISTS sec_mutualfund_explanatory_note (
             series_id INTEGER,
             ts INTEGER,
             section TEXT,
