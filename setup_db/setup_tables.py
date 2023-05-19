@@ -997,6 +997,16 @@ def setup_tables(db) -> None:
         """
     )
 
+    db.cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS sec_transaction_type (
+            type_id INTEGER PRIMARY KEY,
+            abbr TEXT UNIQUE,
+            name TEXT UNIQUE
+        )
+        """
+    )
+
     # ===========================================================
     # ===================== Stratosphere ========================
     # ===========================================================
