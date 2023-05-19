@@ -1359,7 +1359,7 @@ def setup_tables(db) -> None:
         """
         CREATE TABLE IF NOT EXISTS yahoo_currency_price (
             numerator_id INTEGER,
-            denominator_id INTEGER
+            denominator_id INTEGER,
             ts INTEGER,
             open REAL,
             high REAL,
