@@ -97,14 +97,12 @@ class NPORTInsert:
         )
     
     def insert_portfolio_data(self) -> None:
-        quarter = 1
-        year = 1900
+        date = pd.to_datetime(self.filing.date_of_period)
+        year = date.year
+        quarter = (date.month-1) // 3 + 1
         security_id = None
 
         portfolio = self.filing.portfolio(sorted_by="percentage")
-        length = len(portfolio)
-        trail = len(str(length))
-
         for index, item in enumerate(portfolio):
             issuer = item["issuer"]
             if issuer["lei"] is None:
