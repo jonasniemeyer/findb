@@ -839,7 +839,7 @@ def setup_tables(db) -> None:
             series_id INTEGER,
             ts INTEGER,
             realized_gain REAL,
-            unrealized_gain REAL,
+            unrealized_appreciation REAL,
             PRIMARY KEY (series_id, ts)
         )
         """
@@ -847,12 +847,22 @@ def setup_tables(db) -> None:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS sec_mf_security_lending (
+        CREATE TABLE IF NOT EXISTS sec_borrower (
+            borrower_id INTEGER PRIMARY KEY,
+            name TEXT,
+            lei TEXT UNIQUE
+        )
+        """
+    )
+
+    db.cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS sec_mf_lending (
             series_id INTEGER,
-            entity_id INTEGER,
+            borrower_id INTEGER,
             ts INTEGER,
             value REAL,
-            PRIMARY KEY (series_id, entity_id, ts)
+            PRIMARY KEY (series_id, borrower_id, ts)
         )
         """
     )
@@ -876,11 +886,12 @@ def setup_tables(db) -> None:
             ts INTEGER NOT NULL,
             quarter INTEGER,
             year INTEGER,
+            holding_id INTEGER,
             entity_id INTEGER,
             title TEXT,
-            ticker text,
-            isin text,
-            cusip text,
+            ticker TEXT,
+            isin TEXT,
+            cusip TEXT,
             security_id INTEGER,
             percentage REAL,
             market_value REAL,
@@ -893,12 +904,12 @@ def setup_tables(db) -> None:
             restricted_security INTEGER,
             fair_value_level INTEGER,
             is_debt INTEGER,
-            is_repurchase INTEGER,
+            is_repo INTEGER,
             is_derivative INTEGER,
             cash_collateral REAL,
             non_cash_collateral REAL,
             loaned REAL,
-            PRIMARY KEY (series_id, ts, ticker, isin, cusip)
+            PRIMARY KEY (series_id, ts, holding_id)
         )
         """
     )
