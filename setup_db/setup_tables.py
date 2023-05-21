@@ -151,8 +151,8 @@ def setup_tables(db) -> None:
             security_id INTEGER PRIMARY KEY,
             entity_id INTEGER NOT NULL,
             ticker TEXT UNIQUE NOT NULL,
-            isin TEXT UNIQUE,
-            cusip TEXT UNIQUE,
+            isin TEXT,
+            cusip TEXT,
             sec_name TEXT,
             yahoo_name TEXT,
             sec_type_id INTEGER,
@@ -164,7 +164,8 @@ def setup_tables(db) -> None:
             added INTEGER NOT NULL,
             profile_updated INTEGER,
             prices_updated INTEGER,
-            price_update_failed INTEGER DEFAULT 0
+            price_update_failed INTEGER DEFAULT 0,
+            UNIQUE(ticker, isin)
         )
         """
     )
@@ -776,9 +777,9 @@ def setup_tables(db) -> None:
         CREATE TABLE IF NOT EXISTS sec_mf_series (
             series_id INTEGER PRIMARY KEY,
             cik TEXT UNIQUE,
-            lei TEXT UNIQUE,
-            name TEXT UNIQUE,
-            entity_id INTEGER,
+            lei TEXT UNIQUE NOT NULL,
+            name TEXT UNIQUE NOT NULL,
+            entity_id INTEGER NOT NULL,
             added INTEGER NOT NULL,
             discontinued INTEGER
         )
@@ -847,22 +848,12 @@ def setup_tables(db) -> None:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS sec_borrower (
-            borrower_id INTEGER PRIMARY KEY,
-            name TEXT,
-            lei TEXT UNIQUE
-        )
-        """
-    )
-
-    db.cur.execute(
-        """
         CREATE TABLE IF NOT EXISTS sec_mf_lending (
             series_id INTEGER,
-            borrower_id INTEGER,
+            entity_id INTEGER,
             ts INTEGER,
             value REAL,
-            PRIMARY KEY (series_id, borrower_id, ts)
+            PRIMARY KEY (series_id, entity_id, ts)
         )
         """
     )
@@ -967,7 +958,7 @@ def setup_tables(db) -> None:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS sec_hedgefund_holding (
+        CREATE TABLE IF NOT EXISTS sec_hf_holding (
             entity_id INTEGER,
             security_id INTEGER,
             ts INTEGER NOT NULL,
