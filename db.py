@@ -159,13 +159,14 @@ class Database:
         ]
         return data
     
-    def company_profile(self, ticker) -> dict:
+    def security_profile(self, ticker) -> dict:
         data = self.cur.execute(
             """
             SELECT
                 security.ticker                     AS ticker,
-                security.yahoo_name                 AS name,
+                security.yahoo_name                 AS security_name,
                 security.isin                       AS isin,
+                entity.name                         AS entity_name,
                 entity.lei                          AS lei,
                 entity.cik                          AS cik,
                 security.description                AS description,
