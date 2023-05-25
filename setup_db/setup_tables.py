@@ -150,7 +150,7 @@ def setup_tables(db) -> None:
         CREATE TABLE IF NOT EXISTS security (
             security_id INTEGER PRIMARY KEY,
             entity_id INTEGER NOT NULL,
-            ticker TEXT UNIQUE NOT NULL,
+            ticker TEXT NOT NULL,
             isin TEXT,
             cusip TEXT,
             sec_name TEXT,
@@ -165,7 +165,7 @@ def setup_tables(db) -> None:
             profile_updated INTEGER,
             prices_updated INTEGER,
             price_update_failed INTEGER DEFAULT 0,
-            UNIQUE(ticker, isin)
+            UNIQUE(ticker, entity_id)
         )
         """
     )
@@ -777,8 +777,8 @@ def setup_tables(db) -> None:
         CREATE TABLE IF NOT EXISTS sec_mf_series (
             series_id INTEGER PRIMARY KEY,
             cik TEXT UNIQUE,
-            lei TEXT UNIQUE NOT NULL,
-            name TEXT UNIQUE NOT NULL,
+            lei TEXT UNIQUE,
+            name TEXT,
             entity_id INTEGER NOT NULL,
             added INTEGER NOT NULL,
             discontinued INTEGER
@@ -789,9 +789,9 @@ def setup_tables(db) -> None:
     db.cur.execute(
         """
         CREATE TABLE IF NOT EXISTS sec_mf_class (
-            security_id INTEGER PRIMARY KEY,
+            security_id INTEGER,
             series_id INTEGER NOT NULL,
-            cik TEXT UNIQUE NOT NULL
+            cik TEXT PRIMARY KEY
         )
         """
     )
