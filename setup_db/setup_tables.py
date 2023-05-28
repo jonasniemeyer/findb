@@ -1501,40 +1501,6 @@ def setup_tables(db) -> None:
         """
     )
 
-    db.cur.executescript(
-        """
-        CREATE TRIGGER IF NOT EXISTS merge_entity_cik
-        AFTER DELETE ON entity
-        WHEN OLD.cik IS NULL
-        BEGIN
-            UPDATE sec_business_address SET entity_id = (SELECT entity_id FROM entity WHERE lei = OLD.lei) WHERE entity_id = OLD.entity_id;
-            UPDATE sec_mail_address SET entity_id = (SELECT entity_id FROM entity WHERE lei = OLD.lei) WHERE entity_id = OLD.entity_id;
-            UPDATE security SET entity_id = (SELECT entity_id FROM entity WHERE lei = OLD.lei) WHERE entity_id = OLD.entity_id;
-            UPDATE sec_filing SET entity_id = (SELECT entity_id FROM entity WHERE lei = OLD.lei) WHERE entity_id = OLD.entity_id;
-            UPDATE sec_mf_holding SET entity_id = (SELECT entity_id FROM entity WHERE lei = OLD.lei) WHERE entity_id = OLD.entity_id;
-            UPDATE sec_mf_lending SET entity_id = (SELECT entity_id FROM entity WHERE lei = OLD.lei) WHERE entity_id = OLD.entity_id;
-            UPDATE sec_hf_holding SET entity_id = (SELECT entity_id FROM entity WHERE lei = OLD.lei) WHERE entity_id = OLD.entity_id;
-            UPDATE sec_shareholder_trade SET filer_entity_id = (SELECT entity_id FROM entity WHERE lei = OLD.lei) WHERE filer_entity_id = OLD.entity_id;
-            UPDATE sec_shareholder_trade SET subject_entity_id = (SELECT entity_id FROM entity WHERE lei = OLD.lei) WHERE subject_entity_id = OLD.entity_id;
-        END;
-
-        CREATE TRIGGER IF NOT EXISTS merge_entity_lei
-        AFTER DELETE ON entity
-        WHEN OLD.lei IS NULL
-        BEGIN
-            UPDATE sec_business_address SET entity_id = (SELECT entity_id FROM entity WHERE cik = OLD.cik) WHERE entity_id = OLD.entity_id;
-            UPDATE sec_mail_address SET entity_id = (SELECT entity_id FROM entity WHERE cik = OLD.cik) WHERE entity_id = OLD.entity_id;
-            UPDATE security SET entity_id = (SELECT entity_id FROM entity WHERE cik = OLD.cik) WHERE entity_id = OLD.entity_id;
-            UPDATE sec_filing SET entity_id = (SELECT entity_id FROM entity WHERE cik = OLD.cik) WHERE entity_id = OLD.entity_id;
-            UPDATE sec_mf_holding SET entity_id = (SELECT entity_id FROM entity WHERE cik = OLD.cik) WHERE entity_id = OLD.entity_id;
-            UPDATE sec_mf_lending SET entity_id = (SELECT entity_id FROM entity WHERE cik = OLD.cik) WHERE entity_id = OLD.entity_id;
-            UPDATE sec_hf_holding SET entity_id = (SELECT entity_id FROM entity WHERE cik = OLD.cik) WHERE entity_id = OLD.entity_id;
-            UPDATE sec_shareholder_trade SET filer_entity_id = (SELECT entity_id FROM entity WHERE cik = OLD.cik) WHERE filer_entity_id = OLD.entity_id;
-            UPDATE sec_shareholder_trade SET subject_entity_id = (SELECT entity_id FROM entity WHERE cik = OLD.cik) WHERE subject_entity_id = OLD.entity_id;
-        END;
-        """
-    )
-
 def insert_cme_commodities(db) -> None:
     for name, properties in CMEReader.commodities.items():
         sector_id = db.cur.execute(f"SELECT sector_id FROM cme_commodity_sector WHERE name = ?", (properties["sector_name"],)).fetchone()[0]
