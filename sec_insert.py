@@ -1,11 +1,7 @@
 import pandas as pd
-import time
 from finance_database import Database
-from finance_data import (
-    YahooReader,
-    TickerError,
-    FilingNPORT
-)
+from finance_data import FilingNPORT
+from sqlite3 import IntegrityError
 
 class NPORTInsert:
     def __init__(self, filing: FilingNPORT, db: Database) -> None:
@@ -14,18 +10,11 @@ class NPORTInsert:
         self.ts_today = int(pd.to_datetime(pd.to_datetime("today").date()).timestamp())
         self.ts_period = int(pd.to_datetime(self.filing.date_of_period).timestamp())
 
-        # insert series information and get series id
-        series = self.filing.general_information["series"]
-        self.db.cur.execute("INSERT OR IGNORE INTO sec_mf_series (cik, added) VALUES (?, ?)", (series["cik"], self.ts_today))
-        self.db.cur.execute(
-            "UPDATE sec_mf_series SET lei = ?, name = ? WHERE cik = ?",
-            (series["lei"], series["name"], series["cik"])
-        )
-        self.series_id = self.db.cur.execute("SELECT series_id FROM sec_mf_series WHERE cik = ?", (series["cik"],)).fetchone()[0]
-
     def insert_filing_data(self) -> None:
         self.insert_filer_information()
-        self.insert_class_information()
+        self.insert_series_class_information()
+        if self.series_id is None:
+            return
         self.insert_fund_information()
         self.insert_portfolio_data()
         self.insert_explanatory_notes()
@@ -51,50 +40,81 @@ class NPORTInsert:
         else:
             fiscal_year_end = int(str(self.filing.filer["fiscal_year_end"]["month"]) + str(self.filing.filer["fiscal_year_end"]["day"]))
 
-        self.db.cur.execute("INSERT OR IGNORE INTO entity (cik) VALUES (?)", (cik,))
         if self.filing.filer["sic"]["code"] is None:
             sic_industry_id = None
         else:
             sic_industry_id = self.db.cur.execute("SELECT industry_id FROM industry_classification_sic WHERE code = ?", (self.filing.filer["sic"]["code"],)).fetchone()[0]
-        self.db.cur.execute(
-            """
-            UPDATE entity SET lei = ?, name = ?, old_name = ?, sic_industry_id = ?, fiscal_year_end = ?, irs_number = ?
-            WHERE cik = ?
-            """,
-            (lei, self.filing.filer["name"], former_name, sic_industry_id, fiscal_year_end, self.filing.filer["irs_number"], self.filing.filer["cik"])
-        )
 
-        entity_id = self.db.cur.execute("SELECT entity_id FROM entity WHERE cik = ?", (cik,)).fetchone()[0]
+        self.db.cur.execute("INSERT OR IGNORE INTO entity (cik, added) VALUES (?, ?)", (cik, self.ts_today))
+        try:
+            self.db.cur.execute(
+                """
+                UPDATE entity SET lei = ?, name = ?, old_name = ?, sic_industry_id = ?, fiscal_year_end = ?, irs_number = ?
+                WHERE cik = ?
+                """,
+                (lei, self.filing.filer["name"], former_name, sic_industry_id, fiscal_year_end, self.filing.filer["irs_number"], cik)
+            )
+        except IntegrityError:
+            old_entity_id = self.db.cur.execute("SELECT entity_id FROM entity WHERE lei = ?", (lei,)).fetchone()[0]
+            self.db.cur.execute("DELETE FROM entity WHERE lei = ?", (lei,))
+            self.db.cur.execute(
+                """
+                UPDATE entity SET lei = ?, name = ?, old_name = ?, sic_industry_id = ?, fiscal_year_end = ?, irs_number = ?
+                WHERE cik = ?
+                """,
+                (lei, self.filing.filer["name"], former_name, sic_industry_id, fiscal_year_end, self.filing.filer["irs_number"], cik)
+            )
+            for statement in (
+                "UPDATE sec_business_address SET entity_id = (SELECT entity_id FROM entity WHERE lei = ?) WHERE entity_id = ?",
+                "UPDATE sec_mail_address SET entity_id = (SELECT entity_id FROM entity WHERE lei = ?) WHERE entity_id = ?",
+                "UPDATE security SET entity_id = (SELECT entity_id FROM entity WHERE lei = ?) WHERE entity_id = ?",
+                "UPDATE sec_filing SET entity_id = (SELECT entity_id FROM entity WHERE lei = ?) WHERE entity_id = ?",
+                "UPDATE sec_mf_holding SET entity_id = (SELECT entity_id FROM entity WHERE lei = ?) WHERE entity_id = ?",
+                "UPDATE sec_mf_lending SET entity_id = (SELECT entity_id FROM entity WHERE lei = ?) WHERE entity_id = ?",
+                "UPDATE sec_hf_holding SET entity_id = (SELECT entity_id FROM entity WHERE lei = ?) WHERE entity_id = ?",
+                "UPDATE sec_shareholder_trade SET filer_entity_id = (SELECT entity_id FROM entity WHERE lei = ?) WHERE filer_entity_id = ?",
+                "UPDATE sec_shareholder_trade SET subject_entity_id = (SELECT entity_id FROM entity WHERE lei = ?) WHERE subject_entity_id = ?"
+            ):
+                self.db.cur.execute(statement, (lei, old_entity_id))
+        self.entity_id = self.db.cur.execute("SELECT entity_id FROM entity WHERE cik = ?", (cik,)).fetchone()[0]
 
-        self.db.cur.execute("INSERT OR IGNORE INTO sec_state (abbr) VALUES (?)", (business["state"],))
-        state_id = self.db.cur.execute("SELECT state_id FROM sec_state WHERE abbr = ?", (business["state"],)).fetchone()[0]
+        if business is not None:
+            if business["state"] is None:
+                state_id = None
+            else:
+                self.db.cur.execute("INSERT OR IGNORE INTO sec_state (abbr) VALUES (?)", (business["state"],))
+                state_id = self.db.cur.execute("SELECT state_id FROM sec_state WHERE abbr = ?", (business["state"],)).fetchone()[0]
 
-        self.db.cur.execute("INSERT OR IGNORE INTO sec_city (name, state_id) VALUES (?, ?)", (business["city"], state_id))
-        city_id = self.db.cur.execute("SELECT city_id FROM sec_city WHERE name = ?", (business["city"],)).fetchone()[0]
+            if business["city"] is None:
+                city_id = None
+            else:
+                self.db.cur.execute("INSERT OR IGNORE INTO sec_city (name, state_id) VALUES (?, ?)", (business["city"], state_id))
+                city_id = self.db.cur.execute("SELECT city_id FROM sec_city WHERE name = ?", (business["city"],)).fetchone()[0]
 
-        self.db.cur.execute("INSERT OR IGNORE INTO sec_business_address (entity_id) VALUES (?)", (entity_id,))
-        self.db.cur.execute(
-            """
-            UPDATE sec_business_address SET street1 = ?, street2 = ?, city_id = ?, state_id = ?, zip = ?, phone = ?
-            WHERE entity_id = ?
-            """,
-            (business["street1"], business["street2"], city_id, state_id, business["zip"], business["phone"], entity_id)
-        )
+            self.db.cur.execute("INSERT OR IGNORE INTO sec_business_address (entity_id) VALUES (?)", (self.entity_id,))
+            self.db.cur.execute(
+                """
+                UPDATE sec_business_address SET street1 = ?, street2 = ?, city_id = ?, state_id = ?, zip = ?, phone = ?
+                WHERE entity_id = ?
+                """,
+                (business["street1"], business["street2"], city_id, state_id, business["zip"], business["phone"], self.entity_id)
+            )
 
-        self.db.cur.execute("INSERT OR IGNORE INTO sec_state (abbr) VALUES (?)", (mail["state"],))
-        state_id = self.db.cur.execute("SELECT state_id FROM sec_state WHERE abbr = ?", (mail["state"],)).fetchone()[0]
+        if mail is not None:
+            self.db.cur.execute("INSERT OR IGNORE INTO sec_state (abbr) VALUES (?)", (mail["state"],))
+            state_id = self.db.cur.execute("SELECT state_id FROM sec_state WHERE abbr = ?", (mail["state"],)).fetchone()[0]
 
-        self.db.cur.execute("INSERT OR IGNORE INTO sec_city (name, state_id) VALUES (?, ?)", (mail["city"], state_id))
-        city_id = self.db.cur.execute("SELECT city_id FROM sec_city WHERE name = ?", (mail["city"],)).fetchone()[0]
+            self.db.cur.execute("INSERT OR IGNORE INTO sec_city (name, state_id) VALUES (?, ?)", (mail["city"], state_id))
+            city_id = self.db.cur.execute("SELECT city_id FROM sec_city WHERE name = ?", (mail["city"],)).fetchone()[0]
 
-        self.db.cur.execute("INSERT OR IGNORE INTO sec_mail_address (entity_id) VALUES (?)", (entity_id,))
-        self.db.cur.execute(
-            """
-            UPDATE sec_mail_address SET street1 = ?, street2 = ?, city_id = ?, state_id = ?, zip = ?
-            WHERE entity_id = ?
-            """,
-            (mail["street1"], mail["street2"], city_id, state_id, mail["zip"], entity_id)
-        )
+            self.db.cur.execute("INSERT OR IGNORE INTO sec_mail_address (entity_id) VALUES (?)", (self.entity_id,))
+            self.db.cur.execute(
+                """
+                UPDATE sec_mail_address SET street1 = ?, street2 = ?, city_id = ?, state_id = ?, zip = ?
+                WHERE entity_id = ?
+                """,
+                (mail["street1"], mail["street2"], city_id, state_id, mail["zip"], self.entity_id)
+            )
     
     def insert_portfolio_data(self) -> None:
         date = pd.to_datetime(self.filing.date_of_period)
@@ -114,7 +134,12 @@ class NPORTInsert:
             identifier = item["identifier"]
             lending = item["securities_lending"]
             amount = item["amount"]
-            currency_id = self.db.cur.execute("SELECT currency_id FROM currency WHERE abbr = ?", (amount["currency"]["abbr"],)).fetchone()[0]
+            if amount["currency"]["abbr"] is None:
+                currency_id = None
+            else:
+                currency_id = self.db.cur.execute("SELECT currency_id FROM currency WHERE abbr = ?", (amount["currency"]["abbr"],)).fetchone()
+                if currency_id is not None:
+                    currency_id = currency_id[0]
 
             self.db.cur.execute("INSERT OR IGNORE INTO sec_asset_type (abbr, name) VALUES (?, ?)", (item["asset_type"]["abbr"], item["asset_type"]["name"]))
             asset_type_id = self.db.cur.execute("SELECT type_id FROM sec_asset_type WHERE abbr = ?", (item["asset_type"]["abbr"],)).fetchone()[0]
@@ -123,7 +148,7 @@ class NPORTInsert:
             quantity_type_id = self.db.cur.execute("SELECT type_id FROM sec_quantity_type WHERE abbr = ?", (amount["quantity_type"]["abbr"],)).fetchone()[0]
 
             is_debt = True if item["debt_information"] is not None else False
-            is_repo = True if item["repurchase_information"] is not None else False
+            is_repo = True if item["repo_information"] is not None else False
             is_derivative = True if item["derivative_information"] is not None else False
 
             self.db.cur.execute(
@@ -200,17 +225,43 @@ class NPORTInsert:
                 """,
                 (self.series_id, self.ts_period, section, note)
             )
-    
-    def insert_class_information(self) -> None:
+
+    def insert_series_class_information(self) -> None:
+        """
+        insert series information and get series id
+        """
+        series = self.filing.general_information["series"]
+        if series["cik"] is not None and series["lei"] is not None:
+            self.db.cur.execute("INSERT OR IGNORE INTO sec_mf_series (cik, entity_id, added) VALUES (?, ?, ?)", (series["cik"], self.entity_id, self.ts_today))
+            try:
+                self.db.cur.execute("UPDATE sec_mf_series SET lei = ?, name = ? WHERE cik = ?",(series["lei"], series["name"], series["cik"]))
+            except IntegrityError:
+                self.db.cur.execute("UPDATE sec_mf_series SET lei = NULL, name = ? WHERE cik = ?",(series["name"], series["cik"]))
+            self.series_id = self.db.cur.execute("SELECT series_id FROM sec_mf_series WHERE cik = ?", (series["cik"],)).fetchone()[0]
+        elif series["cik"] is None and series["lei"] is not None:
+            self.db.cur.execute("INSERT OR IGNORE INTO sec_mf_series (lei, entity_id, added) VALUES (?, ?, ?)", (series["lei"], self.entity_id, self.ts_today))
+            self.db.cur.execute("UPDATE sec_mf_series SET name = ? WHERE lei = ?",(series["name"], series["lei"]))
+            self.series_id = self.db.cur.execute("SELECT series_id FROM sec_mf_series WHERE lei = ?", (series["lei"],)).fetchone()[0]
+        elif series["lei"] is None and series["cik"] is not None:
+            self.db.cur.execute("INSERT OR IGNORE INTO sec_mf_series (cik, entity_id, added) VALUES (?, ?, ?)", (series["cik"], self.entity_id, self.ts_today))
+            self.db.cur.execute("UPDATE sec_mf_series SET name = ? WHERE cik = ?",(series["name"], series["cik"]))
+            self.series_id = self.db.cur.execute("SELECT series_id FROM sec_mf_series WHERE cik = ?", (series["cik"],)).fetchone()[0]
+        else:
+            self.series_id = None
+            return
+
         classes = self.filing.general_information["classes"]
-        for class_ in classes:
-            self.db.cur.execute("INSERT OR IGNORE INTO security (ticker, added) VALUES (?, ?)", (class_["ticker"], self.ts_today))
-            self.db.cur.execute(
-                "UPDATE security SET sec_name = ? WHERE ticker = ?",
-                (class_["name"], class_["ticker"])
-            )
-            security_id = self.db.cur.execute("SELECT security_id FROM security WHERE ticker = ?", (class_["ticker"],)).fetchone()[0]
-            self.db.cur.execute("INSERT OR IGNORE INTO sec_mf_class (security_id, series_id, cik) VALUES (?, ?, ?)", (security_id, self.series_id, class_["cik"],))
+        if classes is not None:
+            for class_ in classes:
+                if class_["ticker"] is None:
+                    continue
+                self.db.cur.execute("INSERT OR IGNORE INTO security (ticker, entity_id, added) VALUES (?, ?, ?)", (class_["ticker"], self.entity_id, self.ts_today))
+                self.db.cur.execute(
+                    "UPDATE security SET sec_name = ? WHERE ticker = ?",
+                    (class_["name"], class_["ticker"])
+                )
+                security_id = self.db.cur.execute("SELECT security_id FROM security WHERE ticker = ?", (class_["ticker"],)).fetchone()[0]
+                self.db.cur.execute("INSERT OR IGNORE INTO sec_mf_class (security_id, series_id, cik) VALUES (?, ?, ?)", (security_id, self.series_id, class_["cik"]))
 
     def insert_flow_information(self) -> None:
         for date, data in self.filing.flow_information.items():
@@ -227,26 +278,32 @@ class NPORTInsert:
     def insert_lending_information(self) -> None:
         if self.filing.securities_lending["borrowers"] is not None:
             for dct in self.filing.securities_lending["borrowers"]:
-                self.db.cur.execute("INSERT OR IGNORE INTO sec_borrower (lei, name) VALUES (?, ?)", (dct["lei"], dct["name"]))
-                borrower_id = self.db.cur.execute("SELECT borrower_id FROM sec_borrower WHERE lei = ?", (dct["lei"],)).fetchone()[0]
+                self.db.cur.execute("INSERT OR IGNORE INTO entity (lei, name, added) VALUES (?, ?, ?)", (dct["lei"], dct["name"], self.ts_today))
+                entity_id = self.db.cur.execute("SELECT entity_id FROM entity WHERE lei = ?", (dct["lei"],)).fetchone()[0]
                 
-                self.db.cur.execute("INSERT OR IGNORE INTO sec_mf_lending VALUES (?, ?, ?, ?)", (self.series_id, borrower_id, self.ts_period, dct["value"]))
+                self.db.cur.execute("INSERT OR IGNORE INTO sec_mf_lending VALUES (?, ?, ?, ?)", (self.series_id, entity_id, self.ts_period, dct["value"]))
 
         if self.filing.securities_lending["non_cash_collateral"] is not None:
             raise ValueError("non cash collteral not None")
 
     def insert_return_information(self) -> None:
-        # insert class returns
-        for class_cik, data in self.filing.return_information["class_returns"].items():
-            security_id = self.db.cur.execute("SELECT security_id FROM sec_mf_class WHERE cik = ?", (class_cik,)).fetchone()[0]
-            for date, class_return in data.items():
-                ts = int(pd.to_datetime(date).timestamp())
-                self.db.cur.execute(
-                    "INSERT OR IGNORE INTO sec_mf_class_return (class_id, ts, return) VALUES (?, ?, ?)",
-                    (security_id, ts, class_return)
-                )
-        
-        # insert derivative gains
+        """
+        insert class returns and derivative and non-derivative gains
+        """
+        if self.filing.general_information["classes"] is not None:
+            cik_ticker_match = {item["cik"]: item["ticker"] for item in self.filing.general_information["classes"]}
+
+            for class_cik, data in self.filing.return_information["class_returns"].items():
+                if class_cik not in cik_ticker_match or cik_ticker_match[class_cik] is None:
+                    continue
+                security_id = self.db.cur.execute("SELECT security_id FROM sec_mf_class WHERE cik = ?", (class_cik,)).fetchone()[0]
+                for date, class_return in data.items():
+                    ts = int(pd.to_datetime(date).timestamp())
+                    self.db.cur.execute(
+                        "INSERT OR IGNORE INTO sec_mf_class_return (class_id, ts, return) VALUES (?, ?, ?)",
+                        (security_id, ts, class_return)
+                    )
+
         for derivative, data in self.filing.return_information["derivative_gains"].items():
             self.db.cur.execute("INSERT OR IGNORE INTO sec_derivative_type (name) VALUES (?)", (derivative,))
             derivative_type_id = self.db.cur.execute("SELECT type_id FROM sec_derivative_type WHERE name = ?", (derivative,)).fetchone()[0]
@@ -287,7 +344,6 @@ class NPORTInsert:
                         (self.series_id, derivative_type_id, contract_type_id, deriv_ts, deriv_realized_gain, deriv_unrealized_appreciation)
                     )
 
-        # insert non-derivative gains
         for date, data in self.filing.return_information["non_derivative_gains"].items():
             ts = int(pd.to_datetime(date).timestamp())
             self.db.cur.execute(
