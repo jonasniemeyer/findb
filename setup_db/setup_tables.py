@@ -908,6 +908,39 @@ def setup_tables(db) -> None:
 
     db.cur.execute(
         """
+        CREATE TABLE IF NOT EXISTS sec_mf_debt_information (
+            holding_id INTEGER PRIMARY KEY,
+            maturity INTEGER,
+            coupon_rate REAL,
+            coupon_type TEXT,
+            in_default INTEGER,
+            coupon_payments_deferred INTEGER,
+            paid_in_kind INTEGER
+        )
+        """
+    )
+
+    db.cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS sec_mf_convertible_information (
+            holding_id INTEGER PRIMARY KEY,
+            mandatory_convertible INTEGER,
+            contingent_convertible INTEGER,
+            name TEXT,
+            title TEXT,
+            currency_id INTEGER,
+            ticker TEXT,
+            isin TEXT,
+            cusip TEXT,
+            conversion_ratio REAL,
+            conversion_currency_id INTEGER,
+            delta REAL
+        )
+        """
+    )
+
+    db.cur.execute(
+        """
         CREATE TABLE IF NOT EXISTS sec_asset_type (
             type_id INTEGER PRIMARY KEY,
             abbr TEXT UNIQUE,
