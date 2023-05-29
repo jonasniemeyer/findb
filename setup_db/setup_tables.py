@@ -873,11 +873,12 @@ def setup_tables(db) -> None:
     db.cur.execute(
         """
         CREATE TABLE IF NOT EXISTS sec_mf_holding (
+            holding_id INTEGER PRIMARY KEY,
             series_id INTEGER NOT NULL,
             ts INTEGER NOT NULL,
             quarter INTEGER,
             year INTEGER,
-            holding_id INTEGER,
+            position_order INTEGER,
             entity_id INTEGER,
             title TEXT,
             ticker TEXT,
@@ -900,7 +901,7 @@ def setup_tables(db) -> None:
             cash_collateral REAL,
             non_cash_collateral REAL,
             loaned REAL,
-            PRIMARY KEY (series_id, ts, holding_id)
+            UNIQUE (series_id, ts, position_order)
         )
         """
     )
