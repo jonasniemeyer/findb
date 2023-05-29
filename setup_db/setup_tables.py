@@ -940,6 +940,25 @@ def setup_tables(db) -> None:
     )
 
     db.cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS sec_mf_repo_information (
+        holding_id INTEGER PRIMARY KEY,
+        type TEXT,
+        central_counterparty INTEGER,
+        entity_id INTEGER,
+        tri_party INTEGER,
+        repurchase_date INTEGER,
+        maturity_date INTEGER,
+        principal_value REAL,
+        principal_currency_id INTEGER,
+        collateral_value REAL,
+        collateral_currency_id INTEGER,
+        asset_type_id INTEGER
+    )
+    """
+)
+
+    db.cur.execute(
         """
         CREATE TABLE IF NOT EXISTS sec_asset_type (
             type_id INTEGER PRIMARY KEY,
