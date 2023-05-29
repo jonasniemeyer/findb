@@ -880,6 +880,7 @@ def setup_tables(db) -> None:
             year INTEGER,
             position_order INTEGER,
             entity_id INTEGER,
+            issuer_name TEXT,
             title TEXT,
             ticker TEXT,
             isin TEXT,
