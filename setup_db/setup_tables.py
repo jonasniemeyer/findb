@@ -927,7 +927,7 @@ def setup_tables(db) -> None:
             holding_id INTEGER PRIMARY KEY,
             mandatory_convertible INTEGER,
             contingent_convertible INTEGER,
-            name TEXT,
+            issuer_name TEXT,
             title TEXT,
             currency_id INTEGER,
             ticker TEXT,
