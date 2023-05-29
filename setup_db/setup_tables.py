@@ -947,14 +947,25 @@ def setup_tables(db) -> None:
             type TEXT,
             central_counterparty INTEGER,
             entity_id INTEGER,
+            counterparty_name TEXT,
             tri_party INTEGER,
-            repurchase_date INTEGER,
-            maturity_date INTEGER,
+            repurchase_rate REAL,
+            maturity_date INTEGER
+        )
+        """
+    )
+
+    db.cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS sec_mf_repo_collateral (
+            holding_id INTEGER,
             principal_value REAL,
             principal_currency_id INTEGER,
             collateral_value REAL,
             collateral_currency_id INTEGER,
-            asset_type_id INTEGER
+            asset_name TEXT,
+            asset_type_id INTEGER,
+            PRIMARY KEY(holding_id, asset_name, asset_type_id)
         )
         """
     )
