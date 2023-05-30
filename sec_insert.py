@@ -220,6 +220,7 @@ class NPORTInsert:
                 (self.series_id, self.ts_period, index)
             ).fetchone()[0]
             self.insert_debt_information(item["debt_information"], holding_id)
+            self.insert_repo_information(item["repo_information"], holding_id)
 
     def insert_debt_information(self, data: dict, holding_id: int) -> None:
         if data is None:
@@ -256,6 +257,52 @@ class NPORTInsert:
                 data["delta"]
             )
         )
+
+    def insert_repo_information(self, data: dict, holding_id: int) -> None:
+        if data is None:
+            return
+
+        if data["counterparty"]["lei"] is None:
+            counterparty_entity_id = None
+        else:
+            self.db.cur.execute("INSERT OR IGNORE INTO entity (lei, name, added) VALUES (?, ?, ?)", (data["counterparty"]["lei"], data["counterparty"]["name"], self.ts_today))
+            counterparty_entity_id = self.db.cur.execute("SELECT entity_id FROM entity WHERE lei = ?", (data["counterparty"]["lei"],)).fetchone()[0]
+
+        maturity = int(pd.to_datetime(data["maturity"]).timestamp())
+
+        self.db.cur.execute(
+            "INSERT OR IGNORE INTO sec_mf_repo_information VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                holding_id,
+                data["type"],
+                data["counterparty"]["central_counterparty"],
+                counterparty_entity_id,
+                data["counterparty"]["name"],
+                data["counterparty"]["lei"],
+                data["tri_party"],
+                data["repurchase_rate"],
+                maturity
+            )
+        )
+
+        for item in data["collaterals"]:
+            principal_currency_id = self.db.cur.execute("SELECT currency_id FROM currency WHERE abbr = ?", (item["principal"]["currency"],)).fetchone()[0]
+            collateral_currency_id = self.db.cur.execute("SELECT currency_id FROM currency WHERE abbr = ?", (item["collateral"]["currency"],)).fetchone()[0]
+
+            self.db.cur.execute("INSERT OR IGNORE INTO sec_asset_type (name, abbr) VALUES (?, ?)", (item["asset_type"]["name"], item["asset_type"]["abbr"]))
+            asset_type_id = self.db.cur.execute("SELECT type_id FROM sec_asset_type WHERE abbr = ?", (item["asset_type"]["abbr"],)).fetchone()[0]
+
+            self.db.cur.execute(
+                "INSERT OR IGNORE sec_mf_repo_collateral VALUES (?, ?, ?, ?, ?, ?)",
+                (
+                    holding_id,
+                    item["principal"]["value"],
+                    principal_currency_id,
+                    item["collateral"]["value"],
+                    collateral_currency_id,
+                    asset_type_id
+                )
+            )
 
     def insert_explanatory_notes(self) -> None:
         for section, note in self.filing.explanatory_notes.items():
