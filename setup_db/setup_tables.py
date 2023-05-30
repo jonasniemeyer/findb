@@ -815,7 +815,7 @@ def setup_tables(db) -> None:
             sales REAL,
             reinvestments REAL,
             redemptions REAL,
-            PRIMARY KEY (series_id, ts)
+            PRIMARY KEY(series_id, ts)
         )
         """
     )
@@ -829,7 +829,7 @@ def setup_tables(db) -> None:
             ts INTEGER,
             realized_gain REAL,
             unrealized_appreciation REAL,
-            PRIMARY KEY (series_id, contract_type_id, derivative_type_id, ts)
+            PRIMARY KEY(series_id, contract_type_id, derivative_type_id, ts)
         )
         """
     )
@@ -841,7 +841,7 @@ def setup_tables(db) -> None:
             ts INTEGER,
             realized_gain REAL,
             unrealized_appreciation REAL,
-            PRIMARY KEY (series_id, ts)
+            PRIMARY KEY(series_id, ts)
         )
         """
     )
@@ -853,7 +853,7 @@ def setup_tables(db) -> None:
             entity_id INTEGER,
             ts INTEGER,
             value REAL,
-            PRIMARY KEY (series_id, entity_id, ts)
+            PRIMARY KEY(series_id, entity_id, ts)
         )
         """
     )
@@ -865,7 +865,7 @@ def setup_tables(db) -> None:
             ts INTEGER,
             section TEXT,
             note TEXT,
-            PRIMARY KEY (series_id, ts)
+            PRIMARY KEY(series_id, ts)
         )
         """
     )
@@ -902,7 +902,7 @@ def setup_tables(db) -> None:
             cash_collateral REAL,
             non_cash_collateral REAL,
             loaned REAL,
-            UNIQUE (series_id, ts, position_order)
+            UNIQUE(series_id, ts, position_order)
         )
         """
     )
@@ -950,7 +950,7 @@ def setup_tables(db) -> None:
             counterparty_name TEXT,
             tri_party INTEGER,
             repurchase_rate REAL,
-            maturity_date INTEGER
+            maturity INTEGER
         )
         """
     )
@@ -963,9 +963,8 @@ def setup_tables(db) -> None:
             principal_currency_id INTEGER,
             collateral_value REAL,
             collateral_currency_id INTEGER,
-            asset_name TEXT,
             asset_type_id INTEGER,
-            PRIMARY KEY(holding_id, asset_name, asset_type_id)
+            PRIMARY KEY(holding_id, asset_type_id)
         )
         """
     )
@@ -984,7 +983,7 @@ def setup_tables(db) -> None:
         CREATE TABLE IF NOT EXISTS sec_mf_derivative_counterparty (
             holding_id INTEGER,
             entity_id INTEGER,
-            UNIQUE (holding_id, entity_id)
+            UNIQUE(holding_id, entity_id)
         )
         """
     )
@@ -1210,7 +1209,7 @@ def setup_tables(db) -> None:
             title TEXT,
             url TEXT,
             source_id INTEGER NOT NULL,
-            PRIMARY KEY (security_id, analyst_id, ts)
+            PRIMARY KEY(security_id, analyst_id, ts)
         )
         """
     )
@@ -1226,7 +1225,7 @@ def setup_tables(db) -> None:
             average REAL,
             low REAL,
             number_analysts INTEGER,
-            PRIMARY KEY (security_id, variable_id, ts, quarterly)
+            PRIMARY KEY(security_id, variable_id, ts, quarterly)
         )
         """
     )
