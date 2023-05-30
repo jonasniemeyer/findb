@@ -158,7 +158,7 @@ class NPORTInsert:
                     ts,
                     quarter,
                     year,
-                    holding_id,
+                    position_order,
                     entity_id,
                     title,
                     ticker,
@@ -214,7 +214,24 @@ class NPORTInsert:
                     lending["loaned"]
                 )
             )
-    
+
+            holding_id = self.db.cur.execute(
+                "SELECT holding_id FROM sec_mf_holding WHERE series_id = ? AND ts = ? AND position_order = ?",
+                (self.series_id, self.ts_period, index)
+            ).fetchone()[0]
+            self.insert_debt_information(item["debt_information"], holding_id)
+
+
+    def insert_debt_information(self, data: dict, holding_id: int) -> None:
+        if data is None:
+            return
+
+        maturity = int(pd.to_datetime(data["maturity"]).timestamp())
+        self.db.cur.execute(
+            "INSERT INTO sec_mf_debt_information VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (holding_id, maturity, data["coupon"]["rate"], data["coupon"]["type"], data["in_default"], data["coupon_payments_deferred"], data["paid_in_kind"])
+        )
+
     def insert_explanatory_notes(self) -> None:
         for section, note in self.filing.explanatory_notes.items():
             self.db.cur.execute(
