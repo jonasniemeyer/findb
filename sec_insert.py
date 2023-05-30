@@ -221,15 +221,40 @@ class NPORTInsert:
             ).fetchone()[0]
             self.insert_debt_information(item["debt_information"], holding_id)
 
-
     def insert_debt_information(self, data: dict, holding_id: int) -> None:
         if data is None:
             return
 
         maturity = int(pd.to_datetime(data["maturity"]).timestamp())
         self.db.cur.execute(
-            "INSERT INTO sec_mf_debt_information VALUES (?, ?, ?, ?, ?, ?, ?)",
+            "INSERT OR IGNORE INTO sec_mf_debt_information VALUES (?, ?, ?, ?, ?, ?, ?)",
             (holding_id, maturity, data["coupon"]["rate"], data["coupon"]["type"], data["in_default"], data["coupon_payments_deferred"], data["paid_in_kind"])
+        )
+        self.insert_convertible_information(data["convertible_information"], holding_id)
+
+    def insert_convertible_information(self, data: dict, holding_id: int) -> None:
+        if data is None:
+            return
+
+        currency_id = self.db.cur.execute("SELECT currency_id FROM currency WHERE abbr = ?", (data["conversion_asset"]["currency"],)).fetchone()[0]
+        conversion_currency_id = self.db.cur.execute("SELECT currency_id FROM currency WHERE abbr = ?", (data["conversion_information"]["currency"],)).fetchone()[0]
+
+        self.db.cur.execute(
+            "INSERT OR IGNORE INTO sec_mf_convertible_information VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                holding_id,
+                data["mandatory_convertible"],
+                data["contingent_convertible"],
+                data["conversion_asset"]["name"],
+                data["conversion_asset"]["title"],
+                currency_id,
+                data["conversion_asset"]["identifier"].get("ticker"),
+                data["conversion_asset"]["identifier"].get("isin"),
+                data["conversion_asset"]["identifier"].get("cusip"),
+                data["conversion_information"]["ratio"],
+                conversion_currency_id,
+                data["delta"]
+            )
         )
 
     def insert_explanatory_notes(self) -> None:
