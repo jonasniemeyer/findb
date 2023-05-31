@@ -122,13 +122,15 @@ class NPORTInsert:
         quarter = (date.month-1) // 3 + 1
         security_id = None
 
-        portfolio = self.filing.portfolio(sorted_by="percentage")
+        portfolio = self.filing.portfolio()
         for index, item in enumerate(portfolio):
             issuer = item["issuer"]
+            self.db.cur.execute("INSERT OR IGNORE INTO sec_issuer_type (name, abbr) VALUES (?, ?)", (issuer["type"]["name"], issuer["type"]["abbr"]))
+            issuer_type_id = self.db.cur.execute("SELECT type_id FROM sec_issuer_type WHERE abbr = ?", (issuer["type"]["abbr"],)).fetchone()[0]
             if issuer["lei"] is None:
                 entity_id = None
             else:
-                self.db.cur.execute("INSERT OR IGNORE INTO entity (lei, name, added) VALUES (?, ?, ?)", (issuer["lei"], issuer["name"], self.ts_today))
+                self.db.cur.execute("INSERT OR IGNORE INTO entity (lei, name, type_id, added) VALUES (?, ?, ?, ?)", (issuer["lei"], issuer["name"], issuer_type_id, self.ts_today))
                 entity_id = self.db.cur.execute("SELECT entity_id FROM entity WHERE lei = ?", (issuer["lei"],)).fetchone()[0]
 
             identifier = item["identifier"]
@@ -226,7 +228,7 @@ class NPORTInsert:
         if data is None:
             return
 
-        maturity = int(pd.to_datetime(data["maturity"]).timestamp())
+        maturity = None if data["maturity"] is None else int(pd.to_datetime(data["maturity"]).timestamp())
         self.db.cur.execute(
             "INSERT OR IGNORE INTO sec_mf_debt_information VALUES (?, ?, ?, ?, ?, ?, ?)",
             (holding_id, maturity, data["coupon"]["rate"], data["coupon"]["type"], data["in_default"], data["coupon_payments_deferred"], data["paid_in_kind"])
