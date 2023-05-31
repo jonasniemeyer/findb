@@ -963,8 +963,8 @@ def setup_tables(db) -> None:
             principal_currency_id INTEGER,
             collateral_value REAL,
             collateral_currency_id INTEGER,
-            asset_type_id INTEGER,
-            PRIMARY KEY(holding_id, asset_type_id)
+            type_id INTEGER,
+            PRIMARY KEY(holding_id, type_id)
         )
         """
     )
@@ -973,7 +973,7 @@ def setup_tables(db) -> None:
         """
         CREATE TABLE IF NOT EXISTS sec_mf_derivative_information (
             holding_id INTEGER PRIMARY KEY,
-            derivative_type_id INTEGER
+            type_id INTEGER
         )
         """
     )
