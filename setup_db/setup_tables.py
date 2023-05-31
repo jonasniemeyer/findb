@@ -96,10 +96,10 @@ def setup_tables(db) -> None:
             entity_id INTEGER PRIMARY KEY,
             lei TEXT UNIQUE,
             cik INTEGER UNIQUE,
-            sec_name TEXT,
+            name TEXT,
             old_name TEXT,
             logo BLOB,
-            sec_type_id INTEGER,
+            type_id INTEGER,
             gics_industry_id INTEGER,
             sic_industry_id INTEGER,
             website TEXT,
@@ -396,8 +396,8 @@ def setup_tables(db) -> None:
         """
         CREATE TABLE IF NOT EXISTS fred_series (
             series_id INTEGER PRIMARY KEY,
-            abbr TEXT NOT NULL,
             name TEXT NOT NULL,
+            abbr TEXT NOT NULL,
             description TEXT NOT NULL,
             category_id INTEGER NOT NULL,
             UNIQUE(abbr, name)
@@ -1006,8 +1006,8 @@ def setup_tables(db) -> None:
         """
         CREATE TABLE IF NOT EXISTS sec_asset_type (
             type_id INTEGER PRIMARY KEY,
-            abbr TEXT UNIQUE,
-            name TEXT UNIQUE
+            name TEXT UNIQUE,
+            abbr TEXT UNIQUE
         )
         """
     )
@@ -1025,8 +1025,8 @@ def setup_tables(db) -> None:
         """
         CREATE TABLE IF NOT EXISTS sec_derivative_type (
             type_id INTEGER PRIMARY KEY,
-            abbr TEXT UNIQUE,
-            name TEXT UNIQUE
+            name TEXT UNIQUE,
+            abbr TEXT UNIQUE
         )
         """
     )
@@ -1035,8 +1035,9 @@ def setup_tables(db) -> None:
         """
         CREATE TABLE IF NOT EXISTS sec_issuer_type (
             type_id INTEGER PRIMARY KEY,
+            name TEXT UNIQUE,
             abbr TEXT UNIQUE,
-            name TEXT UNIQUE
+            UNIQUE(name, abbr)
         )
         """
     )
@@ -1045,8 +1046,8 @@ def setup_tables(db) -> None:
         """
         CREATE TABLE IF NOT EXISTS sec_quantity_type (
             type_id INTEGER PRIMARY KEY,
-            abbr TEXT UNIQUE,
-            name TEXT UNIQUE
+            name TEXT UNIQUE,
+            abbr TEXT UNIQUE
         )
         """
     )
@@ -1100,8 +1101,8 @@ def setup_tables(db) -> None:
         """
         CREATE TABLE IF NOT EXISTS sec_transaction_type (
             type_id INTEGER PRIMARY KEY,
-            abbr TEXT UNIQUE,
-            name TEXT UNIQUE
+            name TEXT UNIQUE,
+            abbr TEXT UNIQUE
         )
         """
     )
