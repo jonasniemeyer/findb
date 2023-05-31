@@ -278,7 +278,6 @@ class NPORTInsert:
                 data["counterparty"]["central_counterparty"],
                 counterparty_entity_id,
                 data["counterparty"]["name"],
-                data["counterparty"]["lei"],
                 data["tri_party"],
                 data["repurchase_rate"],
                 maturity
@@ -293,7 +292,7 @@ class NPORTInsert:
             asset_type_id = self.db.cur.execute("SELECT type_id FROM sec_asset_type WHERE abbr = ?", (item["asset_type"]["abbr"],)).fetchone()[0]
 
             self.db.cur.execute(
-                "INSERT OR IGNORE sec_mf_repo_collateral VALUES (?, ?, ?, ?, ?, ?)",
+                "INSERT OR IGNORE INTO sec_mf_repo_collateral VALUES (?, ?, ?, ?, ?, ?)",
                 (
                     holding_id,
                     item["principal"]["value"],
