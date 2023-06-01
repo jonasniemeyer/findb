@@ -152,6 +152,11 @@ class NPORTInsert:
             is_debt = True if item["debt_information"] is not None else False
             is_repo = True if item["repo_information"] is not None else False
             is_derivative = True if item["derivative_information"] is not None else False
+            if is_derivative:
+                self.db.cur.execute("INSERT OR IGNORE INTO sec_derivative_type (name, abbr) VALUES (?, ?)", (item["derivative_information"]["type"]["name"], item["derivative_information"]["type"]["abbr"]))
+                derivative_type_id = self.db.cur.execute("SELECT type_id FROM sec_derivative_type WHERE abbr = ?", (item["derivative_information"]["type"]["abbr"],)).fetchone()[0]
+            else:
+                derivative_type_id = None
 
             self.db.cur.execute(
                 """
@@ -180,11 +185,12 @@ class NPORTInsert:
                     is_debt,
                     is_repo,
                     is_derivative,
+                    derivative_type_id,
                     cash_collateral,
                     non_cash_collateral,
                     loaned
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     self.series_id,
@@ -211,6 +217,7 @@ class NPORTInsert:
                     is_debt,
                     is_repo,
                     is_derivative,
+                    derivative_type_id,
                     lending["cash_collateral"],
                     lending["non_cash_collateral"],
                     lending["loaned"]
@@ -228,7 +235,14 @@ class NPORTInsert:
         if data is None:
             return
 
-        maturity = None if data["maturity"] is None else int(pd.to_datetime(data["maturity"]).timestamp())
+        if data["maturity"] is None:
+            maturity = None
+        else:
+            try:
+                maturity = int(pd.to_datetime(data["maturity"]).timestamp())
+            except pd._libs.tslibs.np_datetime.OutOfBoundsDatetime:
+                maturity = None
+
         self.db.cur.execute(
             "INSERT OR IGNORE INTO sec_mf_debt_information VALUES (?, ?, ?, ?, ?, ?, ?)",
             (holding_id, maturity, data["coupon"]["rate"], data["coupon"]["type"], data["in_default"], data["coupon_payments_deferred"], data["paid_in_kind"])
@@ -270,7 +284,7 @@ class NPORTInsert:
             self.db.cur.execute("INSERT OR IGNORE INTO entity (lei, name, added) VALUES (?, ?, ?)", (data["counterparty"]["lei"], data["counterparty"]["name"], self.ts_today))
             counterparty_entity_id = self.db.cur.execute("SELECT entity_id FROM entity WHERE lei = ?", (data["counterparty"]["lei"],)).fetchone()[0]
 
-        maturity = int(pd.to_datetime(data["maturity"]).timestamp())
+        maturity = None if data["maturity"] is None else int(pd.to_datetime(data["maturity"]).timestamp())
 
         self.db.cur.execute(
             "INSERT OR IGNORE INTO sec_mf_repo_information VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
