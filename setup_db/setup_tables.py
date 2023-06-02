@@ -899,6 +899,7 @@ def setup_tables(db) -> None:
             is_debt INTEGER,
             is_repo INTEGER,
             is_derivative INTEGER,
+            derivative_type_id INTEGER,
             cash_collateral REAL,
             non_cash_collateral REAL,
             loaned REAL,
@@ -1014,15 +1015,6 @@ def setup_tables(db) -> None:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS sec_contract_type (
-            type_id INTEGER PRIMARY KEY,
-            name TEXT UNIQUE
-        )
-        """
-    )
-
-    db.cur.execute(
-        """
         CREATE TABLE IF NOT EXISTS sec_derivative_type (
             type_id INTEGER PRIMARY KEY,
             name TEXT UNIQUE,
@@ -1048,6 +1040,24 @@ def setup_tables(db) -> None:
             type_id INTEGER PRIMARY KEY,
             name TEXT UNIQUE,
             abbr TEXT UNIQUE
+        )
+        """
+    )
+
+    db.cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS sec_contract_type (
+            type_id INTEGER PRIMARY KEY,
+            name TEXT UNIQUE
+        )
+        """
+    )
+
+    db.cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS sec_derivative_contract_type (
+            type_id INTEGER PRIMARY KEY,
+            name TEXT UNIQUE
         )
         """
     )
