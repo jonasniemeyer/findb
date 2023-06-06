@@ -912,7 +912,7 @@ def setup_tables(db) -> None:
         """
         CREATE TABLE IF NOT EXISTS sec_mf_debt_information (
             holding_id INTEGER PRIMARY KEY,
-            maturity INTEGER,
+            maturity_date INTEGER,
             coupon_rate REAL,
             coupon_type TEXT,
             in_default INTEGER,
@@ -951,7 +951,7 @@ def setup_tables(db) -> None:
             counterparty_name TEXT,
             tri_party INTEGER,
             repurchase_rate REAL,
-            maturity INTEGER
+            maturity_date INTEGER
         )
         """
     )
