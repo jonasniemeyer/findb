@@ -1027,6 +1027,18 @@ def setup_tables(db) -> None:
 
     db.cur.execute(
         """
+        CREATE TABLE IF NOT EXISTS sec_mf_other_derivative_information (
+            holding_id INTEGER PRIMARY KEY,
+            termination_date INTEGER,
+            notional_amount REAL,
+            delta REAL,
+            unrealized_appreciation REAL
+        )
+        """
+    )
+
+    db.cur.execute(
+        """
         CREATE TABLE IF NOT EXISTS sec_asset_type (
             type_id INTEGER PRIMARY KEY,
             name TEXT UNIQUE,
