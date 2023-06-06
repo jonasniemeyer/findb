@@ -972,19 +972,11 @@ def setup_tables(db) -> None:
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS sec_mf_derivative_information (
-            holding_id INTEGER PRIMARY KEY,
-            type_id INTEGER
-        )
-        """
-    )
-
-    db.cur.execute(
-        """
         CREATE TABLE IF NOT EXISTS sec_mf_derivative_counterparty (
             holding_id INTEGER,
             entity_id INTEGER,
-            UNIQUE(holding_id, entity_id)
+            name TEXT,
+            PRIMARY KEY(holding_id, name)
         )
         """
     )
