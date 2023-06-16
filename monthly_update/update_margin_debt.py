@@ -1,5 +1,5 @@
-from finance_data import finra_margin_debt
-from finance_database import Database
+from findata import finra_margin_debt
+from findb import Database
 
 def insert_margin_debt(db_connection):
     cur = db_connection.cursor()

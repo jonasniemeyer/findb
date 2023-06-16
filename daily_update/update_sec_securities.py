@@ -1,6 +1,6 @@
 import pandas as pd
-from finance_data import sec_companies, sec_mutualfunds
-from finance_database import Database
+from findata import sec_companies, sec_mutualfunds
+from findb import Database
 
 def update_companies(db: Database) -> None:
     new_companies = sec_companies()

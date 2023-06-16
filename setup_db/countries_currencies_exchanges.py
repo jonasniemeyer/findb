@@ -1,8 +1,7 @@
 import requests
-from bs4 import BeautifulSoup
-from finance_database import Database
 import re
-from finance_database.utils import HEADERS
+from bs4 import BeautifulSoup
+from findb.utils import HEADERS
 
 def insert_countries_currencies_exchanges(db) -> None:
     country_url = "https://en.wikipedia.org/wiki/List_of_circulating_currencies"

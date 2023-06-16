@@ -1,6 +1,6 @@
-from finance_data import StratosphereReader
-from finance_database import Database
-from finance_database.utils import STRATOSPHERE_CONVERSION
+from findata import StratosphereReader
+from findb import Database
+from findb.utils import STRATOSPHERE_CONVERSION
 
 def update_stratosphere_fundamental_data(data: dict, security_id: int, db: Database) -> None:
     if data is None:

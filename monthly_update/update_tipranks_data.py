@@ -1,7 +1,7 @@
-from finance_data import TipranksAnalystReader, TipranksStockReader
-from finance_data.utils import DatasetError
-from finance_database import Database
-from finance_database.utils import HEADERS
+from findata import TipranksAnalystReader, TipranksStockReader
+from findata.utils import DatasetError
+from findb import Database
+from findb.utils import HEADERS
 import pandas as pd
 import requests
 

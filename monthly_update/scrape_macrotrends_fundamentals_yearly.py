@@ -1,5 +1,5 @@
-from finance_data import MacrotrendsReader
-from finance_database import Database
+from findata import MacrotrendsReader
+from findb import Database
 import os
 import json
 import concurrent.futures

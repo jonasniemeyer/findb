@@ -3,8 +3,7 @@ import json
 import numpy as np
 import pandas as pd
 import requests
-from bs4 import BeautifulSoup
-from finance_database import Database
+from findb import Database
 from io import StringIO
 from sqlite3 import register_adapter
 

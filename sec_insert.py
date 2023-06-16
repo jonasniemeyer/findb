@@ -1,6 +1,6 @@
 import pandas as pd
-from finance_database import Database
-from finance_data import FilingNPORT
+from findb import Database
+from findata import FilingNPORT
 from sqlite3 import IntegrityError
 
 class NPORTInsert:

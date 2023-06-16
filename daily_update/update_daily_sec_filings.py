@@ -1,7 +1,7 @@
 import requests
 import pandas as pd
-from finance_database import Database
-from finance_database.utils import SEC_BASE_URL, HEADERS
+from findb import Database
+from findb.utils import SEC_BASE_URL, HEADERS
 
 def get_sec_filing_lists(db: Database, start_year=1900, start_quarter=0) -> None:
     url = f"{SEC_BASE_URL}/edgar/daily-index/index.json"

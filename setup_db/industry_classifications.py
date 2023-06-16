@@ -1,7 +1,7 @@
 import requests
 import re
 from bs4 import BeautifulSoup, element
-from finance_database.utils import HEADERS
+from findb.utils import HEADERS
 
 def get_gsci_classification() -> dict:
     url = "https://en.wikipedia.org/wiki/Global_Industry_Classification_Standard"

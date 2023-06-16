@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 import json
-from finance_database import Database
+from findb import Database
 
 timestamp_today = int(pd.to_datetime(pd.to_datetime("today").date()).timestamp())
 

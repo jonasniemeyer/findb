@@ -1,5 +1,5 @@
-from finance_database import Database
-from finance_data import SANews, NasdaqNews
+from findb import Database
+from findata import SANews, NasdaqNews
 import datetime as dt
 
 if dt.date.today().weekday() == 6:

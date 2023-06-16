@@ -1,5 +1,5 @@
-from finance_data import FrenchReader, DatasetError
-from finance_database import Database
+from findata import FrenchReader, DatasetError
+from findb import Database
 import datetime as dt
 
 ts = int((dt.date.today() - dt.date(1970,1,1)).total_seconds())

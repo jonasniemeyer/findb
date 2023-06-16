@@ -1,6 +1,6 @@
-from finance_data import YahooReader
-from finance_data.utils import TickerError
-from finance_database import Database
+from findata import YahooReader
+from findata.utils import TickerError
+from findb import Database
 import pandas as pd
 from dateutil.relativedelta import relativedelta
 

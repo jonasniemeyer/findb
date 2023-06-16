@@ -1,6 +1,5 @@
-from finance_data import FinvizReader
-from finance_database import Database
-import pandas as pd
+from findata import FinvizReader
+from findb import Database
 import datetime as dt
 from time import sleep
 

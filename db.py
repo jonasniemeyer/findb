@@ -1,6 +1,5 @@
-from finance_database.utils import DB_PATH
+from .utils import DB_PATH
 from sqlite3 import connect
-from typing import Union
 import pandas as pd
 
 class Database:    

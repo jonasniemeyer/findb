@@ -1,5 +1,5 @@
-from finance_database import Database
-from finance_data import CMEReader
+from findb import Database
+from findata import CMEReader
 import pandas as pd
 import datetime as dt
 

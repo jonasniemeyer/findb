@@ -1,6 +1,6 @@
-from finance_database import Database
-from finance_database.utils import Conversion, MACROTRENDS_CONVERSION
-from finance_data import CMEReader
+from findb import Database
+from findb.utils import Conversion, MACROTRENDS_CONVERSION
+from findata import CMEReader
 
 def setup_tables(db) -> None:
     # ===========================================================
@@ -155,6 +155,7 @@ def setup_tables(db) -> None:
             cusip TEXT,
             sec_name TEXT,
             yahoo_name TEXT,
+            onvista_name TEXT,
             sec_type_id INTEGER,
             yahoo_type_id INTEGER,
             description TEXT,
