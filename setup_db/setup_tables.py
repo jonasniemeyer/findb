@@ -1666,8 +1666,8 @@ def insert_macrotrends_variables(db) -> None:
             db.cur.execute("INSERT OR IGNORE INTO macrotrends_fundamental_variable (name, statement_id, standard_id) VALUES (?, ?, ?)", (variable, statement_id, enum_id))
 
 if __name__ == "__main__":
-    from finance_database.setup_db.countries_currencies_exchanges import insert_countries_currencies_exchanges
-    from finance_database.setup_db.industry_classifications import insert_gics_classifcation, insert_sic_classification
+    from findb.setup_db.countries_currencies_exchanges import insert_countries_currencies_exchanges
+    from findb.setup_db.industry_classifications import insert_gics_classifcation, insert_sic_classification
     with Database() as db:
         print("Setup Tables")
         setup_tables(db)
