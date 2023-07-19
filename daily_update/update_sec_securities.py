@@ -12,13 +12,13 @@ def update_companies(db: Database) -> None:
     for dct in new_companies.values():
         # if the entity is not in the database, insert it
         if db.cur.execute("SELECT cik FROM entity WHERE cik = ?", (dct["cik"],)).fetchone() is None:
-            db.cur.execute("INSERT INTO entity (cik, sec_name, added) VALUES (?, ?, ?)", (dct["cik"], dct["name"], ts_today))
+            db.cur.execute("INSERT INTO entity (cik, name, added) VALUES (?, ?, ?)", (dct["cik"], dct["name"], ts_today))
             print(f"New entity added: {dct['cik']}")
         # else if the new name is not None and different than in the database, update it
         elif dct["name"] is not None:
-            old_name = db.cur.execute("SELECT sec_name FROM entity WHERE cik = ?", (dct["cik"],)).fetchone()[0]
+            old_name = db.cur.execute("SELECT name FROM entity WHERE cik = ?", (dct["cik"],)).fetchone()[0]
             if dct["name"] != old_name:
-                db.cur.execute("UPDATE entity SET sec_name = ?, old_name = ? WHERE cik = ?", (dct["name"], old_name, dct["cik"]))
+                db.cur.execute("UPDATE entity SET name = ?, old_name = ? WHERE cik = ?", (dct["name"], old_name, dct["cik"]))
                 print(f"Entity Name Updated: {dct['cik']:>8}, New Name: {dct['name']}, Old Name: {old_name}")
 
     # insert new securities
@@ -44,9 +44,9 @@ def update_mutualfunds(db: Database) -> None:
     # insert new series
     new_series = set([(class_["series_cik"], class_["entity_cik"]) for class_ in new_classes])
     for series_cik, entity_cik in new_series:
-        if db.cur.execute("SELECT cik FROM sec_mutualfund_series WHERE cik = ?", (series_cik,)).fetchone() is None:
+        if db.cur.execute("SELECT cik FROM sec_mf_series WHERE cik = ?", (series_cik,)).fetchone() is None:
             entity_id = db.cur.execute("SELECT entity_id FROM entity WHERE cik = ?", (entity_cik,)).fetchone()[0]
-            db.cur.execute("INSERT INTO sec_mutualfund_series (cik, entity_id, added) VALUES (?, ?, ?)", (series_cik, entity_id, ts_today))
+            db.cur.execute("INSERT INTO sec_mf_series (cik, entity_id, added) VALUES (?, ?, ?)", (series_cik, entity_id, ts_today))
             print(f"New Mutual Fund Series: {series_cik}")
 
     # insert new classes
@@ -62,8 +62,8 @@ def update_mutualfunds(db: Database) -> None:
             entity_id = db.cur.execute("SELECT entity_id FROM entity WHERE cik = ?",(entity_cik,)).fetchone()[0]
             db.cur.execute("INSERT INTO security (entity_id, ticker, added) VALUES (?, ?, ?)", (entity_id, ticker, ts_today))
             security_id = db.cur.execute("SELECT security_id FROM security WHERE ticker = ?",(ticker,)).fetchone()[0]
-            series_id = db.cur.execute("SELECT series_id FROM sec_mutualfund_series WHERE cik = ?", (series_cik,)).fetchone()[0]
-            db.cur.execute("INSERT INTO sec_mutualfund_class (security_id, series_id, cik) VALUES (?, ?, ?)", (security_id, series_id, class_cik))
+            series_id = db.cur.execute("SELECT series_id FROM sec_mf_series WHERE cik = ?", (series_cik,)).fetchone()[0]
+            db.cur.execute("INSERT INTO sec_mf_class (security_id, series_id, cik) VALUES (?, ?, ?)", (security_id, series_id, class_cik))
             print(f"New Mutual Fund Class: {class_cik:>10} {ticker:>8}")
 
 if __name__ == "__main__":
