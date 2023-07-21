@@ -34,7 +34,9 @@ def setup_tables(db) -> None:
         CREATE TABLE IF NOT EXISTS country_currency_match (
             country_id INTEGER,
             currency_id INTEGER,
-            PRIMARY KEY(country_id, currency_id)
+            PRIMARY KEY (country_id, currency_id),
+            FOREIGN KEY (country_id) REFERENCES country (country_id),
+            FOREIGN KEY (currency_id) REFERENCES currency (currency_id)
         )
         """
     )
@@ -45,7 +47,8 @@ def setup_tables(db) -> None:
             index_id INTEGER PRIMARY KEY,
             name TEXT UNIQUE NOT NULL,
             ticker TEXT NOT NULL,
-            country_id INTEGER NOT NULL
+            country_id INTEGER NOT NULL,
+            FOREIGN KEY (country_id) REFERENCES country (country_id)
         )
         """
     )
@@ -55,7 +58,9 @@ def setup_tables(db) -> None:
         CREATE TABLE IF NOT EXISTS index_constituent (
             index_id INTEGER,
             security_id INTEGER,
-            PRIMARY KEY(index_id, security_id)
+            PRIMARY KEY(index_id, security_id),
+            FOREIGN KEY (index_id) REFERENCES security_index (index_id),
+            FOREIGN KEY (security_id) REFERENCES security (security_id)
         )
         """
     )
@@ -112,7 +117,12 @@ def setup_tables(db) -> None:
             employees INTEGER,
             fiscal_year_end INTEGER,
             irs_number INTEGER,
-            added INTEGER NOT NULL
+            added INTEGER NOT NULL,
+            FOREIGN KEY (type_id) REFERENCES sec_issuer_type (type_id),
+            FOREIGN KEY (gics_industry_id) REFERENCES industry_classification_gics (industry_id),
+            FOREIGN KEY (sic_industry_id) REFERENCES industry_classification_sic (industry_id),
+            FOREIGN KEY (country_id) REFERENCES country (country_id),
+            FOREIGN KEY (city_id) REFERENCES city (city_id)
         )
         """
     )
@@ -126,7 +136,10 @@ def setup_tables(db) -> None:
             city_id INTEGER,
             state_id INTEGER,
             zip INTEGER,
-            phone TEXT
+            phone TEXT,
+            FOREIGN KEY (entity_id) REFERENCES entity (entity_id),
+            FOREIGN KEY (city_id) REFERENCES sec_city (city_id),
+            FOREIGN KEY (state_id) REFERENCES sec_state (state_id)
         )
         """
     )
@@ -140,7 +153,10 @@ def setup_tables(db) -> None:
             city_id INTEGER,
             state_id INTEGER,
             zip INTEGER,
-            phone TEXT
+            phone TEXT,
+            FOREIGN KEY (entity_id) REFERENCES entity (entity_id),
+            FOREIGN KEY (city_id) REFERENCES sec_city (city_id),
+            FOREIGN KEY (state_id) REFERENCES sec_state (state_id)
         )
         """
     )
@@ -166,7 +182,12 @@ def setup_tables(db) -> None:
             profile_updated INTEGER,
             prices_updated INTEGER,
             price_update_failed INTEGER DEFAULT 0,
-            UNIQUE(ticker, entity_id)
+            UNIQUE (ticker, entity_id),
+            FOREIGN KEY (entity_id) REFERENCES entity (entity_id),
+            FOREIGN KEY (sec_type_id) REFERENCES sec_asset_type (type_id),
+            FOREIGN KEY (yahoo_type_id) REFERENCES yahoo_asset_type (type_id),
+            FOREIGN KEY (currency_id) REFERENCES currency (currency_id),
+            FOREIGN KEY (exchange_id) REFERENCES exchange (exchange_id)
         )
         """
     )
@@ -180,7 +201,8 @@ def setup_tables(db) -> None:
             stratosphere_data_updated INTEGER,
             tipranks_data_updated INTEGER,
             finviz_data_updated INTEGER,
-            macrotrends_data_updated INTEGER
+            macrotrends_data_updated INTEGER,
+            FOREIGN KEY (security_id) REFERENCES security (security_id)
         )
         """
     )
@@ -195,7 +217,9 @@ def setup_tables(db) -> None:
             header TEXT NOT NULL,
             description TEXT,
             url TEXT NOT NULL,
-            UNIQUE(ts, url)
+            UNIQUE (ts, url),
+            FOREIGN KEY (source_id) REFERENCES news_source (source_id),
+            FOREIGN KEY (type_id) REFERENCES news_type (type_id)
         )
         """
     )
@@ -205,7 +229,9 @@ def setup_tables(db) -> None:
         CREATE TABLE IF NOT EXISTS security_news_match (
             security_id INTEGER,
             news_id INTEGER,
-            PRIMARY KEY(security_id, news_id)
+            PRIMARY KEY (security_id, news_id),
+            FOREIGN KEY (security_id) REFERENCES security (security_id),
+            FOREIGN KEY (news_id) REFERENCES news (news_id)
         )
         """
     )
@@ -237,7 +263,8 @@ def setup_tables(db) -> None:
             header TEXT NOT NULL,
             description TEXT,
             url TEXT NOT NULL,
-            UNIQUE(ts, url)
+            UNIQUE (ts, url),
+            FOREIGN KEY (source_id) REFERENCES news_source (source_id)
         )
         """
     )
@@ -247,7 +274,9 @@ def setup_tables(db) -> None:
         CREATE TABLE IF NOT EXISTS news_category_match (
             news_id INTEGER,
             category_id INTEGER,
-            PRIMARY KEY(news_id, news_id)
+            PRIMARY KEY (news_id, news_id),
+            FOREIGN KEY (news_id) REFERENCES general_news (news_id),
+            FOREIGN KEY (category_id) REFERENCES news_category (category_id)
         )
         """
     )
@@ -272,7 +301,7 @@ def setup_tables(db) -> None:
             ts INTEGER,
             price REAL NOT NULL,
             volume INTEGER NOT NULL,
-            PRIMARY KEY(maturity_date, ts)
+            PRIMARY KEY (maturity_date, ts)
         )
         """
     )
@@ -288,7 +317,9 @@ def setup_tables(db) -> None:
             name TEXT UNIQUE NOT NULL,
             exchange_id INTEGER NOT NULL,
             sector_id INTEGER NOT NULL,
-            prices_updated INTEGER
+            prices_updated INTEGER,
+            FOREIGN KEY (exchange_id) REFERENCES exchange (exchange_id),
+            FOREIGN KEY (sector_id) REFERENCES cme_commodity_sector (sector_id)
         )
         """
     )
@@ -304,11 +335,11 @@ def setup_tables(db) -> None:
 
     db.cur.executescript(
         """
-        INSERT OR IGNORE INTO cme_commodity_sector (name) VALUES("Agriculture");
-        INSERT OR IGNORE INTO cme_commodity_sector (name) VALUES("Energy");
-        INSERT OR IGNORE INTO cme_commodity_sector (name) VALUES("Industrial Metals");
-        INSERT OR IGNORE INTO cme_commodity_sector (name) VALUES("Livestock");
-        INSERT OR IGNORE INTO cme_commodity_sector (name) VALUES("Precious Metals");
+        INSERT OR IGNORE INTO cme_commodity_sector (name) VALUES ("Agriculture");
+        INSERT OR IGNORE INTO cme_commodity_sector (name) VALUES ("Energy");
+        INSERT OR IGNORE INTO cme_commodity_sector (name) VALUES ("Industrial Metals");
+        INSERT OR IGNORE INTO cme_commodity_sector (name) VALUES ("Livestock");
+        INSERT OR IGNORE INTO cme_commodity_sector (name) VALUES ("Precious Metals");
         """
     )
 
@@ -321,7 +352,8 @@ def setup_tables(db) -> None:
             price REAL,
             volume INTEGER,
             open_interest INTEGER,
-            PRIMARY KEY(commodity_id, maturity_date, ts)
+            PRIMARY KEY (commodity_id, maturity_date, ts),
+            FOREIGN KEY (commodity_id) REFERENCES cme_commodity (commodity_id)
         )
         """
     )
@@ -374,7 +406,9 @@ def setup_tables(db) -> None:
             change INTEGER NOT NULL,
             old_price REAL,
             new_price REAL,
-            PRIMARY KEY(company_id, security_id, ts)
+            PRIMARY KEY (company_id, security_id, ts),
+            FOREIGN KEY (company_id) REFERENCES finviz_analyst_company (company_id),
+            FOREIGN KEY (security_id) REFERENCES security (security_id)
         )
         """
     )
@@ -388,7 +422,8 @@ def setup_tables(db) -> None:
         CREATE TABLE IF NOT EXISTS fred_category (
             category_id INTEGER PRIMARY KEY,
             name TEXT NOT NULL,
-            super_category_id INTEGER
+            super_category_id INTEGER,
+            FOREIGN KEY (super_category_id) REFERENCES fred_category (category_id)
         )
         """
     )
@@ -401,7 +436,8 @@ def setup_tables(db) -> None:
             abbr TEXT NOT NULL,
             description TEXT NOT NULL,
             category_id INTEGER NOT NULL,
-            UNIQUE(abbr, name)
+            UNIQUE (abbr, name),
+            FOREIGN KEY (category_id) REFERENCES fred_category (category_id)
         )
         """
     )
@@ -412,7 +448,8 @@ def setup_tables(db) -> None:
             series_id INTEGER,
             ts INTEGER,
             value REAL,
-            PRIMARY KEY(series_id, ts)
+            PRIMARY KEY (series_id, ts),
+            FOREIGN KEY (series_id) REFERENCES fred_series (series_id)
         )
         """
     )
@@ -447,7 +484,9 @@ def setup_tables(db) -> None:
             dataset_id INTEGER NOT NULL,
             table_id INTEGER NOT NULL,
             name TEXT NOT NULL,
-            UNIQUE(dataset_id, table_id, name)
+            UNIQUE (dataset_id, table_id, name),
+            FOREIGN KEY (dataset_id) REFERENCES french_dataset (dataset_id),
+            FOREIGN KEY (table_id) REFERENCES french_table (table_id)
         )
         """
     )
@@ -458,7 +497,8 @@ def setup_tables(db) -> None:
             series_id INTEGER,
             ts INTEGER,
             value REAL,
-            PRIMARY KEY(series_id, ts)
+            PRIMARY KEY (series_id, ts),
+            FOREIGN KEY (series_id) REFERENCES french_series (series_id)
         )
         """
     )
@@ -477,7 +517,8 @@ def setup_tables(db) -> None:
             is_industry_group INTEGER,
             is_industry INTEGER,
             is_sub_industry INTEGER,
-            parent_id INTEGER
+            parent_id INTEGER,
+            FOREIGN KEY (parent_id) REFERENCES industry_classification_gics (industry_id)
         )
         """
     )
@@ -494,7 +535,8 @@ def setup_tables(db) -> None:
             is_industry_group INTEGER,
             is_industry INTEGER,
             description TEXT,
-            parent_id INTEGER
+            parent_id INTEGER,
+            FOREIGN KEY (parent_id) REFERENCES industry_classification_sic (industry_id)
         )
         """
     )
@@ -510,7 +552,9 @@ def setup_tables(db) -> None:
             name TEXT NOT NULL,
             statement_id INTEGER NOT NULL,
             standard_id INTEGER UNIQUE NOT NULL,
-            UNIQUE(name, statement_id)
+            UNIQUE (name, statement_id),
+            FOREIGN KEY (statement_id) REFERENCES financial_statement (statement_id),
+            FOREIGN KEY (standard_id) REFERENCES fundamental_variable (variable_id)
         )
         """
     )
@@ -524,7 +568,9 @@ def setup_tables(db) -> None:
             year INTEGER,
             ts INTEGER NOT NULL,
             value INTEGER,
-            PRIMARY KEY(security_id, variable_id, quarter, year)
+            PRIMARY KEY (security_id, variable_id, quarter, year),
+            FOREIGN KEY (security_id) REFERENCES security (security_id),
+            FOREIGN KEY (variable_id) REFERENCES macrotrends_fundamental_variable (variable_id)
         )
         """
     )
@@ -539,7 +585,10 @@ def setup_tables(db) -> None:
             variable_id INTEGER PRIMARY KEY,
             name TEXT NOT NULL,
             statement_id INTEGER NOT NULL,
-            UNIQUE(name, statement_id)
+            standard_id INTEGER UNIQUE NOT NULL,
+            UNIQUE (name, statement_id),
+            FOREIGN KEY (statement_id) REFERENCES financial_statement (statement_id),
+            FOREIGN KEY (standard_id) REFERENCES fundamental_variable (variable_id)
         )
         """
     )
@@ -553,7 +602,9 @@ def setup_tables(db) -> None:
             year INTEGER,
             ts INTEGER NOT NULL,
             value INTEGER,
-            PRIMARY KEY(security_id, variable_id, quarter, year)
+            PRIMARY KEY (security_id, variable_id, quarter, year),
+            FOREIGN KEY (security_id) REFERENCES security (security_id),
+            FOREIGN KEY (variable_id) REFERENCES marketscreener_fundamental_variable (variable_id)
         )
         """
     )
@@ -575,7 +626,9 @@ def setup_tables(db) -> None:
             year INTEGER NOT NULL,
             value REAL,
             percentage REAL,
-            PRIMARY KEY(security_id, segment_id, year)
+            PRIMARY KEY (security_id, segment_id, year),
+            FOREIGN KEY (security_id) REFERENCES security (security_id),
+            FOREIGN KEY (segment_id) REFERENCES marketscreener_segment (segment_id)
         )
         """
     )
@@ -597,7 +650,9 @@ def setup_tables(db) -> None:
             year INTEGER NOT NULL,
             value REAL,
             percentage REAL,
-            PRIMARY KEY(security_id, region_id, year)
+            PRIMARY KEY (security_id, region_id, year),
+            FOREIGN KEY (security_id) REFERENCES security (security_id),
+            FOREIGN KEY (region_id) REFERENCES marketscreener_region (region_id)
         )
         """
     )
@@ -607,7 +662,8 @@ def setup_tables(db) -> None:
         CREATE TABLE IF NOT EXISTS marketscreener_industry (
             industry_id INTEGER PRIMARY KEY,
             name TEXT UNIQUE NOT NULL,
-            super_id INTEGER
+            super_id INTEGER,
+            FOREIGN KEY (super_id) REFERENCES marketscreener_industry (industry_id)
         )
         """
     )
@@ -631,7 +687,10 @@ def setup_tables(db) -> None:
             joined INTEGER,
             added INTEGER NOT NULL,
             discontinued INTEGER,
-            PRIMARY KEY(security_id, executive_id, type_id)
+            PRIMARY KEY (security_id, executive_id, type_id),
+            FOREIGN KEY (security_id) REFERENCES security (security_id),
+            FOREIGN KEY (executive_id) REFERENCES marketscreener_executive (executive_id),
+            FOREIGN KEY (type_id) REFERENCES marketscreener_executive_type (type_id)
         )
         """
     )
@@ -676,7 +735,8 @@ def setup_tables(db) -> None:
             price REAL,
             simple_return REAL,
             log_return REAL,
-            PRIMARY KEY(index_id, ts)
+            PRIMARY KEY (index_id, ts),
+            FOREIGN KEY (index_id) REFERENCES msci_index (index_id)
         )
         """
     )
@@ -709,7 +769,10 @@ def setup_tables(db) -> None:
             document_url TEXT NOT NULL,
             parsed INTEGER NOT NULL,
             list_id INTEGER NOT NULL,
-            UNIQUE(entity_id, type_id, ts_filed, document_url)
+            UNIQUE (entity_id, type_id, ts_filed, document_url),
+            FOREIGN KEY (entity_id) REFERENCES entity (entity_id),
+            FOREIGN KEY (type_id) REFERENCES sec_form_type (type_id),
+            FOREIGN KEY (list_id) REFERENCES sec_daily_list (list_id)
         )
         """
     )
@@ -738,7 +801,8 @@ def setup_tables(db) -> None:
         CREATE TABLE IF NOT EXISTS sec_city (
             city_id INTEGER PRIMARY KEY,
             name TEXT UNIQUE NOT NULL,
-            state_id INTEGER NOT NULL
+            state_id INTEGER NOT NULL,
+            FOREIGN KEY (state_id) REFERENCES sec_state (state_id)
         )
         """
     )
@@ -751,7 +815,8 @@ def setup_tables(db) -> None:
             variable_id INTEGER PRIMARY KEY,
             name TEXT NOT NULL,
             statement_id INTEGER NOT NULL,
-            UNIQUE(name, statement_id)
+            UNIQUE (name, statement_id),
+            FOREIGN KEY (statement_id) REFERENCES financial_statement (statement_id)
         )
         """
     )
@@ -766,7 +831,10 @@ def setup_tables(db) -> None:
             ts INTEGER NOT NULL,
             value INTEGER,
             filing_id INTEGER NOT NULL,
-            PRIMARY KEY(security_id, variable_id, quarter, year)
+            PRIMARY KEY (security_id, variable_id, quarter, year),
+            FOREIGN KEY (security_id) REFERENCES security (security_id),
+            FOREIGN KEY (variable_id) REFERENCES sec_fundamental_variable (variable_id),
+            FOREIGN KEY (filing_id) REFERENCES sec_filing (filing_id)
         )
         """
     )
@@ -782,7 +850,8 @@ def setup_tables(db) -> None:
             name TEXT,
             entity_id INTEGER NOT NULL,
             added INTEGER NOT NULL,
-            discontinued INTEGER
+            discontinued INTEGER,
+            FOREIGN KEY (entity_id) REFERENCES entity (entity_id)
         )
         """
     )
@@ -790,9 +859,11 @@ def setup_tables(db) -> None:
     db.cur.execute(
         """
         CREATE TABLE IF NOT EXISTS sec_mf_class (
-            security_id INTEGER,
+            class_id INTEGER,
             series_id INTEGER NOT NULL,
-            cik TEXT PRIMARY KEY
+            cik TEXT PRIMARY KEY,
+            FOREIGN KEY (class_id) REFERENCES security (security_id),
+            FOREIGN KEY (series_id) REFERENCES sec_mf_series (series_id)
         )
         """
     )
@@ -803,7 +874,8 @@ def setup_tables(db) -> None:
             class_id INTEGER,
             ts INTEGER,
             return REAL,
-            PRIMARY KEY(class_id, ts)
+            PRIMARY KEY (class_id, ts),
+            FOREIGN KEY (class_id) REFERENCES sec_mf_class (class_id)
         )
         """
     )
@@ -816,7 +888,8 @@ def setup_tables(db) -> None:
             sales REAL,
             reinvestments REAL,
             redemptions REAL,
-            PRIMARY KEY(series_id, ts)
+            PRIMARY KEY (series_id, ts),
+            FOREIGN KEY (series_id) REFERENCES sec_mf_series (series_id)
         )
         """
     )
@@ -830,7 +903,10 @@ def setup_tables(db) -> None:
             ts INTEGER,
             realized_gain REAL,
             unrealized_appreciation REAL,
-            PRIMARY KEY(series_id, contract_type_id, derivative_type_id, ts)
+            PRIMARY KEY (series_id, contract_type_id, derivative_type_id, ts),
+            FOREIGN KEY (series_id) REFERENCES sec_mf_series (series_id),
+            FOREIGN KEY (contract_type_id) REFERENCES sec_contract_type (type_id),
+            FOREIGN KEY (derivative_type_id) REFERENCES sec_derivative_type (type_id)
         )
         """
     )
@@ -842,7 +918,8 @@ def setup_tables(db) -> None:
             ts INTEGER,
             realized_gain REAL,
             unrealized_appreciation REAL,
-            PRIMARY KEY(series_id, ts)
+            PRIMARY KEY (series_id, ts),
+            FOREIGN KEY (series_id) REFERENCES sec_mf_series (series_id)
         )
         """
     )
@@ -854,7 +931,9 @@ def setup_tables(db) -> None:
             entity_id INTEGER,
             ts INTEGER,
             value REAL,
-            PRIMARY KEY(series_id, entity_id, ts)
+            PRIMARY KEY (series_id, entity_id, ts),
+            FOREIGN KEY (series_id) REFERENCES sec_mf_series (series_id),
+            FOREIGN KEY (entity_id) REFERENCES entity (entity_id)
         )
         """
     )
@@ -866,7 +945,8 @@ def setup_tables(db) -> None:
             ts INTEGER,
             section TEXT,
             note TEXT,
-            PRIMARY KEY(series_id, ts)
+            PRIMARY KEY (series_id, ts),
+            FOREIGN KEY (series_id) REFERENCES sec_mf_series (series_id)
         )
         """
     )
@@ -904,7 +984,14 @@ def setup_tables(db) -> None:
             cash_collateral REAL,
             non_cash_collateral REAL,
             loaned REAL,
-            UNIQUE(series_id, ts, position_order)
+            UNIQUE (series_id, ts, position_order),
+            FOREIGN KEY (series_id) REFERENCES sec_mf_series (series_id),
+            FOREIGN KEY (entity_id) REFERENCES entity (entity_id),
+            FOREIGN KEY (security_id) REFERENCES security (security_id),
+            FOREIGN KEY (quantity_type_id) REFERENCES sec_quantity_type (type_id),
+            FOREIGN KEY (currency_id) REFERENCES currency (currency_id),
+            FOREIGN KEY (asset_type_id) REFERENCES sec_asset_type (type_id),
+            FOREIGN KEY (derivative_type_id) REFERENCES sec_derivative_type (type_id)
         )
         """
     )
@@ -918,7 +1005,8 @@ def setup_tables(db) -> None:
             coupon_type TEXT,
             in_default INTEGER,
             coupon_payments_deferred INTEGER,
-            paid_in_kind INTEGER
+            paid_in_kind INTEGER,
+            FOREIGN KEY (holding_id) REFERENCES sec_mf_holding (holding_id)
         )
         """
     )
@@ -937,7 +1025,10 @@ def setup_tables(db) -> None:
             cusip TEXT,
             conversion_ratio REAL,
             conversion_currency_id INTEGER,
-            delta REAL
+            delta REAL,
+            FOREIGN KEY (holding_id) REFERENCES sec_mf_holding (holding_id),
+            FOREIGN KEY (currency_id) REFERENCES currency (currency_id),
+            FOREIGN KEY (conversion_currency_id) REFERENCES currency (currency_id)
         )
         """
     )
@@ -952,7 +1043,9 @@ def setup_tables(db) -> None:
             counterparty_name TEXT,
             tri_party INTEGER,
             repurchase_rate REAL,
-            maturity_date INTEGER
+            maturity_date INTEGER,
+            FOREIGN KEY (holding_id) REFERENCES sec_mf_holding (holding_id),
+            FOREIGN KEY (entity_id) REFERENCES entity (entity_id)
         )
         """
     )
@@ -966,7 +1059,11 @@ def setup_tables(db) -> None:
             collateral_value REAL,
             collateral_currency_id INTEGER,
             type_id INTEGER,
-            PRIMARY KEY(holding_id, type_id)
+            PRIMARY KEY (holding_id, type_id),
+            FOREIGN KEY (holding_id) REFERENCES sec_mf_holding (holding_id),
+            FOREIGN KEY (principal_currency_id) REFERENCES currency (currency_id),
+            FOREIGN KEY (collateral_currency_id) REFERENCES currency (currency_id),
+            FOREIGN KEY (type_id) REFERENCES sec_asset_type (type_id)
         )
         """
     )
@@ -977,7 +1074,9 @@ def setup_tables(db) -> None:
             holding_id INTEGER,
             entity_id INTEGER,
             name TEXT,
-            PRIMARY KEY(holding_id, name)
+            PRIMARY KEY (holding_id, name),
+            FOREIGN KEY (holding_id) REFERENCES sec_mf_holding (holding_id),
+            FOREIGN KEY (entity_id) REFERENCES entity (entity_id)
         )
         """
     )
@@ -991,7 +1090,10 @@ def setup_tables(db) -> None:
             sold_value REAL,
             sold_currency_id INTEGER,
             settlement_date INTEGER,
-            unrealized_appreciation REAL
+            unrealized_appreciation REAL,
+            FOREIGN KEY (holding_id) REFERENCES sec_mf_holding (holding_id),
+            FOREIGN KEY (purchased_currency_id) REFERENCES currency (currency_id),
+            FOREIGN KEY (sold_currency_id) REFERENCES currency (currency_id)
         )
         """
     )
@@ -1004,7 +1106,9 @@ def setup_tables(db) -> None:
             expiration_date INTEGER,
             notional_amount REAL,
             currency_id INTEGER,
-            unrealized_appreciation REAL
+            unrealized_appreciation REAL,
+            FOREIGN KEY (holding_id) REFERENCES sec_mf_holding (holding_id),
+            FOREIGN KEY (currency_id) REFERENCES currency (currency_id)
         )
         """
     )
@@ -1021,7 +1125,10 @@ def setup_tables(db) -> None:
             exercise_currency_id INTEGER,
             expiration_date INTEGER,
             delta REAL,
-            unrealized_appreciation REAL
+            unrealized_appreciation REAL,
+            FOREIGN KEY (holding_id) REFERENCES sec_mf_holding (holding_id),
+            FOREIGN KEY (quantity_type_id) REFERENCES sec_quantity_type (type_id),
+            FOREIGN KEY (exercise_currency_id) REFERENCES currency (currency_id)
         )
         """
     )
@@ -1033,7 +1140,8 @@ def setup_tables(db) -> None:
             termination_date INTEGER,
             notional_amount REAL,
             delta REAL,
-            unrealized_appreciation REAL
+            unrealized_appreciation REAL,
+            FOREIGN KEY (holding_id) REFERENCES sec_mf_holding (holding_id)
         )
         """
     )
@@ -1064,7 +1172,7 @@ def setup_tables(db) -> None:
             type_id INTEGER PRIMARY KEY,
             name TEXT UNIQUE,
             abbr TEXT UNIQUE,
-            UNIQUE(name, abbr)
+            UNIQUE (name, abbr)
         )
         """
     )
@@ -1107,12 +1215,17 @@ def setup_tables(db) -> None:
             ts INTEGER NOT NULL,
             quarter INTEGER,
             year INTEGER,
+            cusip TEXT,
             percentage REAL,
             no_shares INTEGER,
             market_value REAL,
             option_id INTEGER,
             filing_id INTEGER,
-            PRIMARY KEY(entity_id, security_id, quarter, year, option_id)
+            PRIMARY KEY (entity_id, security_id, quarter, year, option_id),
+            FOREIGN KEY (entity_id) REFERENCES entity (entity_id),
+            FOREIGN KEY (security_id) REFERENCES security (security_id),
+            FOREIGN KEY (option_id) REFERENCES sec_option (option_id),
+            FOREIGN KEY (filing_id) REFERENCES sec_filing (filing_id)
         )
         """
     )
@@ -1137,7 +1250,11 @@ def setup_tables(db) -> None:
             ts INTEGER NOT NULL,
             shares INTEGER NOT NULL,
             percentage REAL NOT NULL,
-            filing_id INTEGER PRIMARY KEY
+            filing_id INTEGER PRIMARY KEY,
+            FOREIGN KEY (filer_entity_id) REFERENCES entity (entity_id),
+            FOREIGN KEY (subject_entity_id) REFERENCES entity (entity_id),
+            FOREIGN KEY (security_id) REFERENCES security (security_id),
+            FOREIGN KEY (filing_id) REFERENCES sec_filing (filing_id)
         )
         """
     )
@@ -1162,7 +1279,8 @@ def setup_tables(db) -> None:
             variable_id INTEGER PRIMARY KEY,
             name TEXT NOT NULL,
             statement_id INTEGER NOT NULL,
-            UNIQUE(name, statement_id)
+            UNIQUE (name, statement_id),
+            FOREIGN KEY (statement_id) REFERENCES financial_statement (statement_id)
         )
         """
     )
@@ -1175,7 +1293,9 @@ def setup_tables(db) -> None:
             ts INTEGER NOT NULL,
             quarterly INTEGER NOT NULL,
             value REAL,
-            PRIMARY KEY(security_id, variable_id, ts, quarterly)
+            PRIMARY KEY (security_id, variable_id, ts, quarterly),
+            FOREIGN KEY (security_id) REFERENCES security (security_id),
+            FOREIGN KEY (variable_id) REFERENCES stratosphere_fundamental_variable (variable_id)
         )
         """
     )
@@ -1197,7 +1317,9 @@ def setup_tables(db) -> None:
             ts INTEGER NOT NULL,
             quarterly INTEGER NOT NULL,
             value REAL,
-            PRIMARY KEY(security_id, variable_id, ts, quarterly)
+            PRIMARY KEY (security_id, variable_id, ts, quarterly),
+            FOREIGN KEY (security_id) REFERENCES security (security_id),
+            FOREIGN KEY (variable_id) REFERENCES stratosphere_segment_variable (variable_id)
         )
         """
     )
@@ -1219,7 +1341,9 @@ def setup_tables(db) -> None:
             ts INTEGER NOT NULL,
             quarterly INTEGER NOT NULL,
             value REAL,
-            PRIMARY KEY(security_id, variable_id, ts, quarterly)
+            PRIMARY KEY (security_id, variable_id, ts, quarterly),
+            FOREIGN KEY (security_id) REFERENCES security (security_id),
+            FOREIGN KEY (variable_id) REFERENCES stratosphere_kpi_variable (variable_id)
         )
         """
     )
@@ -1230,7 +1354,8 @@ def setup_tables(db) -> None:
             analyst_id INTEGER PRIMARY KEY,
             name TEXT,
             company_id INTEGER NOT NULL,
-            UNIQUE(name, company_id)
+            UNIQUE (name, company_id),
+            FOREIGN KEY (company_id) REFERENCES stratosphere_analyst_company (company_id)
         )
         """
     )
@@ -1255,7 +1380,10 @@ def setup_tables(db) -> None:
             title TEXT,
             url TEXT,
             source_id INTEGER NOT NULL,
-            PRIMARY KEY(security_id, analyst_id, ts)
+            PRIMARY KEY (security_id, analyst_id, ts),
+            FOREIGN KEY (security_id) REFERENCES security (security_id),
+            FOREIGN KEY (analyst_id) REFERENCES stratosphere_analyst (analyst_id),
+            FOREIGN KEY (source_id) REFERENCES news_source (source_id)
         )
         """
     )
@@ -1271,7 +1399,9 @@ def setup_tables(db) -> None:
             average REAL,
             low REAL,
             number_analysts INTEGER,
-            PRIMARY KEY(security_id, variable_id, ts, quarterly)
+            PRIMARY KEY (security_id, variable_id, ts, quarterly),
+            FOREIGN KEY (security_id) REFERENCES security (security_id),
+            FOREIGN KEY (variable_id) REFERENCES stratosphere_fundamental_variable (variable_id)
         )
         """
     )
@@ -1293,7 +1423,8 @@ def setup_tables(db) -> None:
             hold INTEGER,
             sell INTEGER,
             average_price_target REAL,
-            PRIMARY KEY(security_id, week)
+            PRIMARY KEY (security_id, week),
+            FOREIGN KEY (security_id) REFERENCES security (security_id)
         )
         """
     )
@@ -1308,7 +1439,8 @@ def setup_tables(db) -> None:
             buy INTEGER,
             hold INTEGER,
             sell INTEGER,
-            PRIMARY KEY(security_id, week)
+            PRIMARY KEY (security_id, week),
+            FOREIGN KEY (security_id) REFERENCES security (security_id)
         )
         """
     )
@@ -1330,7 +1462,10 @@ def setup_tables(db) -> None:
             average_rating_return REAL,
             buy_percentage REAL,
             hold_percentage REAL,
-            sell_percentage REAL
+            sell_percentage REAL,
+            FOREIGN KEY (company_id) REFERENCES tipranks_analyst_company (company_id),
+            FOREIGN KEY (sector_id) REFERENCES tipranks_sector (sector_id),
+            FOREIGN KEY (country_id) REFERENCES tipranks_country (country_id)
         )
         """
     )
@@ -1382,7 +1517,11 @@ def setup_tables(db) -> None:
             price_target REAL,
             title TEXT,
             url TEXT,
-            PRIMARY KEY(analyst_id, security_id, ts)
+            PRIMARY KEY (analyst_id, security_id, ts),
+            FOREIGN KEY (analyst_id) REFERENCES tipranks_analyst (analyst_id),
+            FOREIGN KEY (security_id) REFERENCES security (security_id),
+            FOREIGN KEY (rating_id) REFERENCES tipranks_rating (rating_id),
+            FOREIGN KEY (change_id) REFERENCES tipranks_rating (change_id)
         )
         """
     )
@@ -1396,7 +1535,9 @@ def setup_tables(db) -> None:
             total_recommendations INTEGER,
             success_rate REAL,
             average_rating_return REAL,
-            PRIMARY KEY(analyst_id, security_id)
+            PRIMARY KEY (analyst_id, security_id),
+            FOREIGN KEY (analyst_id) REFERENCES tipranks_analyst (analyst_id),
+            FOREIGN KEY (security_id) REFERENCES security (security_id)
         )
         """
     )
@@ -1423,7 +1564,9 @@ def setup_tables(db) -> None:
             value INTEGER,
             change REAL,
             percentage_of_portfolio REAL,
-            PRIMARY KEY(institutional_id, security_id, ts)
+            PRIMARY KEY (institutional_id, security_id, ts),
+            FOREIGN KEY (institutional_id) REFERENCES tipranks_institutional (institutional_id),
+            FOREIGN KEY (security_id) REFERENCES security (security_id)
         )
         """
     )
@@ -1438,7 +1581,8 @@ def setup_tables(db) -> None:
             city_id INTEGER PRIMARY KEY,
             name TEXT NOT NULL,
             country_id INTEGER NOT NULL,
-            UNIQUE(name, country_id)
+            UNIQUE (name, country_id),
+            FOREIGN KEY (country_id) REFERENCES country (country_id)
         )
         """
     )
@@ -1450,7 +1594,8 @@ def setup_tables(db) -> None:
             name TEXT NOT NULL,
             yahoo_suffix TEXT NOT NULL,
             country_id INTEGER NOT NULL,
-            UNIQUE(name, country_id, yahoo_suffix)
+            UNIQUE (name, country_id, yahoo_suffix),
+            FOREIGN KEY (country_id) REFERENCES country (country_id)
         )
         """
     )
@@ -1462,7 +1607,7 @@ def setup_tables(db) -> None:
             name TEXT NOT NULL,
             age INTEGER,
             born INTEGER,
-            UNIQUE(name, born)
+            UNIQUE (name, born)
         )
         """
     )
@@ -1485,7 +1630,10 @@ def setup_tables(db) -> None:
             salary REAL,
             added INTEGER NOT NULL,
             discontinued INTEGER,
-            PRIMARY KEY(security_id, executive_id, position_id)
+            PRIMARY KEY (security_id, executive_id, position_id),
+            FOREIGN KEY (security_id) REFERENCES security (security_id),
+            FOREIGN KEY (executive_id) REFERENCES yahoo_executive (executive_id),
+            FOREIGN KEY (position_id) REFERENCES yahoo_executive_position (position_id)
         )
         """
     )
@@ -1505,7 +1653,8 @@ def setup_tables(db) -> None:
             split_ratio REAL,
             simple_return REAL,
             log_return REAL,
-            PRIMARY KEY(security_id, ts)
+            PRIMARY KEY (security_id, ts),
+            FOREIGN KEY (security_id) REFERENCES security (security_id)
         )
         """
     )
@@ -1523,14 +1672,16 @@ def setup_tables(db) -> None:
             adj_close REAL,
             simple_return REAL,
             log_return REAL,
-            PRIMARY KEY(numerator_id, denominator_id, ts)
+            PRIMARY KEY (numerator_id, denominator_id, ts),
+            FOREIGN KEY (numerator_id) REFERENCES currency (currency_id),
+            FOREIGN KEY (denominator_id) REFERENCES currency (currency_id)
         )
         """
     )
 
     db.cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS yahoo_security_type (
+        CREATE TABLE IF NOT EXISTS yahoo_asset_type (
             type_id INTEGER PRIMARY KEY,
             name TEXT UNIQUE NOT NULL
         )
@@ -1564,7 +1715,9 @@ def setup_tables(db) -> None:
             old INTEGER,
             new INTEGER NOT NULL,
             change INTEGER NOT NULL,
-            PRIMARY KEY(company_id, security_id, ts)
+            PRIMARY KEY (company_id, security_id, ts),
+            FOREIGN KEY (company_id) REFERENCES yahoo_analyst_company (company_id),
+            FOREIGN KEY (security_id) REFERENCES security (security_id)
         )
         """
     )
@@ -1581,7 +1734,8 @@ def setup_tables(db) -> None:
             hold INTEGER,
             sell INTEGER,
             strong_sell INTEGER,
-            PRIMARY KEY(security_id, month)
+            PRIMARY KEY (security_id, month),
+            FOREIGN KEY (security_id) REFERENCES security (security_id)
         )
         """
     )
@@ -1592,7 +1746,8 @@ def setup_tables(db) -> None:
             variable_id INTEGER PRIMARY KEY,
             name TEXT NOT NULL,
             statement_id INTEGER NOT NULL,
-            UNIQUE(name, statement_id)
+            UNIQUE (name, statement_id),
+            FOREIGN KEY (statement_id) REFERENCES financial_statement (statement_id)
         )
         """
     )
@@ -1606,7 +1761,9 @@ def setup_tables(db) -> None:
             year INTEGER,
             ts INTEGER NOT NULL,
             value INTEGER,
-            PRIMARY KEY(security_id, variable_id, quarter, year)
+            PRIMARY KEY (security_id, variable_id, quarter, year),
+            FOREIGN KEY (security_id) REFERENCES security (security_id),
+            FOREIGN KEY (variable_id) REFERENCES yahoo_fundamental_variable (variable_id)
         )
         """
     )
@@ -1625,7 +1782,8 @@ def setup_tables(db) -> None:
         CREATE TABLE IF NOT EXISTS yahoo_gics_industry (
             industry_id INTEGER PRIMARY KEY,
             name TEXT UNIQUE NOT NULL,
-            sector_id INTEGER NOT NULL
+            sector_id INTEGER NOT NULL,
+            FOREIGN KEY (sector_id) REFERENCES yahoo_gics_sector (sector_id)
         )
         """
     )
@@ -1639,7 +1797,8 @@ def setup_tables(db) -> None:
             actual REAL,
             abs_diff REAL,
             rel_diff REAL,
-            PRIMARY KEY(security_id, ts)
+            PRIMARY KEY (security_id, ts),
+            FOREIGN KEY (security_id) REFERENCES security (security_id)
         )
         """
     )
