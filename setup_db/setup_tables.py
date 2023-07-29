@@ -167,7 +167,7 @@ def setup_tables(db) -> None:
             security_id INTEGER PRIMARY KEY,
             entity_id INTEGER NOT NULL,
             ticker TEXT NOT NULL,
-            isin TEXT,
+            isin TEXT UNIQUE NOT NULL,
             cusip TEXT,
             sec_name TEXT,
             yahoo_name TEXT,
@@ -1803,6 +1803,7 @@ def setup_tables(db) -> None:
         """
     )
 
+
 def insert_cme_commodities(db) -> None:
     for name, properties in CMEReader.commodities.items():
         sector_id = db.cur.execute(f"SELECT sector_id FROM cme_commodity_sector WHERE name = ?", (properties["sector_name"],)).fetchone()[0]
@@ -1811,6 +1812,7 @@ def insert_cme_commodities(db) -> None:
             f"INSERT OR IGNORE INTO cme_commodity (name, exchange_id, sector_id) VALUES (?, ?, ?)",
             (name, exchange_id, sector_id)
         )
+
 
 def insert_standardized_variables(db) -> None:
     for var in Conversion:
