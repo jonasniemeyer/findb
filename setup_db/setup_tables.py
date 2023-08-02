@@ -166,14 +166,15 @@ def setup_tables(db) -> None:
         CREATE TABLE IF NOT EXISTS security (
             security_id INTEGER PRIMARY KEY,
             entity_id INTEGER NOT NULL,
-            ticker TEXT NOT NULL,
             isin TEXT UNIQUE NOT NULL,
+            ticker TEXT NOT NULL,
             cusip TEXT,
             sec_name TEXT,
             yahoo_name TEXT,
             onvista_name TEXT,
             sec_type_id INTEGER,
             yahoo_type_id INTEGER,
+            onvista_type_id INTEGER,
             description TEXT,
             currency_id INTEGER,
             utc_offset INTEGER,
@@ -186,6 +187,7 @@ def setup_tables(db) -> None:
             FOREIGN KEY (entity_id) REFERENCES entity (entity_id),
             FOREIGN KEY (sec_type_id) REFERENCES sec_asset_type (type_id),
             FOREIGN KEY (yahoo_type_id) REFERENCES yahoo_asset_type (type_id),
+            FOREIGN KEY (onvista_type_id) REFERENCES onvista_asset_type (type_id),
             FOREIGN KEY (currency_id) REFERENCES currency (currency_id),
             FOREIGN KEY (exchange_id) REFERENCES exchange (exchange_id)
         )
@@ -737,6 +739,19 @@ def setup_tables(db) -> None:
             log_return REAL,
             PRIMARY KEY (index_id, ts),
             FOREIGN KEY (index_id) REFERENCES msci_index (index_id)
+        )
+        """
+    )
+
+    # ===========================================================
+    # ====================== Onvista ============================
+    # ===========================================================
+
+    db.cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS onvista_asset_type (
+            type_id INTEGER PRIMARY KEY,
+            name TEXT UNIQUE NOT NULL
         )
         """
     )
