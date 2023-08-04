@@ -130,14 +130,14 @@ def setup_tables(db) -> None:
     db.cur.execute(
         """
         CREATE TABLE IF NOT EXISTS sec_business_address (
-            entity_id INTEGER PRIMARY KEY,
+            cik INTEGER PRIMARY KEY,
             street1 TEXT,
             street2 TEXT,
             city_id INTEGER,
             state_id INTEGER,
             zip INTEGER,
             phone TEXT,
-            FOREIGN KEY (entity_id) REFERENCES entity (entity_id),
+            FOREIGN KEY (cik) REFERENCES entity (cik),
             FOREIGN KEY (city_id) REFERENCES sec_city (city_id),
             FOREIGN KEY (state_id) REFERENCES sec_state (state_id)
         )
@@ -147,14 +147,14 @@ def setup_tables(db) -> None:
     db.cur.execute(
         """
         CREATE TABLE IF NOT EXISTS sec_mail_address (
-            entity_id INTEGER PRIMARY KEY,
+            cik INTEGER PRIMARY KEY,
             street1 TEXT,
             street2 TEXT,
             city_id INTEGER,
             state_id INTEGER,
             zip INTEGER,
             phone TEXT,
-            FOREIGN KEY (entity_id) REFERENCES entity (entity_id),
+            FOREIGN KEY (cik) REFERENCES entity (cik),
             FOREIGN KEY (city_id) REFERENCES sec_city (city_id),
             FOREIGN KEY (state_id) REFERENCES sec_state (state_id)
         )
@@ -166,7 +166,7 @@ def setup_tables(db) -> None:
         CREATE TABLE IF NOT EXISTS security (
             security_id INTEGER PRIMARY KEY,
             entity_id INTEGER NOT NULL,
-            isin TEXT UNIQUE NOT NULL,
+            isin TEXT UNIQUE,
             ticker TEXT NOT NULL,
             cusip TEXT,
             sec_name TEXT,
@@ -777,15 +777,15 @@ def setup_tables(db) -> None:
         """
         CREATE TABLE IF NOT EXISTS sec_filing (
             filing_id INTEGER PRIMARY KEY,
-            entity_id INTEGER NOT NULL,
+            cik INTEGER NOT NULL,
             type_id INTEGER NOT NULL,
             ts_filed INTEGER NOT NULL,
             filing_url TEXT NOT NULL,
             document_url TEXT NOT NULL,
             parsed INTEGER NOT NULL,
             list_id INTEGER NOT NULL,
-            UNIQUE (entity_id, type_id, ts_filed, document_url),
-            FOREIGN KEY (entity_id) REFERENCES entity (entity_id),
+            UNIQUE (cik, type_id, ts_filed, document_url),
+            FOREIGN KEY (cik) REFERENCES entity (cik),
             FOREIGN KEY (type_id) REFERENCES sec_form_type (type_id),
             FOREIGN KEY (list_id) REFERENCES sec_daily_list (list_id)
         )
@@ -863,10 +863,10 @@ def setup_tables(db) -> None:
             cik TEXT UNIQUE,
             lei TEXT UNIQUE,
             name TEXT,
-            entity_id INTEGER NOT NULL,
+            entity_cik INTEGER NOT NULL,
             added INTEGER NOT NULL,
             discontinued INTEGER,
-            FOREIGN KEY (entity_id) REFERENCES entity (entity_id)
+            FOREIGN KEY (entity_cik) REFERENCES entity (cik)
         )
         """
     )
@@ -943,12 +943,12 @@ def setup_tables(db) -> None:
         """
         CREATE TABLE IF NOT EXISTS sec_mf_lending (
             series_id INTEGER,
-            entity_id INTEGER,
+            cik INTEGER,
             ts INTEGER,
             value REAL,
-            PRIMARY KEY (series_id, entity_id, ts),
+            PRIMARY KEY (series_id, cik, ts),
             FOREIGN KEY (series_id) REFERENCES sec_mf_series (series_id),
-            FOREIGN KEY (entity_id) REFERENCES entity (entity_id)
+            FOREIGN KEY (cik) REFERENCES entity (cik)
         )
         """
     )
@@ -975,7 +975,7 @@ def setup_tables(db) -> None:
             quarter INTEGER,
             year INTEGER,
             position_order INTEGER,
-            entity_id INTEGER,
+            lei INTEGER,
             issuer_name TEXT,
             title TEXT,
             ticker TEXT,
@@ -1001,7 +1001,7 @@ def setup_tables(db) -> None:
             loaned REAL,
             UNIQUE (series_id, ts, position_order),
             FOREIGN KEY (series_id) REFERENCES sec_mf_series (series_id),
-            FOREIGN KEY (entity_id) REFERENCES entity (entity_id),
+            FOREIGN KEY (lei) REFERENCES entity (lei),
             FOREIGN KEY (security_id) REFERENCES security (security_id),
             FOREIGN KEY (quantity_type_id) REFERENCES sec_quantity_type (type_id),
             FOREIGN KEY (currency_id) REFERENCES currency (currency_id),
@@ -1054,13 +1054,13 @@ def setup_tables(db) -> None:
             holding_id INTEGER PRIMARY KEY,
             type TEXT,
             central_counterparty INTEGER,
-            entity_id INTEGER,
+            cik INTEGER,
             counterparty_name TEXT,
             tri_party INTEGER,
             repurchase_rate REAL,
             maturity_date INTEGER,
             FOREIGN KEY (holding_id) REFERENCES sec_mf_holding (holding_id),
-            FOREIGN KEY (entity_id) REFERENCES entity (entity_id)
+            FOREIGN KEY (cik) REFERENCES entity (cik)
         )
         """
     )
@@ -1087,11 +1087,11 @@ def setup_tables(db) -> None:
         """
         CREATE TABLE IF NOT EXISTS sec_mf_derivative_counterparty (
             holding_id INTEGER,
-            entity_id INTEGER,
+            cik INTEGER,
             name TEXT,
             PRIMARY KEY (holding_id, name),
             FOREIGN KEY (holding_id) REFERENCES sec_mf_holding (holding_id),
-            FOREIGN KEY (entity_id) REFERENCES entity (entity_id)
+            FOREIGN KEY (cik) REFERENCES entity (cik)
         )
         """
     )
@@ -1225,7 +1225,7 @@ def setup_tables(db) -> None:
     db.cur.execute(
         """
         CREATE TABLE IF NOT EXISTS sec_hf_holding (
-            entity_id INTEGER,
+            cik INTEGER,
             security_id INTEGER,
             ts INTEGER NOT NULL,
             quarter INTEGER,
@@ -1236,8 +1236,8 @@ def setup_tables(db) -> None:
             market_value REAL,
             option_id INTEGER,
             filing_id INTEGER,
-            PRIMARY KEY (entity_id, security_id, quarter, year, option_id),
-            FOREIGN KEY (entity_id) REFERENCES entity (entity_id),
+            PRIMARY KEY (cik, security_id, quarter, year, option_id),
+            FOREIGN KEY (cik) REFERENCES entity (cik),
             FOREIGN KEY (security_id) REFERENCES security (security_id),
             FOREIGN KEY (option_id) REFERENCES sec_option (option_id),
             FOREIGN KEY (filing_id) REFERENCES sec_filing (filing_id)
@@ -1259,15 +1259,15 @@ def setup_tables(db) -> None:
     db.cur.execute(
         """
         CREATE TABLE IF NOT EXISTS sec_shareholder_trade (
-            filer_entity_id INTEGER NOT NULL,
-            subject_entity_id INTEGER NOT NULL,
+            filer_cik INTEGER NOT NULL,
+            subject_cik INTEGER NOT NULL,
             security_id INTEGER NOT NULL,
             ts INTEGER NOT NULL,
             shares INTEGER NOT NULL,
             percentage REAL NOT NULL,
             filing_id INTEGER PRIMARY KEY,
-            FOREIGN KEY (filer_entity_id) REFERENCES entity (entity_id),
-            FOREIGN KEY (subject_entity_id) REFERENCES entity (entity_id),
+            FOREIGN KEY (filer_cik) REFERENCES entity (cik),
+            FOREIGN KEY (subject_cik) REFERENCES entity (cik),
             FOREIGN KEY (security_id) REFERENCES security (security_id),
             FOREIGN KEY (filing_id) REFERENCES sec_filing (filing_id)
         )
