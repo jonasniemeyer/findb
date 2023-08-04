@@ -51,7 +51,7 @@ def scrape_sec_filing_lists(db: Database) -> None:
             row = row.split("|")
             if len(row) != 5 or any([item == "" for item in row]):
                 continue
-            cik, _, form, date, href = row
+            cik, name, form, date, href = row
             if cik.strip() == "CIK":
                 continue
             cik = int(cik)
@@ -66,14 +66,14 @@ def scrape_sec_filing_lists(db: Database) -> None:
             form_id = db.cur.execute("SELECT type_id FROM sec_form_type WHERE name = ?", (form,)).fetchone()[0]
 
             db.cur.execute("INSERT OR IGNORE INTO entity (cik, added) VALUES (?, ?)", (cik, ts_today))
-            entity_id = db.cur.execute("SELECT entity_id FROM entity WHERE cik = ?", (cik,)).fetchone()[0]
+            db.cur.execute("UPDATE entity SET name = ? WHERE cik = ?", (name, cik))
 
             db.cur.execute(
                 """
-                INSERT OR IGNORE INTO sec_filing (entity_id, type_id, ts_filed, filing_url, document_url, parsed, list_id)
+                INSERT INTO sec_filing (cik, type_id, ts_filed, filing_url, document_url, parsed, list_id)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
                 """,
-                (entity_id, form_id, ts_filed, filing_url, document_url, False, list_id)
+                (cik, form_id, ts_filed, filing_url, document_url, False, list_id)
             )
         db.cur.execute("UPDATE sec_daily_list SET parsed = ? WHERE url = ?", (True, url))
 
