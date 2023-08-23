@@ -874,10 +874,10 @@ def setup_tables(db) -> None:
     db.cur.execute(
         """
         CREATE TABLE IF NOT EXISTS sec_mf_class (
-            class_id INTEGER,
+            security_id INTEGER,
             series_id INTEGER NOT NULL,
             cik TEXT PRIMARY KEY,
-            FOREIGN KEY (class_id) REFERENCES security (security_id),
+            FOREIGN KEY (security_id) REFERENCES security (security_id),
             FOREIGN KEY (series_id) REFERENCES sec_mf_series (series_id)
         )
         """
