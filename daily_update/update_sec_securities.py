@@ -45,8 +45,7 @@ def update_mutualfunds(db: Database) -> None:
     new_series = set([(class_["series_cik"], class_["entity_cik"]) for class_ in new_classes])
     for series_cik, entity_cik in new_series:
         if db.cur.execute("SELECT cik FROM sec_mf_series WHERE cik = ?", (series_cik,)).fetchone() is None:
-            entity_id = db.cur.execute("SELECT entity_id FROM entity WHERE cik = ?", (entity_cik,)).fetchone()[0]
-            db.cur.execute("INSERT INTO sec_mf_series (cik, entity_id, added) VALUES (?, ?, ?)", (series_cik, entity_id, ts_today))
+            db.cur.execute("INSERT INTO sec_mf_series (cik, entity_cik, added) VALUES (?, ?, ?)", (series_cik, entity_cik, ts_today))
             print(f"New Mutual Fund Series: {series_cik}")
 
     # insert new classes
