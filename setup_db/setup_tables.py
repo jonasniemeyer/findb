@@ -529,9 +529,9 @@ def setup_tables(db) -> None:
         """
         CREATE TABLE IF NOT EXISTS industry_classification_sic (
             industry_id INTEGER PRIMARY KEY,
-            code INTEGER UNIQUE,
+            code INTEGER UNIQUE NOT NULL,
             name TEXT NOT NULL,
-            no_businesses INTEGER NOT NULL,
+            no_businesses INTEGER,
             is_division INTEGER,
             is_major_group INTEGER,
             is_industry_group INTEGER,
