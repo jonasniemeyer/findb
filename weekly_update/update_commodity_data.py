@@ -1,7 +1,12 @@
+import datetime as dt
 from findb import Database
 from findata import CMEReader
+import numpy as np
 import pandas as pd
-import datetime as dt
+from sqlite3 import register_adapter
+
+register_adapter(np.int64, lambda val: int(val))
+register_adapter(np.float64, lambda val: float(val))
 
 if dt.date.today().weekday() == 6:
     with Database() as db:
@@ -12,8 +17,6 @@ if dt.date.today().weekday() == 6:
         trail = len(str(length))
 
         for index, commodity in enumerate(CMEReader.commodities.keys()):
-            if commodity == "Uranium U308":
-                continue
             print(f"{index+1:{trail}} of {length}: {commodity}")
             data[commodity] = CMEReader(commodity, timestamps=True).read()
 
