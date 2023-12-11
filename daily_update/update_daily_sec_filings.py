@@ -67,10 +67,9 @@ def scrape_sec_filing_lists(db: Database) -> None:
 
             db.cur.execute("INSERT OR IGNORE INTO entity (cik, added) VALUES (?, ?)", (cik, ts_today))
             db.cur.execute("UPDATE entity SET name = ? WHERE cik = ?", (name, cik))
-
             db.cur.execute(
                 """
-                INSERT INTO sec_filing (cik, type_id, ts_filed, filing_url, document_url, parsed, list_id)
+                INSERT OR IGNORE INTO sec_filing (cik, type_id, ts_filed, filing_url, document_url, parsed, list_id)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
                 """,
                 (cik, form_id, ts_filed, filing_url, document_url, False, list_id)
