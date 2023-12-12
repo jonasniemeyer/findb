@@ -13,7 +13,6 @@ class Database:
         return self
     
     def __exit__(self, *args):
-        self.con.commit()
         self.con.close()
 
     def companies(self) -> list:
