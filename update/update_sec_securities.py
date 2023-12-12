@@ -12,7 +12,7 @@ def update_companies(db: Database) -> None:
     for dct in new_companies.values():
         # if the entity is not in the database, insert it
         if db.cur.execute("SELECT cik FROM entity WHERE cik = ?", (dct["cik"],)).fetchone() is None:
-            db.cur.execute("INSERT INTO entity (cik, name, added, ) VALUES (?, ?, ?)", (dct["cik"], dct["name"], ts_today))
+            db.cur.execute("INSERT INTO entity (cik, name, added) VALUES (?, ?, ?)", (dct["cik"], dct["name"], ts_today))
             print(f"New Entity added: {dct['cik']}")
         # else if the new name is not None and different than in the database, update it
         elif dct["name"] is not None:
