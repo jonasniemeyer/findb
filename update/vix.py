@@ -7,8 +7,7 @@ from findb import Database
 from io import StringIO
 from sqlite3 import register_adapter
 
-register_adapter(np.int64, lambda val: int(val))
-register_adapter(np.float64, lambda val: float(val))
+
 
 db = Database()
 con = db.connection
@@ -17,7 +16,7 @@ cur = db.cursor
 base_url = "https://markets.cboe.com/us/futures/market_statistics/historical_data/"
 
 html = requests.get(base_url).text
-url_dict = html.split("TX.defaultProductList = ")[1].split("CTX.productTypes = ")[0]
+url_dict = html.split("TX.defaultProductList = ")[1].split("CTX.productTypes = ")[0].strip().rstrip(";")
 url_dict = json.loads(url_dict)
 
 urls = [f"https://cdn.cboe.com/{item['path']}" for year in url_dict for item in url_dict[year]]
