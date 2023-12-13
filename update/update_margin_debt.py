@@ -1,18 +1,14 @@
 from findata import finra_margin_debt
 from findb import Database
 
-def insert_margin_debt(db_connection):
-    cur = db_connection.cursor()
-    df = finra_margin_debt(timestamps=True)["combined full"]
-    data = []
-    for ts in df.index:
-        data.append((ts, int(df.loc[ts, "debit"]), int(df.loc[ts, "credit"])))
+def insert_margin_debt(db):
+    cur = db.connection.cursor()
+    df = finra_margin_debt(timestamps=True)
 
-    cur.executemany("INSERT OR IGNORE INTO finra_margin_debt VALUES (?, ?, ?)", data)
-    con.commit()
+    df.reset_index(inplace=True)
+    cur.executemany("INSERT OR IGNORE INTO finra_margin_debt VALUES (?, ?, ?, ?)", df.to_numpy())
+    db.connection.commit()
 
 if __name__ == "__main__":
-    db = Database()
-    con = db.connection
-    insert_margin_debt(con)
-    con.close()
+    with Database() as db:
+        insert_margin_debt(db)
