@@ -369,8 +369,9 @@ def setup_tables(db) -> None:
         """
         CREATE TABLE IF NOT EXISTS finra_margin_debt (
             ts INTEGER PRIMARY KEY,
-            debit INTEGER NOT NULL,
-            credit INTEGER NOT NULL
+            debit_margin INTEGER NOT NULL,
+            credit_margin INTEGER NOT NULL,
+            cash_margin INTEGER NOT NULL
         )
         """
     )
