@@ -38,6 +38,8 @@ def get_sec_filing_lists(db: Database, start_year=1900, start_quarter=0) -> None
                     ts = int(pd.to_datetime(date).timestamp())
                     db.cur.execute("INSERT OR IGNORE INTO sec_daily_list (ts, url, parsed) VALUES (?, ?, ?)", (ts, day_url, False))
 
+    db.connection.commit()
+
 def scrape_sec_filing_lists(db: Database) -> None:
     ts_today = int(pd.to_datetime(pd.to_datetime("today").date()).timestamp())
     filing_lists = db.cur.execute("SELECT list_id, url FROM sec_daily_list WHERE parsed = ?", (False,)).fetchall()
@@ -75,6 +77,8 @@ def scrape_sec_filing_lists(db: Database) -> None:
                 (cik, form_id, ts_filed, filing_url, document_url, False, list_id)
             )
         db.cur.execute("UPDATE sec_daily_list SET parsed = ? WHERE url = ?", (True, url))
+
+    db.connection.commit()
 
 if __name__ == "__main__":
     with Database() as db:

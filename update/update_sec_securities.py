@@ -65,6 +65,8 @@ def update_mutualfunds(db: Database) -> None:
             db.cur.execute("INSERT INTO sec_mf_class (security_id, series_id, cik) VALUES (?, ?, ?)", (security_id, series_id, class_cik))
             print(f"New Mutual Fund Class added: {class_cik:>10} {ticker:>8}")
 
+    db.connection.commit()
+
 if __name__ == "__main__":
     with Database() as db:
         print("Updating SEC Companies")
