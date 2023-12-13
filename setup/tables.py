@@ -505,6 +505,30 @@ def setup_tables(db) -> None:
         """
     )
 
+    db.cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS french_industry (
+            industry_id INTEGER PRIMARY KEY,
+            name TEXT NOT NULL,
+            abbr TEXT UNIQUE NOT NULL
+        )
+        """
+    )
+
+    db.cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS french_sub_industry (
+            sub_industry_id INTEGER PRIMARY KEY,
+            name TEXT,
+            lower INTEGER NOT NULL,
+            upper INTEGER NOT NULL,
+            industry_id INTEGER NOT NULL,
+            UNIQUE(lower, upper),
+            FOREIGN KEY (industry_id) REFERENCES french_industry (industry_id)
+        )
+        """
+    )
+
     # ===========================================================
     # ======= Industry Classification (GICS & SIC) ==============
     # ===========================================================
@@ -1818,6 +1842,8 @@ def setup_tables(db) -> None:
         """
     )
 
+    db.con.commit()
+
 
 def insert_cme_commodities(db) -> None:
     for name, properties in CMEReader.commodities.items():
@@ -1828,11 +1854,14 @@ def insert_cme_commodities(db) -> None:
             (name, exchange_id, sector_id)
         )
 
+    db.con.commit()
+
 
 def insert_standardized_variables(db) -> None:
     for var in Conversion:
         db.cur.execute("INSERT OR IGNORE INTO fundamental_variable (internal_name, label) VALUES(?, ?)", (var.name, var.value))
 
+    db.con.commit()
 
 def insert_macrotrends_variables(db) -> None:
     for statement in MACROTRENDS_CONVERSION.keys():
@@ -1840,6 +1869,8 @@ def insert_macrotrends_variables(db) -> None:
         for variable, enum in MACROTRENDS_CONVERSION[statement].items():
             enum_id = db.cur.execute("SELECT variable_id FROM fundamental_variable WHERE internal_name = ?", (enum.name,)).fetchone()[0]
             db.cur.execute("INSERT OR IGNORE INTO macrotrends_fundamental_variable (name, statement_id, standard_id) VALUES (?, ?, ?)", (variable, statement_id, enum_id))
+
+    db.con.commit()
 
 if __name__ == "__main__":
     from findb.setup.countries_currencies_exchanges import insert_countries_currencies_exchanges
