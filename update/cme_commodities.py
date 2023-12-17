@@ -11,10 +11,12 @@ def insert_commododity_data(db):
     ts_today = int(pd.to_datetime(pd.to_datetime("today").date()).timestamp())
 
     data = {}
-    length = len(CMEReader.commodities)
+    commodities = db.cur.execute("SELECT name FROM cme_commodity").fetchall()
+    commodities = [item[0] for item in commodities]
+    length = len(commodities)
     trail = len(str(length))
 
-    for index, commodity in enumerate(CMEReader.commodities.keys()):
+    for index, commodity in enumerate(commodities):
         print(f"{index+1:{trail}} of {length}: {commodity}")
         data[commodity] = CMEReader(commodity, timestamps=True).read()
 
@@ -33,4 +35,4 @@ def insert_commododity_data(db):
 
 if __name__ == "__main__":
     with Database() as db:
-        insert_commododity_data()
+        insert_commododity_data(db)
