@@ -1,6 +1,7 @@
 import pandas as pd
 from findata import sec_companies, sec_mutualfunds
 from findb import Database
+from sqlite3 import IntegrityError
 
 def update_companies(db: Database) -> None:
     new_companies = sec_companies()
@@ -62,8 +63,11 @@ def update_mutualfunds(db: Database) -> None:
             db.cur.execute("INSERT INTO security (entity_id, ticker, added) VALUES (?, ?, ?)", (entity_id, ticker, ts_today))
             security_id = db.cur.execute("SELECT security_id FROM security WHERE ticker = ?",(ticker,)).fetchone()[0]
             series_id = db.cur.execute("SELECT series_id FROM sec_mf_series WHERE cik = ?", (series_cik,)).fetchone()[0]
-            db.cur.execute("INSERT INTO sec_mf_class (security_id, series_id, cik) VALUES (?, ?, ?)", (security_id, series_id, class_cik))
-            print(f"New Mutual Fund Class added: {class_cik:>10} {ticker:>8}")
+            try:
+                db.cur.execute("INSERT INTO sec_mf_class (security_id, series_id, cik) VALUES (?, ?, ?)", (security_id, series_id, class_cik))
+                print(f"New Mutual Fund Class added: {class_cik:>10} {ticker:>8}")
+            except IntegrityError:
+                pass
 
     db.connection.commit()
 
